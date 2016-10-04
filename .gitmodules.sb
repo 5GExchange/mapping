@@ -1,0 +1,4 @@
+[submodule "nffg_lib"]
+	path = nffg_lib
+	url = ssh://git@sb.tmit.bme.hu:42322/unify/mapping.git
+	branch = master
