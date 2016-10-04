@@ -19,7 +19,6 @@ Core functions and classes of Algorithm1.
 
 import copy
 import networkx as nx
-import sys
 from collections import deque
 
 import Alg1_Helper as helper
@@ -27,13 +26,7 @@ import BacktrackHandler as backtrack
 import GraphPreprocessor
 import UnifyExceptionTypes as uet
 
-try:
-  from escape.nffg_lib.nffg import NFFG
-except ImportError:
-  import sys, os
-  sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                  "../escape/escape/nffg_lib/")))
-  from nffg import NFFG
+from nffg_lib.nffg import NFFG
 
 
 class CoreAlgorithm(object):

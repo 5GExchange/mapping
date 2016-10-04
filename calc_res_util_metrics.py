@@ -1,19 +1,11 @@
 import sys, os, getopt, subprocess, copy
 import numpy as np
 from collections import OrderedDict
-from pprint import pformat
 import matplotlib.pyplot as plt
-import matplotlib
 import math
 
 
-try:
-  from escape.nffg_lib.nffg import NFFG
-except ImportError:
-  import sys, os
-  sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                  "../escape/escape/nffg_lib/")))
-  from nffg import NFFG
+from nffg_lib.nffg import NFFG
 
 helpmsg="""
 Decompresses the NFFG-s given in command line, sorts them base on test level,

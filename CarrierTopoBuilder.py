@@ -29,13 +29,7 @@ import string
 
 import networkx as nx
 
-try:
-  from escape.nffg_lib.nffg import NFFG
-except ImportError:
-  import sys, os
-  sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                  "../escape/escape/nffg_lib/")))
-  from nffg import NFFG
+from nffg_lib.nffg import NFFG
 
 # Aggregation links (100Gbps) Connecting Distribution nodes to Aggregation Nodes
 aggr_link = {'bandwidth': 1000, 'delay': 0.2}

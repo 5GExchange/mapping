@@ -33,13 +33,7 @@ import UnifyExceptionTypes as uet
 
 from collections import OrderedDict
 
-try:
-  from escape.nffg_lib.nffg import NFFG, NFFGToolBox
-except ImportError:
-  import sys, os
-  sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                  "../pox/ext/escape/nffg_lib/")))
-  from nffg import NFFG, NFFGToolBox
+from nffg_lib.nffg import NFFG, NFFGToolBox
 
 log = logging.getLogger("StressTest")
 log.setLevel(logging.WARN)

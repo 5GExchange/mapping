@@ -1,0 +1,4 @@
+[submodule "nffg_lib"]
+	path = nffg_lib
+	url = git@5gexgit.tmit.bme.hu:unify/nffg.git
+	branch = master

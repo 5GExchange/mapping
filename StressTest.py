@@ -31,13 +31,7 @@ import UnifyExceptionTypes as uet
 
 from collections import OrderedDict
 
-try:
-  from escape.nffg_lib.nffg import NFFG, NFFGToolBox
-except ImportError:
-  import sys, os
-  sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                  "../escape/escape/nffg_lib/")))
-  from nffg import NFFG, NFFGToolBox
+from nffg_lib.nffg import NFFG, NFFGToolBox
 
 def gen_seq():
   while True:
