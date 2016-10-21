@@ -675,6 +675,9 @@ class CoreAlgorithm(object):
     first infrastructure link is common, starting from the same SAP, the first
     Infra node can only identify which packet belongs to which SGHop based on 
     the FLOWCLASS field, which is considered optional.
+
+    Flowrule ID-s are always reqlid, ID collision cannot happen, because these
+    ID-s are unique in an Infra (loops cannot occur in SGHop's path).
     """
     helperlink = self.manager.link_mapping[v1][v2][reqlid]
     path = helperlink['mapped_to']
@@ -687,6 +690,7 @@ class CoreAlgorithm(object):
       flowdst = None
     reqlink = self.req[v1][v2][reqlid]
     bw = reqlink.bandwidth
+    delay = reqlink.delay
     # Let's use the substrate SAPs' ID-s for TAG definition.
     if self.req.node[v1].type == 'SAP':
       v1 = self.manager.getIdOfChainEnd_fromNetwork(v1)
@@ -707,7 +711,8 @@ class CoreAlgorithm(object):
       action_str += str(flowdst.id)
       self.log.debug("Collocated flowrule %s => %s added to Port %s of %s" % (
         match_str, action_str, flowsrc.id, path[0]))
-      flowsrc.add_flowrule(match_str, action_str, bw, hop_id = reqlid)
+      flowsrc.add_flowrule(match_str, action_str, bandwidth=bw, delay=delay, 
+                           id=reqlid)
     else:
       # set the flowrules for the transit Infra nodes
       for i, j, k, lidij, lidjk in zip(path[:-2], path[1:-1], path[2:],
@@ -728,8 +733,8 @@ class CoreAlgorithm(object):
             match_str += ";" + tag
         self.log.debug("Transit flowrule %s => %s added to Port %s of %s" % (
           match_str, action_str, self.net[i][j][lidij].dst.id, j))
-        nffg.network[i][j][lidij].dst.add_flowrule(match_str, action_str, bw, 
-                                                   hop_id = reqlid)
+        nffg.network[i][j][lidij].dst.add_flowrule(match_str, action_str, 
+                                      bandwidth=bw, delay=delay, id=reqlid)
 
       # set flowrule for the first element if that is not a SAP
       if nffg.network.node[path[0]].type != 'SAP':
@@ -745,7 +750,8 @@ class CoreAlgorithm(object):
         action_str += ";" + tag
         self.log.debug("Starting flowrule %s => %s added to Port %s of %s" % (
           match_str, action_str, flowsrc.id, path[0]))
-        flowsrc.add_flowrule(match_str, action_str, bw, hop_id = reqlid)
+        flowsrc.add_flowrule(match_str, action_str, bandwidth=bw, delay=delay, 
+                             id=reqlid)
 
       # set flowrule for the last element if that is not a SAP
       if nffg.network.node[path[-1]].type != 'SAP':
@@ -763,7 +769,7 @@ class CoreAlgorithm(object):
           match_str, action_str,
           self.net[path[-2]][path[-1]][linkids[-1]].dst.id, path[-1]))
         nffg.network[path[-2]][path[-1]][linkids[-1]].dst.add_flowrule(
-          match_str, action_str, bw, hop_id = reqlid)
+          match_str, action_str, bandwidth=bw, delay=delay, id=reqlid)
 
   def _retrieveOrAddVNF (self, nffg, vnfid):
     # add the VNF from the request graph to update the resource requirements 
@@ -780,6 +786,9 @@ class CoreAlgorithm(object):
 
     return nodenf
 
+  '''
+  # This was needed for adding output SGHops, maybe needed for their generation 
+  # based on flowrule data.
   def _addSAPportIfNeeded(self, nffg, sapid, portid):
     """
     The request and substrate SAPs are different objects, the substrate does not
@@ -789,6 +798,7 @@ class CoreAlgorithm(object):
       return portid
     else:
       return nffg.network.node[sapid].add_port(portid).id
+  '''
 
   def _getSrcDstPortsOfOutputEdgeReq(self, nffg, sghop_id, infra, src=True, dst=True):
     """
@@ -1029,53 +1039,17 @@ class CoreAlgorithm(object):
           
     # all VNFs are added to the NFFG, so now, req ids are valid in this
     # NFFG instance. Ports for the SG link ends are reused from the mapped NFFG.
-    # Add all the SGHops to the NFFG keeping the SGHops` identifiers, so the
-    # installed flowrules and TAG-s will be still valid
-    # REFACTOR: make port object retrieval nicer (independent of SAPness)
-    try:
-      for i, j, d in self.req.edges_iter(data=True):
-        if nffg.network.has_edge(i, j, key=d.id):
-          # it means this link is under an update, so add it with the new 
-          # attributes! and remove the old one!
-          nffg.network.remove_edge(i, j, key=d.id)
-          self.log.debug("Removed old SGHop %s for SG Hop data update!"%d.id)
-          nffg.del_flowrules_of_SGHop(d.id)
-          self.log.debug("Removed all flowrules belonging to SGHop %s!"%d.id)
-        if self.req.node[i].type == 'SAP':
-          # if i is a SAP we have to find what is its ID in the network
-          # d.id is the link`s key
-          sapstartid = self.manager.getIdOfChainEnd_fromNetwork(i)
-          if self.req.node[j].type == 'SAP':
-            sapendid = self.manager.getIdOfChainEnd_fromNetwork(j)
-            nffg.add_sglink(nffg.network.node[sapstartid].ports[
-                 self._addSAPportIfNeeded(nffg, sapstartid, d.src.id)],
-                            nffg.network.node[sapendid].ports[
-                 self._addSAPportIfNeeded(nffg, sapendid, d.dst.id)], 
-                            id=d.id, flowclass=d.flowclass, tag_info=d.tag_info,
-                            delay=d.delay, bandwidth=d.bandwidth)
-          else:
-            nffg.add_sglink(nffg.network.node[sapstartid].ports[
-                 self._addSAPportIfNeeded(nffg, sapstartid, d.src.id)],
-                            nffg.network.node[j].ports[d.dst.id], id=d.id,
-                            flowclass=d.flowclass, tag_info=d.tag_info,
-                            delay=d.delay, bandwidth=d.bandwidth)
-        elif self.req.node[j].type == 'SAP':
-          sapendid = self.manager.getIdOfChainEnd_fromNetwork(j)
-          nffg.add_sglink(nffg.network.node[i].ports[d.src.id],
-                          nffg.network.node[sapendid].ports[
-                            self._addSAPportIfNeeded(nffg, sapendid, d.dst.id)],
-                          id=d.id, flowclass=d.flowclass, tag_info=d.tag_info,
-                          delay=d.delay, bandwidth=d.bandwidth)
-        else:
-          nffg.add_sglink(nffg.network.node[i].ports[d.src.id],
-                          nffg.network.node[j].ports[d.dst.id], id=d.id,
-                          flowclass=d.flowclass, tag_info=d.tag_info,
-                          delay=d.delay, bandwidth=d.bandwidth)
-        self.log.debug("SGHop %s added to output NFFG."%d.id)
-    except RuntimeError as re:
-      raise uet.InternalAlgorithmException("RuntimeError catched during SGLink"
-          " addition to the output NFFG. Maybe same SGLink "
-          "ID in current request and a previous request?")
+    # SGHops are not added to the output NFFG anymore because they can be 
+    # generated by the Flowrule data. (They had been added here latest: commit 
+    # 8bdaf26cd3)
+    for i, j, d in self.req.edges_iter(data=True):
+      # if any Flowrule with d.id is present in the substrate NFFG, means this
+      # link is under an update, so add it with the new attributes! and 
+      # remove the old one!
+      self.log.debug("Removing all flowrules belonging to SGHop %s of the "
+                     "current request, in case this SGHop is an update to "
+                     "an already mapped one!"%d.id)
+      nffg.del_flowrules_of_SGHop(d.id)
 
     # adding the flowrules should be after deleting the flowrules of SGHops 
     # to be updated from the data of the Request (relevant in case of MODE_ADD)
