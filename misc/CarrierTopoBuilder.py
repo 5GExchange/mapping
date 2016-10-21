@@ -22,6 +22,11 @@ Parameter names are also based on the .ppt file.
 
 """
 
+import os
+import sys
+# Needed to run the Algorithm scripts in the parent folder.
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 import logging
 import math
 import random

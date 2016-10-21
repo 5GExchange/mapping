@@ -11,7 +11,8 @@ Files required to run the algorithm:
       * BacktrackHandler.py
       * UnifyExceptionTypes.py
 
-Other files:
+Other files (appropriate PYTHONPATH setting maybe required, 
+see StressTest-small.py):
       * StressTest-small.py
       * CarrierTopoBuilder.py
       * MIPBaseline.py
@@ -32,6 +33,7 @@ Utilities (can be outdated):
       * calc_res_util_metrics.py
       * count_bt_successes.py
       * count_milp_successes.py
+      * night_test.py
 
 The parameters of the algorithm are:
       * enable_shortest_path_cache -- saves the calculated shortest paths for the
