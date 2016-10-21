@@ -27,9 +27,9 @@ import traceback
 import string
 import os
 
-import CarrierTopoBuilder
-import MappingAlgorithms
-import UnifyExceptionTypes as uet
+from .. import CarrierTopoBuilder
+from .. import MappingAlgorithms
+from .. import UnifyExceptionTypes as uet
 
 from collections import OrderedDict
 
