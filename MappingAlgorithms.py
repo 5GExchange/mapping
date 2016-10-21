@@ -24,7 +24,6 @@ invocation details.
 NOTE: Currently only SAP-to-SAP EdgeReqs, or link-local (which are parallel 
 with an SGLink) EdgeReqs are supported. After generating the service chains
 from the EdgeReqs, all SG links must be in one of the subchains. 
-TODO: map best-effort links (not part of any subchain).
 """
 
 import traceback
@@ -88,7 +87,7 @@ def MAP (request, network, enable_shortest_path_cache=False,
   reservation state. Their resource requirements are subtracted from the 
   available. If an ID is present in both the substrate and request graphs, the 
   resource requirements (and the whole instance) will be updated.
-  MODE_DELETE: Finds the elements of the request NFFG in the substrate NFFG and
+  MODE_DEL: Finds the elements of the request NFFG in the substrate NFFG and
   removes them.
   """
   
@@ -484,12 +483,14 @@ if __name__ == '__main__':
     # print net.dump()
     # req = _testRequestForBacktrack()
     # net = _testNetworkForBacktrack()
-    with open('untracked/deladd-bug1-req.nffg', "r") as f:
+    with open('nffgs/escape-mn-req.nffg', "r") as f:
       req = NFFG.parse(f.read())
-    with open('untracked/deladd-bug1-net.nffg', "r") as g:
+    with open('nffgs/escape-mn-topo.nffg', "r") as g:
       net = NFFG.parse(g.read())
-      # net.duplicate_static_links()
-    mapped = MAP(req, net, mode=NFFG.MODE_DEL)
+      # The following line must not be called if the input has already 
+      # bidirectional links in the resource graph
+      net.duplicate_static_links()
+    mapped = MAP(req, net, mode=NFFG.MODE_ADD)
     print mapped.dump()
   except uet.UnifyException as ue:
     print ue, ue.msg

@@ -759,12 +759,6 @@ class GraphPreprocessorClass(object):
          and link.type != 'STATIC':
         net.del_edge(link.src, link.dst, link.id)
 
-    """ calculate_available_link_res does the same...
-    # set availbandwidth to the maximal value
-    for i, j, k, d in net.network.edges_iter(data=True, keys=True):
-      if d.type == 'STATIC':
-        setattr(net.network[i][j][k], 'availbandwidth', d.bandwidth)
-    """
     # in case of REMAP mode there is nothing to do with the flowrules, they 
     # will be deleted...
     sg_hops_to_be_left_in_place = set()
