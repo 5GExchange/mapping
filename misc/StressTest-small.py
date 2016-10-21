@@ -18,18 +18,20 @@ Generates increasingly bigger/more Service Chain requirements for a
 network topology, reports how well the algorithm performed.
 """
 
+import os
+import sys
+# Needed to run the Algorithm scripts in the parent folder.
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 import getopt
 import logging
 import math
 import random
-import sys
 import traceback
 import string
-import os
 
-from .. import CarrierTopoBuilder
-from .. import MappingAlgorithms
-from .. import UnifyExceptionTypes as uet
+import CarrierTopoBuilder
+import MappingAlgorithms
+import UnifyExceptionTypes as uet
 
 from collections import OrderedDict
 
