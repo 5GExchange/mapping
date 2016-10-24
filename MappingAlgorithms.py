@@ -30,7 +30,7 @@ import traceback
 
 from pprint import pformat
 
-from nffg_lib.nffg import NFFG
+from nffg_lib.nffg import NFFG, NFFGToolBox
 from Alg1_Core import CoreAlgorithm
 import UnifyExceptionTypes as uet
 import Alg1_Helper as helper
@@ -468,7 +468,7 @@ if __name__ == '__main__':
     # print net.dump()
     # req = _testRequestForBacktrack()
     # net = _testNetworkForBacktrack()
-    with open('nffgs/escape-mn-req.nffg', "r") as f:
+    with open('nffgs/escape-mn-sgfrid-mapped.nffg', "r") as f:
       req = NFFG.parse(f.read())
     with open('nffgs/escape-mn-topo.nffg', "r") as g:
       net = NFFG.parse(g.read())
