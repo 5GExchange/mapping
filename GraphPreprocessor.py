@@ -544,7 +544,7 @@ class GraphPreprocessorClass(object):
             for act in fr.action.split(";"):
               if specific_tag_format in act:
                 for sghop in self.req_graph.sg_hops:
-                  if sghop.id == fr.hop_id:
+                  if sghop.id == fr.id:
                     # tag_info indicates action in SGHop
                     if sghop.dst.node.type != 'SAP':
                       raise uet.BadInputException("%s tag action should be"
@@ -573,7 +573,7 @@ class GraphPreprocessorClass(object):
             for mat in fr.match.split(";"):
               if specific_tag_format in mat:
                 for sghop in self.req_graph.sg_hops:
-                  if sghop.id == fr.hop_id and sghop.tag_info is None:
+                  if sghop.id == fr.id and sghop.tag_info is None:
                     # it means we haven't found this tag_info while searching in
                     # ACTION fields of Flowrules previously!
                     if sghop.src.node.type != 'SAP':
@@ -598,7 +598,7 @@ class GraphPreprocessorClass(object):
       elif not hasattr(d, 'bandwidth') or getattr(d, 'bandwidth', 0) is None:
         setattr(d, 'bandwidth', 0)
 
-    # there can only be SGHops left in the graph, if there are no edges then
+    # there can only be SGHops left in the graph, if there are no edges, then
     # the req graph has no SGHops!
     if self.req_graph.network.number_of_edges() == 0:
       raise uet.BadInputException(
@@ -702,7 +702,6 @@ class GraphPreprocessorClass(object):
       # we have to do the SG preprocessing before the substrate preprocessing
       self.preprocessed_del_req = self.processDelRequest()
 
-    # remove deepcopy!! (we already saved the full input, in Core)
     net = self.net
 
     # intersection of VNFs in net and req.
@@ -759,7 +758,7 @@ class GraphPreprocessorClass(object):
     sap_intersection = set([s.id for s in self.req_graph.saps \
                             if s.id in net.network])
     if mode == NFFG.MODE_ADD:
-      sgs_in_network = zip(*net.network.edges(keys=True))[2]
+      sgs_in_network = [sg.id for sg in net.sg_hops]
       for sg in self.req_graph.sg_hops:
         if (sg.src.node.id in vnf_to_be_left_in_place or \
             sg.src.node.id in sap_intersection)\
@@ -772,6 +771,9 @@ class GraphPreprocessorClass(object):
                 " SAP which is present in both the request and resource!", 
                 "SGHop %s has one of its ends not mapped yet!"%sg.id)
     if mode != NFFG.MODE_DEL:
+      # SGHops which need to be updated are ignored during available link 
+      # resource calculation, because it will be decided during the mapping 
+      # process whether they can be mapped or not with their new requirement.
       net.calculate_available_link_res(sg_hops_to_be_left_in_place, mode)
 
       # calculated weights for infras based on their available bandwidth 
@@ -790,7 +792,7 @@ class GraphPreprocessorClass(object):
           self.log.debug("Weight for node %s: %f" % (d.id, d.weight))
           self.log.debug("Supported types of node %s: %s" % (d.id, d.supported))
     
-      # after all the TAG values are traced back, and the reserved bandwidth 
+      # after all Flowrule sequences are traced back, and the reserved bandwidth 
       # capacities are subtracted from the available resources, we can 
       # calculate the link weights. Needed in every mode, but DEL
       for i, j, k, d in net.network.edges_iter(data=True, keys=True):

@@ -89,32 +89,24 @@ def MAP (request, network, enable_shortest_path_cache=False,
   if mode is None:
     raise uet.BadInputException("Mapping operation mode should always be set", 
                                 "No mode specified for mapping operation!")
-  """
+
   # NOTE: SG Hops are always given in the service graph from now on!
-  sg_hops_given = True
   try:
     # if there is at least ONE SGHop in the graph, we don't do SGHop retrieval.
     next(request.sg_hops)
+    sg_hops_given = True
   except StopIteration:
-    # retrieve the SGHops from the TAG values of the flow rules, in case they
-    # are cannot be found in the request graph and can only be deduced from the 
-    # flows
-    helper.log.warn("No SGHops were given in the Service Graph, retrieving them"
-                    " based on the flowrules...")
     sg_hops_given = False
-    sg_hop_info = NFFGToolBox.retrieve_all_SGHops(request)
-    helper.log.log(5, "Retrieved SG hops:\n" + pformat(sg_hop_info))
-    if len(sg_hop_info) == 0:
+    helper.log.warn("No SGHops were not given in the Service Graph! Could it "
+                    "be retreived? based on the Flowrules?")
+    NFFGToolBox.recreate_all_sghops(request)
+    try:
+      next(request.sg_hops)
+    except StopIteration:
       raise uet.BadInputException("If SGHops are not given, flowrules should be"
                                   " in the NFFG",
                                   "No SGHop could be retrieved based on the "
                                   "flowrules of the NFFG.")
-    for k, v in sg_hop_info.iteritems():
-      # VNF ports are given to the function
-      request.add_sglink(v[0], v[1], flowclass=v[2], bandwidth=v[3], delay=v[4],
-                         id=k[2])
-  """
-
   chainlist = []
   cid = 1
   edgereqlist = []
@@ -125,14 +117,13 @@ def MAP (request, network, enable_shortest_path_cache=False,
     edgereqlist.append(req)
     request.del_edge(req.src, req.dst, req.id)
     
-  """
-  # NOTE: this is not needed because SG Hops are always given from now on.
+  # NOTE: this may not be needed because SGHop regeneration is safer now with 
+  # Flowrule ID-s being the same as SGHop ID-s.
   if len(edgereqlist) != 0 and not sg_hops_given:
     helper.log.warn("EdgeReqs were given, but the SGHops (which the EdgeReqs "
                     "refer to by id) are retrieved based on the flowrules of "
                     "infrastructure. This can cause error later if the "
                     "flowrules was malformed...")
-  """
 
   # construct chains from EdgeReqs
   for req in edgereqlist:

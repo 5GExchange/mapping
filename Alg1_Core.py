@@ -814,7 +814,7 @@ class CoreAlgorithm(object):
     found = False
     for p in nffg.network.node[infra].ports:
       for fr in p.flowrules:
-        if fr.hop_id == sghop_id:
+        if fr.id == sghop_id:
           if src:
             start_port_for_req = p
             if not dst:
