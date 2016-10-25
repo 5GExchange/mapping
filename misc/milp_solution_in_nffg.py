@@ -18,7 +18,13 @@ import UnifyExceptionTypes as uet
 import networkx as nx
 
 from Alg1_Core import CoreAlgorithm
-from nffg_lib.nffg import NFFG, NFFGToolBox
+try:
+  from escape.nffg_lib.nffg import NFFG, NFFGToolBox
+except ImportError:
+  import sys, os
+  sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                  "../escape/escape/nffg_lib/")))
+  from nffg import NFFG, NFFGToolBox
 
 from MIPBaseline import Scenario, ModelCreator, isFeasibleStatus, \
   convert_req_to_request, convert_nffg_to_substrate

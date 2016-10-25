@@ -24,9 +24,6 @@ from networkx.algorithms.flow.mincost import cost_of_flow
 __author__ = 'Matthias Rost (mrost@inet.tu-berlin.de)'
 
 import traceback
-import json
-
-from pprint import pformat
 
 try:
   from escape.nffg_lib.nffg import NFFG, NFFGToolBox

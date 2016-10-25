@@ -19,15 +19,18 @@ It maps end-to-end bandwidth requirements for links.
 
 And divides the e2e chains to disjunct subchains for core mapping.
 """
-
-import copy
 import networkx as nx
-import sys
 
 import Alg1_Helper as helper
 import UnifyExceptionTypes as uet
 
-from nffg_lib.nffg import NFFG
+try:
+  from escape.nffg_lib.nffg import NFFG
+except ImportError:
+  import sys, os
+  sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                  "../escape/escape/nffg_lib/")))
+  from nffg import NFFG
 
 
 class GraphPreprocessorClass(object):

@@ -30,7 +30,14 @@ import traceback
 
 from pprint import pformat
 
-from nffg_lib.nffg import NFFG, NFFGToolBox
+try:
+  from escape.nffg_lib.nffg import NFFG, NFFGToolBox
+except ImportError:
+  import sys, os
+  sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                  "../escape/escape/nffg_lib/")))
+  from nffg import NFFG, NFFGToolBox
+
 from Alg1_Core import CoreAlgorithm
 import UnifyExceptionTypes as uet
 import Alg1_Helper as helper

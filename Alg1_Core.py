@@ -26,7 +26,13 @@ import BacktrackHandler as backtrack
 import GraphPreprocessor
 import UnifyExceptionTypes as uet
 
-from nffg_lib.nffg import NFFG
+try:
+  from escape.nffg_lib.nffg import NFFG
+except ImportError:
+  import sys, os
+  sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                  "../escape/escape/nffg_lib/")))
+  from nffg import NFFG
 
 
 class CoreAlgorithm(object):
