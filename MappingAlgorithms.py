@@ -104,7 +104,7 @@ def MAP (request, network, enable_shortest_path_cache=False,
     sg_hops_given = True
   except StopIteration:
     sg_hops_given = False
-    helper.log.warn("No SGHops were not given in the Service Graph! Could it "
+    helper.log.warn("No SGHops were given in the Service Graph! Could it "
                     "be retreived? based on the Flowrules?")
     NFFGToolBox.recreate_all_sghops(request)
     try:
@@ -131,6 +131,11 @@ def MAP (request, network, enable_shortest_path_cache=False,
                     "refer to by id) are retrieved based on the flowrules of "
                     "infrastructure. This can cause error later if the "
                     "flowrules was malformed...")
+
+  # Rebind EdgeReqs to SAP-to-SAP paths, instead of BiSBiS ports
+  # So EdgeReqs should either go between SAP-s, or InfraPorts which are 
+  # connected to a SAP
+  request = NFFGToolBox.rebind_e2e_req_links(request)
 
   # construct chains from EdgeReqs
   for req in edgereqlist:
