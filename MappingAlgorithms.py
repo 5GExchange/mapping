@@ -114,6 +114,12 @@ def MAP (request, network, enable_shortest_path_cache=False,
                                   " in the NFFG",
                                   "No SGHop could be retrieved based on the "
                                   "flowrules of the NFFG.")
+
+  # Rebind EdgeReqs to SAP-to-SAP paths, instead of BiSBiS ports
+  # So EdgeReqs should either go between SAP-s, or InfraPorts which are 
+  # connected to a SAP
+  request = NFFGToolBox.rebind_e2e_req_links(request)
+
   chainlist = []
   cid = 1
   edgereqlist = []
@@ -131,11 +137,6 @@ def MAP (request, network, enable_shortest_path_cache=False,
                     "refer to by id) are retrieved based on the flowrules of "
                     "infrastructure. This can cause error later if the "
                     "flowrules was malformed...")
-
-  # Rebind EdgeReqs to SAP-to-SAP paths, instead of BiSBiS ports
-  # So EdgeReqs should either go between SAP-s, or InfraPorts which are 
-  # connected to a SAP
-  request = NFFGToolBox.rebind_e2e_req_links(request)
 
   # construct chains from EdgeReqs
   for req in edgereqlist:
@@ -480,13 +481,13 @@ if __name__ == '__main__':
     # print net.dump()
     # req = _testRequestForBacktrack()
     # net = _testNetworkForBacktrack()
-    with open('nffgs/escape-mn-sgfrid-mapped.nffg', "r") as f:
+    with open('nffgs/rebind_error_req.nffg', "r") as f:
       req = NFFG.parse(f.read())
-    with open('nffgs/escape-mn-topo.nffg', "r") as g:
+    with open('nffgs/rebind_error_net.nffg', "r") as g:
       net = NFFG.parse(g.read())
       # The following line must not be called if the input has already 
       # bidirectional links in the resource graph
-      net.duplicate_static_links()
+      # net.duplicate_static_links()
     mapped = MAP(req, net, mode=NFFG.MODE_ADD)
     print mapped.dump()
   except uet.UnifyException as ue:

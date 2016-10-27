@@ -14,4 +14,4 @@ old.*
 *~
 *.a
 *.out
-*shortest_path.txt
+*shortest_paths.txt
