@@ -286,6 +286,18 @@ class GraphPreprocessorClass(object):
     else:
       return 0
 
+  def _checkIfNextVNFRechained (self, best_effort_graph, last_vnf):
+    for possible_subc_ending in \
+        best_effort_graph.neighbors_iter(last_vnf):
+      if self.rechained[possible_subc_ending]:
+        linkid = next(best_effort_graph[last_vnf][\
+                      possible_subc_ending].iterkeys())
+        # if we succesfully found a rechained node, we can 
+        # terminate this subchain.
+        return possible_subc_ending, linkid
+    else:
+      return None, None
+
   def _extractBestEffortSubchains (self, mode, best_effort_graph):
     """
     Removes all uncolored edges from the input and divides the best effort 
@@ -317,30 +329,15 @@ class GraphPreprocessorClass(object):
                 last_vnf = j
                 if self.rechained[j]:
                   break
-                # if it would be a loop in this chain (with an ending not 
-                # rechained yet), that is not good! 
-                # cut the ending and continue the DFS from somewhere
-                if subc_path.count(j) == 2:
-                  # leave the last element out, we dont need loop
-                  subc_path = subc_path[:-1]
-                  link_ids = link_ids[:-1]
-                  # continue on next DFS edges.
-              elif i in subc_path:
-                # let's have a look where does the DFS would continue, leave out
-                # the tail and continue
-                tail_start = subc_path.index(i)
-                subc_path = subc_path[:tail_start+1]
-                subc_path.append(j)
-                linkid = next(best_effort_graph[i][j].iterkeys())
-                link_ids = link_ids[:tail_start]
-                link_ids.append(linkid)
-                last_vnf = j
-                # from here do the same thing basically.
-                if self.rechained[j]:
+                terminating_nf, terminating_link = \
+                     self._checkIfNextVNFRechained(best_effort_graph, last_vnf)
+                if terminating_link is not None and terminating_nf is not None:
+                  # This can happen when the DFS path stopped before the last 
+                  # link of a loop back to a SAP or a rechained node.
+                  link_ids.append(terminating_link)
+                  subc_path.append(terminating_nf)
+                  last_vnf = terminating_nf
                   break
-                if subc_path.count(j) == 2:
-                  subc_path = subc_path[:-1]
-                  link_ids = link_ids[:-1]
               else:
                 # don't go further if the DFS would change path
                 break
@@ -350,7 +347,10 @@ class GraphPreprocessorClass(object):
               # DFS run of the rechaining.
               if best_effort_graph.has_edge(i,j,k):
                 best_effort_graph.remove_edge(i, j, k)
-            if self.rechained[last_vnf] or vnf == last_vnf:
+            if self.rechained[last_vnf]:
+              # either because of the manual adding of the last link or the
+              # second DFS run
+              # this condition emulates a do-while loop
               break
             else:
               # If a rechained vnf is not found for the chain end, we start a 
