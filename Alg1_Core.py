@@ -785,6 +785,8 @@ class CoreAlgorithm(object):
       nodenf_res = copy.deepcopy(self.req.node[vnfid].resources)
       nffg.network.node[vnfid].resources = nodenf_res
       nffg.network.node[vnfid].name = self.req.node[vnfid].name
+      # Status is also updated in every case, it must be forwarded to lower layer
+      nffg.network.node[vnfid].status = self.req.node[vnfid].status
       nodenf = nffg.network.node[vnfid]
     else:
       nodenf = copy.deepcopy(self.req.node[vnfid])
