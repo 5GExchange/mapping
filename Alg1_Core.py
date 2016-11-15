@@ -27,12 +27,12 @@ import GraphPreprocessor
 import UnifyExceptionTypes as uet
 
 try:
-  from escape.nffg_lib.nffg import NFFG
+  from escape.nffg_lib.nffg import NFFG, NFFGToolBox
 except ImportError:
   import sys, os
   sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
                                   "../escape/escape/nffg_lib/")))
-  from nffg import NFFG
+  from nffg import NFFG, NFFGToolBox
 
 
 class CoreAlgorithm(object):
