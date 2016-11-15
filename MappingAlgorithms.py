@@ -97,7 +97,6 @@ def MAP (request, network, enable_shortest_path_cache=False,
     raise uet.BadInputException("Mapping operation mode should always be set", 
                                 "No mode specified for mapping operation!")
 
-  # NOTE: SG Hops are always given in the service graph from now on!
   try:
     # if there is at least ONE SGHop in the graph, we don't do SGHop retrieval.
     next(request.sg_hops)
@@ -110,10 +109,23 @@ def MAP (request, network, enable_shortest_path_cache=False,
     try:
       next(request.sg_hops)
     except StopIteration:
-      raise uet.BadInputException("If SGHops are not given, flowrules should be"
-                                  " in the NFFG",
-                                  "No SGHop could be retrieved based on the "
-                                  "flowrules of the NFFG.")
+      for nf in request.nfs:
+        if nf.id not in network.network:
+          raise uet.BadInputException("If SGHops are not given, flowrules should"
+                                      " be in the NFFG",
+                                      "No SGHop could be retrieved based on the "
+                                      "flowrules of the NFFG. And there is a VNF"
+                                      " which is not mapped yet!")
+      else:
+        # if all the NFs in the request are mapped already, then it is only 
+        # an update on NF data.
+        helper.log.warn("Updating only the status of NFs! Differences in other"
+                        " attributes (resource, name, etc.) are ignored!")
+        for nf in request.nfs:
+          network.network.node[nf.id].status = nf.status
+        
+        #returning the substrate with the updated NF data
+        return network
 
   # Rebind EdgeReqs to SAP-to-SAP paths, instead of BiSBiS ports
   # So EdgeReqs should either go between SAP-s, or InfraPorts which are 
@@ -481,9 +493,9 @@ if __name__ == '__main__':
     # print net.dump()
     # req = _testRequestForBacktrack()
     # net = _testNetworkForBacktrack()
-    with open('nffgs/rebind_error_req.nffg', "r") as f:
+    with open('nffgs/diff-test-req.nffg', "r") as f:
       req = NFFG.parse(f.read())
-    with open('nffgs/rebind_error_net.nffg', "r") as g:
+    with open('nffgs/diff-test-net.nffg', "r") as g:
       net = NFFG.parse(g.read())
       # The following line must not be called if the input has already 
       # bidirectional links in the resource graph
