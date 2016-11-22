@@ -45,33 +45,8 @@ import Alg1_Helper as helper
 # object for the algorithm instance
 alg = None
 
-def _purgeNFFGFromInfinityValues(nffg):
-  """
-  Before running the algorithm None values for resources were replaced by 
-  Infinity value to ensure seamless mapping, in case of missing parameters.
-  These values should be set back to None to cooperate with surrounding layers.
-  (zero values do not cause errors, and they can't be placed back unabiguously)
-  """
-  purge = False
-  for respar in ('cpu', 'mem', 'storage', 'bandwidth'):
-    for n in nffg.infras:
-      if hasattr(n.resources, respar):
-        if n.resources[respar] == float("inf"):
-          n.resources[respar] = None
-          purge = True
-  if purge:
-    helper.log.info("Purging node resource data of output NFFG from Infinity "
-                    "values was required.")
-  purge = False
-  for i, j, d in nffg.network.edges_iter(data=True):
-    if d.type == 'STATIC':
-      if hasattr(d, 'bandwidth'):
-        if d.bandwidth == float("inf"):
-          d.bandwidth = None
-          purge = True
-  if purge:
-    helper.log.info("Purging link resource of output NFFG from Infinity values"
-                    " was required.")
+
+
 
 def MAP (request, network, enable_shortest_path_cache=False,
          bw_factor=1, res_factor=1, lat_factor=1,
@@ -126,6 +101,9 @@ def MAP (request, network, enable_shortest_path_cache=False,
         
         #returning the substrate with the updated NF data
         return network
+
+  # add fake SGHops to handle logical SAP aliases.
+  helper.processInputSAPAlias(request)
 
   # Rebind EdgeReqs to SAP-to-SAP paths, instead of BiSBiS ports
   # So EdgeReqs should either go between SAP-s, or InfraPorts which are 
@@ -254,8 +232,10 @@ def MAP (request, network, enable_shortest_path_cache=False,
   alg.setBacktrackParameters(bt_limit, bt_branching_factor)
   mappedNFFG = alg.start()
 
+  # eliminate fake SGHops and their flowrules for SAP Alias handling.
+  helper.processOutputSAPAlias(mappedNFFG)
   # replace Infinity values
-  _purgeNFFGFromInfinityValues(mappedNFFG)
+  helper.purgeNFFGFromInfinityValues(mappedNFFG)
   # print mappedNFFG.dump()
   # The printed format is vnfs: (vnf_id, node_id) and links: MultiDiGraph, edge
   # data is the paths (with link ID-s) where the request links are mapped.
@@ -493,9 +473,9 @@ if __name__ == '__main__':
     # print net.dump()
     # req = _testRequestForBacktrack()
     # net = _testNetworkForBacktrack()
-    with open('nffgs/diff-test-req.nffg', "r") as f:
+    with open('nffgs/sapalias-test-req.nffg', "r") as f:
       req = NFFG.parse(f.read())
-    with open('nffgs/diff-test-net.nffg', "r") as g:
+    with open('nffgs/sapalias-test-net.nffg', "r") as g:
       net = NFFG.parse(g.read())
       # The following line must not be called if the input has already 
       # bidirectional links in the resource graph

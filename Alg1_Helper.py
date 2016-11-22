@@ -61,7 +61,8 @@ def retrieveFullDistMtx (dist, G_full):
 
 def shortestPathsInLatency (G_full, enable_shortest_path_cache,
                             enable_network_cutting=False, bidirectional=True):
-  """Wrapper function for Floyd`s algorithm to calculate shortest paths
+  """
+  Wrapper function for Floyd`s algorithm to calculate shortest paths
   measured in latency, using also nodes` forwarding latencies.
   Modified source code taken from NetworkX library.
   HACK: if enable_network_cutting=True, then all the SAP-s are cut from the 
@@ -152,7 +153,8 @@ def shortestPathsInLatency (G_full, enable_shortest_path_cache,
 
 def shortestPathsBasedOnEdgeWeight (G, source, weight='weight', target=None,
                                     cutoff=None):
-  """Taken and modified from NetworkX source code,
+  """
+  Taken and modified from NetworkX source code,
   the function originally 'was single_source_dijkstra',
   now it returns the key edge data too.
   If a weight doesn't exist let's be permissive and give it 0 weight.
@@ -217,6 +219,71 @@ def shortestPathsBasedOnEdgeWeight (G, source, weight='weight', target=None,
   log.debug("Calculated distances from %s based on %s: %s"%
             (source, weight, dist))
   return paths, edgekeys
+
+
+def purgeNFFGFromInfinityValues(nffg):
+  """
+  Before running the algorithm None values for resources were replaced by 
+  Infinity value to ensure seamless mapping, in case of missing parameters.
+  These values should be set back to None to cooperate with surrounding layers.
+  (zero values do not cause errors, and they can't be placed back unabiguously)
+  """
+  purge = False
+  for respar in ('cpu', 'mem', 'storage', 'bandwidth'):
+    for n in nffg.infras:
+      if hasattr(n.resources, respar):
+        if n.resources[respar] == float("inf"):
+          n.resources[respar] = None
+          purge = True
+  if purge:
+    log.info("Purging node resource data of output NFFG from Infinity "
+             "values was required.")
+  purge = False
+  for i, j, d in nffg.network.edges_iter(data=True):
+    if d.type == 'STATIC':
+      if hasattr(d, 'bandwidth'):
+        if d.bandwidth == float("inf"):
+          d.bandwidth = None
+          purge = True
+  if purge:
+    log.info("Purging link resource of output NFFG from Infinity values"
+             " was required.")
+
+
+def processInputSAPAlias (nffg):
+  """
+  If a SAP port's ID equals to an NF port's ID, then it means they are 
+  logically the same aliases of the same SAP. So they need to be connected and 
+  mapped to the same Infra for the mapping processing.
+  """
+  # Handle the NF-SAP connections which represent SAP aliases.
+  for nf in nffg.nfs:
+    for pn in nf.ports:
+      for sap in nffg.saps:
+        for ps in sap.ports:
+          # This indicates that they are logically the same service access
+          # points, which should be kept on the same infra after mapping.
+          if pn.sap == ps.sap:
+            # id, bandwidth, flowclass are don't care
+            log.debug("Adding fake SGHop for SAP alias handling between nodes"
+                      " %s, %s with SAP value: %s"%(pn.node.id, ps.node.id, 
+                                                    pn.sap))
+            nffg.add_sglink(ps, pn, delay=0)
+            nffg.add_sglink(pn, ps, delay=0)
+
+
+def processOutputSAPAlias (nffg):
+  """
+  The helper SGHops for SAP alias handling shouldn't leave the scope of 
+  mapping module. If an SGHop is identified as logical alias connection, then 
+  it should be removed together with its mapped path.
+  """
+  for sg in [s for s in nffg.sg_hops]:
+    if sg.src.sap == sg.dst.sap and sg.delay == 0:
+      log.debug("Deleting fake SGHop between nodes %s, %s with SAP value: %s"
+                %(sg.src.node.id, sg.dst.node.id, sg.src.sap))
+      nffg.del_flowrules_of_SGHop(sg.id)
+      nffg.del_edge(sg.src, sg.dst, sg.id)
 
 
 class MappingManager(object):
@@ -616,7 +683,8 @@ class MappingManager(object):
     (host, lat_pref_value).
     """
     # should always be mapped already
-    log.debug("Calculating latency preference values for placing VNF %s for hosts %s."%(vnf2, hosts))
+    log.debug("Calculating latency preference values for placing VNF %s "
+              "for hosts %s."%(vnf2, hosts))
     strictest_cid = min(self.chain_subchain[cid].keys(),
                         key=lambda sc, graph=self.chain_subchain: \
                         graph.node[sc]['avail_latency'])
