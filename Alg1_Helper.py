@@ -257,6 +257,7 @@ def processInputSAPAlias (nffg):
   mapped to the same Infra for the mapping processing.
   """
   # Handle the NF-SAP connections which represent SAP aliases.
+  sap_alias_links = []
   for nf in nffg.nfs:
     for pn in nf.ports:
       for sap in nffg.saps:
@@ -268,8 +269,11 @@ def processInputSAPAlias (nffg):
             log.debug("Adding fake SGHop for SAP alias handling between nodes"
                       " %s, %s with SAP value: %s"%(pn.node.id, ps.node.id, 
                                                     pn.sap))
-            nffg.add_sglink(ps, pn, delay=0)
-            nffg.add_sglink(pn, ps, delay=0)
+            sg1 = nffg.add_sglink(ps, pn, delay=0)
+            sg2 = nffg.add_sglink(pn, ps, delay=0)
+            sap_alias_links.append(sg1)
+            sap_alias_links.append(sg2)
+  return sap_alias_links
 
 
 def processOutputSAPAlias (nffg):
@@ -278,12 +282,13 @@ def processOutputSAPAlias (nffg):
   mapping module. If an SGHop is identified as logical alias connection, then 
   it should be removed together with its mapped path.
   """
-  for sg in [s for s in nffg.sg_hops]:
-    if sg.src.sap == sg.dst.sap and sg.delay == 0:
+  if hasattr(nffg, 'sap_alias_links'):
+    for sg in nffg.sap_alias_links:
       log.debug("Deleting fake SGHop between nodes %s, %s with SAP value: %s"
                 %(sg.src.node.id, sg.dst.node.id, sg.src.sap))
       nffg.del_flowrules_of_SGHop(sg.id)
-      nffg.del_edge(sg.src, sg.dst, sg.id)
+      if nffg.network.has_edge(sg.src.node.id, sg.dst.node.id, key=sg.id):
+        nffg.del_edge(sg.src, sg.dst, sg.id)
 
 
 class MappingManager(object):

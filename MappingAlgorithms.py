@@ -103,7 +103,9 @@ def MAP (request, network, enable_shortest_path_cache=False,
         return network
 
   # add fake SGHops to handle logical SAP aliases.
-  helper.processInputSAPAlias(request)
+  sap_alias_links = helper.processInputSAPAlias(request)
+  if len(sap_alias_links) > 0:
+    network.sap_alias_links = sap_alias_links
 
   # Rebind EdgeReqs to SAP-to-SAP paths, instead of BiSBiS ports
   # So EdgeReqs should either go between SAP-s, or InfraPorts which are 
@@ -473,14 +475,14 @@ if __name__ == '__main__':
     # print net.dump()
     # req = _testRequestForBacktrack()
     # net = _testNetworkForBacktrack()
-    with open('nffgs/sapalias-test-req.nffg', "r") as f:
+    with open('../examples/sapalias-test-req1.nffg', "r") as f:
       req = NFFG.parse(f.read())
-    with open('nffgs/sapalias-test-net.nffg', "r") as g:
+    with open('../examples/sapalias-test-net1.nffg', "r") as g:
       net = NFFG.parse(g.read())
       # The following line must not be called if the input has already 
       # bidirectional links in the resource graph
       # net.duplicate_static_links()
-    mapped = MAP(req, net, mode=NFFG.MODE_ADD)
+    mapped = MAP(req, net, mode=NFFG.MODE_REMAP)
     print mapped.dump()
   except uet.UnifyException as ue:
     print ue, ue.msg
