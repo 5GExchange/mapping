@@ -264,7 +264,7 @@ def processInputSAPAlias (nffg):
         for ps in sap.ports:
           # This indicates that they are logically the same service access
           # points, which should be kept on the same infra after mapping.
-          if pn.sap == ps.sap:
+          if pn.sap == ps.sap and (pn.sap is not None or ps.sap is not None):
             # id, bandwidth, flowclass are don't care
             log.debug("Adding fake SGHop for SAP alias handling between nodes"
                       " %s, %s with SAP value: %s"%(pn.node.id, ps.node.id, 
