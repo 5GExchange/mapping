@@ -264,7 +264,9 @@ def processInputSAPAlias (nffg):
         for ps in sap.ports:
           # This indicates that they are logically the same service access
           # points, which should be kept on the same infra after mapping.
-          if pn.sap == ps.sap and (pn.sap is not None or ps.sap is not None):
+          if pn.sap == ps.sap and pn.sap is not None and ps.sap is not None and \
+             pn.role == nffg.PORT_ROLE_PROVIDER and \
+             ps.role == nffg.PORT_ROLE_PROVIDER:
             # id, bandwidth, flowclass are don't care
             log.debug("Adding fake SGHop for SAP alias handling between nodes"
                       " %s, %s with SAP value: %s"%(pn.node.id, ps.node.id, 
@@ -289,6 +291,84 @@ def processOutputSAPAlias (nffg):
       nffg.del_flowrules_of_SGHop(sg.id)
       if nffg.network.has_edge(sg.src.node.id, sg.dst.node.id, key=sg.id):
         nffg.del_edge(sg.src, sg.dst, sg.id)
+
+
+def countConsumerSAPPorts (nffg, infra):
+  """
+  Counts the consumer SAPs mapped to this Infra's hosted SAP provider NFs.
+  """
+  consumer_count = 0
+  for nf in nffg.running_nfs(infra.id):
+    for p in nf.ports:
+      if p.sap is not None and p.role == nffg.PORT_ROLE_CONSUMER:
+        consumer_count += 1
+  return consumer_count
+
+
+def mapConsumerSAPPort (req, net):
+  """
+  Iterates on NFs to look for consumer SAP ports whihc should be mapped to 
+  (one of) the Infra, which hosts a SAPPort provider NF. The mapping decision
+  is made here, this cannot be backtracked during the core mapping procedure.
+  """
+  sap_total_consumer_counts = {}
+  mapped_nfs_to_be_added = []
+  for nf in req.nfs:
+    for p in nf.ports:
+      if p.sap is not None and p.role is not None:
+        if p.role == req.PORT_ROLE_CONSUMER:
+          sap_provider_ports = []
+          for nf2 in net.nfs:
+            for p2 in nf2.ports:
+              if p.sap == p2.sap and p2.role == net.PORT_ROLE_PROVIDER:
+                # there should be only one hosting infra
+                hosting_infra = next(net.infra_neighbors(nf2.id))
+
+                # NOTE: This should be checked! But in current version the 
+                # calculate_available_link_res function can only be called 
+                # later, but the graph structure cannot be updated later with 
+                # these preprocessing steps for SAP cons/prov handling...
+
+                # if hosting_infra.has_enough_resource(nf.resources):
+                if nf.functional_type in hosting_infra.supported:
+                  if hosting_infra.id not in sap_total_consumer_counts:
+                    consumer_count = countConsumerSAPPorts(net, hosting_infra)
+                    sap_total_consumer_counts[hosting_infra.id] = consumer_count
+                  else:
+                    consumer_count = sap_total_consumer_counts[hosting_infra.id]
+                  sap_provider_ports.append((hosting_infra, nf2, p2, 
+                                             consumer_count))
+                # don't add this NF multiple times if it has more provider SAPs 
+                # for the same service, named 'sap'.
+                break
+          # we can choose the Infra/VNF which host the least consumer SAP ports 
+          # so far. NOTE: the SAPconsumerNFs' resources are not subtracted 
+          # greedily during this mapping, so this can cause mapping errors! If 
+          # there is always only one SAPconsumer in the SG, this is not a problem.
+          infra, provider_nf, provider_port, cons_count = \
+            min(sap_provider_ports, key=lambda t: t[3])
+          sap_total_consumer_counts[infra.id] += 1
+          mapped_nfs_to_be_added.append((provider_nf, provider_port, 
+                                         nf, p, infra))
+          
+  # the SG is prerocessed with the addition of the SAPProviderVNFs.
+  for provider_nf, provider_port, consumer_nf, consumer_port, infra in \
+      mapped_nfs_to_be_added:
+    log.debug("Adding an already mapped NF to indicate the place of the provider"
+              " SAP for service name %s."%provider_port.sap)
+    provider_nf_copy = req.add_nf(nf=copy.deepcopy(provider_nf))
+
+    # NOTE: This would be better instead of 0-delay links!
+    # setattr(consumer_nf, 'placement_criteria', [infra.id])
+    log.debug("Adding fake SGHops to indicate SAP provider-consumer connection "
+              "for service %s."%provider_port.sap)
+    req.add_sglink(provider_nf_copy.ports[provider_port.id], consumer_port,
+                   delay=0)
+    req.add_sglink(consumer_port, provider_nf_copy.ports[provider_port.id],
+                   delay=0)
+
+  # return the modified SG
+  return req
 
 
 class MappingManager(object):

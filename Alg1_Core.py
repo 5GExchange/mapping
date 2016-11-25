@@ -485,6 +485,7 @@ class CoreAlgorithm(object):
                              potential_hosts)
     self.log.debug("Potential hosts #3 (not supporting this NF type are "
                    "filtered) for  VNF %s: %s"%(vnf_id, potential_hosts))
+    # TODO: is it still spoils something??
     # allow only hosts which complies to plac_crit if any
     # potential_hosts = filter(lambda h, v=vnf_id, vnfs=self.req.node:
     #   len(vnfs[v].placement_criteria)==0 or h in vnfs[v].placement_criteria, 
@@ -980,7 +981,25 @@ class CoreAlgorithm(object):
                                            "shouldn't reach here!")
 
     self.log.debug("Constructing output NFFG...")
+    
     for vnf, host in self.manager.vnf_mapping:
+
+      # Save data of SAP port from SG to output NFFG.
+      if self.req.node[vnf].type == 'SAP':
+        if len(self.req.node[vnf].ports) > 1:
+          self.log.warn("SAP object %s has more than one Port in its container!"%
+                        self.req.node[vnf].id)
+        for pn in self.req.node[vnf].ports:
+          if pn.sap is not None and pn.role is not None:
+            if len(nffg.network.node[host].ports) > 1:
+              self.log.warn("SAP object %s has more than one Port in its container!"%
+                            nffg.network.node[host].id)
+            for ps in nffg.network.node[host].ports:
+              ps.sap = pn.sap
+              ps.role = pn.role
+              break
+          break
+
       # duplicate the object, so the original one is not modified.
       if self.req.node[vnf].type == 'NF':
         mappednodenf = self._retrieveOrAddVNF(nffg, vnf)
