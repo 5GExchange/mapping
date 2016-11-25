@@ -27,13 +27,14 @@ from the EdgeReqs, all SG links must be in one of the subchains.
 """
 
 import traceback
+import sys
 
 from pprint import pformat
 
 try:
   from escape.nffg_lib.nffg import NFFG, NFFGToolBox
 except ImportError:
-  import sys, os
+  import os
   sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
                                   "../escape/escape/nffg_lib/")))
   from nffg import NFFG, NFFGToolBox
@@ -466,23 +467,20 @@ def _testRequestForBacktrack ():
 
 if __name__ == '__main__':
   try:
-    # req = _constructExampleRequest()
-    # net = _constructExampleNetwork()
-
-    # req = _example_request_for_fallback()
-    # print req.dump()
-    # req = _onlySAPsRequest()
-    # print net.dump()
-    # req = _testRequestForBacktrack()
-    # net = _testNetworkForBacktrack()
-    with open('../examples/sapalias-test-req1.nffg', "r") as f:
+    argv = sys.argv[1:]
+    if '-h' in argv or '--help' in argv:
+      print "A single mapping can be run as \"python MappingAlgorithms.py "\
+        "req.nffg net.nffg\" \nand the resulting NFFG is dumped to console. "\
+        "\nAll mapping algorithm parameters are default."
+      sys.exit()
+    with open(argv[0], "r") as f:
       req = NFFG.parse(f.read())
-    with open('../examples/sapalias-test-net1.nffg', "r") as g:
+    with open(argv[1], "r") as g:
       net = NFFG.parse(g.read())
       # The following line must not be called if the input has already 
       # bidirectional links in the resource graph
       # net.duplicate_static_links()
-    mapped = MAP(req, net, mode=NFFG.MODE_REMAP)
+    mapped = MAP(req, net, mode=req.mode)
     print mapped.dump()
   except uet.UnifyException as ue:
     print ue, ue.msg
