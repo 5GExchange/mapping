@@ -433,8 +433,7 @@ class MappingManager(object):
 
   def getIdOfChainEnd_fromNetwork (self, _id):
     """
-    SAPs are mapped by their name, NOT by their ID in the network/request
-    graphs. If the chain is between VNFs, those must be already mapped.
+    If the chain is between VNFs, those must be already mapped.
     Input is an ID from the request graph. Return -1 if the node is not
     mapped.
     """

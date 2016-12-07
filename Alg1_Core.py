@@ -273,11 +273,72 @@ class CoreAlgorithm(object):
     else:
       return -1.5625 * ((x-1) ** 2) + 1
       
+  def _checkAntiAffinityCriteria(self, node_id, vnf_id, bt_record):
+    """
+    Checks whether there is an anti-affinity criteria for this 
+    host wich may spoil the greedy mapping of this VNF. 
+       Anti-affinitity: if this is not the host of any of the already mapped 
+          VNFs, which are present in the anti-affinity list, then 
+          returns true, false otherwise.
+    Saves the bt_record if we are at the temporary host of the other end of 
+    the anti-affinity for delegating .
+    """
+    vnf = self.req.node[vnf_id]
+    infra = self.net.node[node_id]
+    if len(vnf.antiaffinity) > 0:
+      anti_aff_ruined = False
+      setattr(vnf, 'anti_aff_metadata', {})
+      for anti_aff_pair in vnf.antiaffinity:
+        vnf['anti_aff_metadata'][anti_aff_pair] = 0
+      for anti_aff_pair in vnf.antiaffinity:
+        host_of_aff_pair = helper.getIdOfChainEnd_fromNetwork(anti_aff_pair)
+        if host_of_aff_pair != -1:
+          vnf['anti_aff_metadata'][anti_aff_pair] += 1
+          if host_of_aff_pair == node_id:
+            anti_aff_ruined = True
+            if self.net.node[host_of_aff_pair].infra_type == infra.TYPE_BISBIS:
+              # it there are multiple Infras, where this can be delegated, the 
+              # last visited is chosen. It could be done more sophisticatedly, 
+              # now it is just a random selection among the feasible ones.
+              self.log.debug("Setting anti-affinity delegation data with "
+                             "backtracking record: %s"%bt_record)
+              setattr(vnf, 'anti_aff_delegation_data', bt_record)
+      if anti_aff_ruined:
+        return False
+    else:
+      return True
+
+  def _resolveAntiAffinityDelegationIfPossible(self, cid, vnf_id):
+    """
+    Checks whether the mapping procedure failed because of Anti-affinity 
+    criteria on the VNF which was tried to map the most recently. Saves the
+    anti-affinity criteria for delegating to the hosting BiSBiS of the other 
+    end of anti-affinity.
+    Returns a boolean whether the anti-affinity could be delegated or not.
+    Should be called after catching a MappingException which cannot be backtracked
+    """
+    vnf = self.req.net[vnf_id]
+    if hasattr(vnf, 'anti_aff_delegation_data'):
+      # anti_aff_delegation_data is a 'bt_record' type object
+      self._takeOneGreedyStep(cid, vnf.anti_aff_delegation_data)
+      if not hasattr(self, 'delegated_anti_aff_crit'):
+        setattr(self, 'delegated_anti_aff_crit', {vnf_id: vnf.antiaffinity})
+      else:
+        self.delegated_anti_aff_crit[vnf_id] = copy.deepcopy(vnf.antiaffinity)
+        # this anti-affinity is resolved for the current mapping process 
+        # permanently (this cannot even be backstepped, because we have run out 
+        # of backsteps earlier)
+        vnf.antiaffinity = []
+      return True
+    else:
+      return False
 
   def _objectiveFunction (self, cid, node_id, prev_vnf_id, vnf_id, reqlinkid,
                           path_to_map, linkids, sum_latency):
-    """Calculates a function to determine which node is better to map to,
-    returns -1, if not feasible"""
+    """
+    Calculates a function to determine which node is better to map to,
+    returns -1, if not feasible
+    """
     requested = self.req.node[vnf_id].resources
     available = self.net.node[node_id].availres
     maxres = self.net.node[node_id].resources
@@ -307,9 +368,10 @@ class CoreAlgorithm(object):
                        (node_id, vnf_id))
         return -1
 
-      '''Here we know that node_id have enough resource and the path
-      leading there satisfies the bandwidth req of the potentially
-      mapped edge of req graph. And the latency requirements as well'''
+      # Here we know that node_id have enough resource and the path
+      # leading there satisfies the bandwidth req of the potentially
+      # mapped edge of req graph. And the latency requirements as well
+
       max_rescomponent_value = 0
       for attr, res_w in zip(['cpu', 'mem', 'storage'],
                              self.resource_priorities):
@@ -330,11 +392,12 @@ class CoreAlgorithm(object):
       # function
       # scaled_lat_comp = 10 * float(sum_latency) / local_latreq
 
-      # TODO: correct logs to new latency calculation!
       self.log.debug("avglinkutil pref value: %f, sum res: %f" % (
         self.bw_factor * scaled_bw_comp, self.res_factor * scaled_res_comp))
 
-      return self.bw_factor * scaled_bw_comp + self.res_factor * scaled_res_comp
+      value = self.bw_factor * scaled_bw_comp + self.res_factor * scaled_res_comp
+
+      return value
     else:
       self.log.debug("Host %s does not have engough node resource for hosting %s."%
                      (node_id, vnf_id))
@@ -499,9 +562,8 @@ class CoreAlgorithm(object):
     hosts_with_lat_prefvalues = self.manager.calcDelayPrefValues(\
                             potential_hosts_sumlat, prev_vnf_id, vnf_id, 
                             reqlinkid, cid, subgraph, start)
-    # TODO: self.use_old_lat_calc variable to change between lat pref val 
-    # calculation methods
-    self.log.debug("Hosts with lat pref values from VNF %s: \n %s"%(vnf_id, hosts_with_lat_prefvalues))
+    self.log.debug("Hosts with lat pref values from VNF %s: \n %s"%(vnf_id, 
+                   hosts_with_lat_prefvalues))
     for map_target, sumlat, latprefval in hosts_with_lat_prefvalues:
       value = self._objectiveFunction(cid, map_target,
                                       prev_vnf_id, vnf_id,
@@ -509,7 +571,8 @@ class CoreAlgorithm(object):
                                       paths[map_target],
                                       linkids[map_target],
                                       sumlat)
-      self.log.debug("Objective function value for VNF %s - Host %s mapping: %s"%(vnf_id, map_target, value))
+      self.log.debug("Objective function value for VNF %s - Host %s "
+                     "mapping: %s"%(vnf_id, map_target, value))
       if value > -1:
         self.log.debug("Calculated latency preference value: %f for VNF %s and "
                        "path: %s" % (latprefval, vnf_id, paths[map_target]))
@@ -521,6 +584,12 @@ class CoreAlgorithm(object):
                               'used_latency', 'obj_func_value'), 
                           (map_target, paths[map_target], 
                            linkids[map_target], sumlat, value)))
+        
+        if not self._checkAntiAffinityCriteria(map_target, vnf_id, just_found):
+          self.log.debug("Skipping possible host %s due to anti-affinity "
+                         "criteria for VNF %s"%(map_target, vnf_id))
+          continue
+
         if deque_length == 0:
           best_node_que.append(just_found)
           deque_length += 1
@@ -964,6 +1033,43 @@ class CoreAlgorithm(object):
         self.log.debug("Output latency requirement increased to %s in %s for "
                        "path %s"%(er.delay, er.src.node.id, er.sg_path))
         
+  def _addAntiAffinityDelegationToOutput(self, nffg):
+    """
+    Checks whether the Anti-affinity constraints are satisfied by the current 
+    mapping, raises exception if not, indicating an impelemtation error. The 
+    satisfied constraints are deleted.
+    Retrieves the saved anti-affinity data for delegation purposes.
+    """
+    for nf in nffg.nfs:
+      hosting_infra1 = next(nffg.infra_neighbors(nf.id))
+      for anti_aff_pair in nf.antiaffinity:
+        hosting_infra2 = next(nffg.infra_neighbors(anti_aff_pair))
+        if hosting_infra1.id == hosting_infra2.id:
+          raise uet.InternalAlgorithmException("Anti-affinity between NFs %s "
+                "and %s is not satisfied by the given mapping! NotYetImplemented:"
+                " correcting anti-affinity pairings for bidirectionality if they"
+                " are only partially given."%(nf.id, anti_aff_pair))
+        else:
+          # delete anti-affinity, in lower layers it would be invalid or 
+          # already satisfied by this mapping.
+          nf.antiaffinity = []
+    if hasattr(self, 'delegated_anti_aff_crit'):
+      for vnf in self.delegated_anti_aff_crit:
+        nf_obj = nffg.network.node[vnf]
+        hosting_infra1 = next(nffg.infra_neighbors(vnf))
+        setattr(nf_obj, 'antiaffinity', [])
+        for anti_aff_pair in self.delegated_anti_aff_crit[vnf]:
+          if anti_aff_pair in [n.id for n in nffg.running_nfs(hosting_infra1.id)]:
+            hosting_infra2 = next(nffg.infra_neighbors(anti_aff_pair))
+            anti_aff_pair_obj = nffg.network.node[anti_aff_pair]
+            if hosting_infra2.id != hosting_infra1.id:
+              raise uet.InternalAlgorithmException("Delegation of anti-affinity"
+                    " criterion between NFs %s and %s is unsuccessful due to "
+                    "different hosting infras."%(vnf, anti_aff_pair))
+            self.log.debug("Adding delegated (bidirectional) anti-affinity "
+                           "criterion for BiSBiS node %s"%hosting_infra1.id)
+            nf_obj.add_antiaffinity(anti_aff_pair)
+            anti_aff_pair_obj.add_antiaffinity(vnf)
 
   def constructOutputNFFG (self):
     # use the unchanged input from the lower layer (deepcopied in the
@@ -1085,6 +1191,8 @@ class CoreAlgorithm(object):
         # i is always vnf
         self._addFlowrulesToNFFGDerivatedFromReqLinks(vnf, j, k, nffg)
 
+    self._addAntiAffinityDelegationToOutput(nffg)
+
     # Add EdgeReqs to propagate E2E latency reqs.
     self._divideEndToEndRequirements(nffg)
 
@@ -1205,6 +1313,8 @@ class CoreAlgorithm(object):
             self.log.debug("MappingException catched for backtrack purpose, "
                            "its message is: "+me.msg)
             if not me.backtrack_possible:
+              if self._resolveAntiAffinityDelegationIfPossible(c['id'], next_vnf):
+                break
               # re-raise the exception, we have ran out of backrack 
               # possibilities.
               raise uet.MappingException(me.msg, False, peak_sc_cnt=me.peak_sc_cnt,
@@ -1215,6 +1325,9 @@ class CoreAlgorithm(object):
                    self.bt_handler.getNextBacktrackRecordAndSubchainSubgraph([])
               except uet.MappingException as me2:
                 if not me2.backtrack_possible:
+                  if self._resolveAntiAffinityDelegationIfPossible(c['id'], 
+                                                                   next_vnf):
+                    break
                   raise uet.MappingException(me2.msg, False, 
                             peak_sc_cnt=me2.peak_sc_cnt,
                             peak_vnf_cnt=self.peak_mapped_vnf_count)
