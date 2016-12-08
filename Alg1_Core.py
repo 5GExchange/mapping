@@ -285,15 +285,15 @@ class CoreAlgorithm(object):
     """
     vnf = self.req.node[vnf_id]
     infra = self.net.node[node_id]
-    if len(vnf.antiaffinity) > 0:
+    if len(vnf.constraints.antiaffinity) > 0:
       anti_aff_ruined = False
       setattr(vnf, 'anti_aff_metadata', {})
-      for anti_aff_pair in vnf.antiaffinity:
-        vnf['anti_aff_metadata'][anti_aff_pair] = 0
-      for anti_aff_pair in vnf.antiaffinity:
-        host_of_aff_pair = helper.getIdOfChainEnd_fromNetwork(anti_aff_pair)
+      for anti_aff_pair in vnf.constraints.antiaffinity:
+        vnf.anti_aff_metadata[anti_aff_pair] = 0
+      for anti_aff_pair in vnf.constraints.antiaffinity:
+        host_of_aff_pair = self.manager.getIdOfChainEnd_fromNetwork(anti_aff_pair)
         if host_of_aff_pair != -1:
-          vnf['anti_aff_metadata'][anti_aff_pair] += 1
+          vnf.anti_aff_metadata[anti_aff_pair] += 1
           if host_of_aff_pair == node_id:
             anti_aff_ruined = True
             if self.net.node[host_of_aff_pair].infra_type == infra.TYPE_BISBIS:
@@ -305,6 +305,8 @@ class CoreAlgorithm(object):
               setattr(vnf, 'anti_aff_delegation_data', bt_record)
       if anti_aff_ruined:
         return False
+      else:
+        return True
     else:
       return True
 
@@ -317,18 +319,20 @@ class CoreAlgorithm(object):
     Returns a boolean whether the anti-affinity could be delegated or not.
     Should be called after catching a MappingException which cannot be backtracked
     """
-    vnf = self.req.net[vnf_id]
+    vnf = self.req.node[vnf_id]
     if hasattr(vnf, 'anti_aff_delegation_data'):
       # anti_aff_delegation_data is a 'bt_record' type object
       self._takeOneGreedyStep(cid, vnf.anti_aff_delegation_data)
       if not hasattr(self, 'delegated_anti_aff_crit'):
-        setattr(self, 'delegated_anti_aff_crit', {vnf_id: vnf.antiaffinity})
+        setattr(self, 'delegated_anti_aff_crit', 
+                {vnf_id: vnf.constraints.antiaffinity})
       else:
-        self.delegated_anti_aff_crit[vnf_id] = copy.deepcopy(vnf.antiaffinity)
+        self.delegated_anti_aff_crit[vnf_id] = \
+             copy.deepcopy(vnf.constraints.antiaffinity)
         # this anti-affinity is resolved for the current mapping process 
         # permanently (this cannot even be backstepped, because we have run out 
         # of backsteps earlier)
-        vnf.antiaffinity = []
+        vnf.constraints.antiaffinity = []
       return True
     else:
       return False
@@ -585,6 +589,7 @@ class CoreAlgorithm(object):
                           (map_target, paths[map_target], 
                            linkids[map_target], sumlat, value)))
         
+        # returns true if the anti-affinity criteria is ruined.
         if not self._checkAntiAffinityCriteria(map_target, vnf_id, just_found):
           self.log.debug("Skipping possible host %s due to anti-affinity "
                          "criteria for VNF %s"%(map_target, vnf_id))
@@ -1042,7 +1047,7 @@ class CoreAlgorithm(object):
     """
     for nf in nffg.nfs:
       hosting_infra1 = next(nffg.infra_neighbors(nf.id))
-      for anti_aff_pair in nf.antiaffinity:
+      for anti_aff_pair in nf.constraints.antiaffinity:
         hosting_infra2 = next(nffg.infra_neighbors(anti_aff_pair))
         if hosting_infra1.id == hosting_infra2.id:
           raise uet.InternalAlgorithmException("Anti-affinity between NFs %s "
@@ -1052,7 +1057,7 @@ class CoreAlgorithm(object):
         else:
           # delete anti-affinity, in lower layers it would be invalid or 
           # already satisfied by this mapping.
-          nf.antiaffinity = []
+          nf.constraints.antiaffinity = []
     if hasattr(self, 'delegated_anti_aff_crit'):
       for vnf in self.delegated_anti_aff_crit:
         nf_obj = nffg.network.node[vnf]
