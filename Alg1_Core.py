@@ -325,10 +325,10 @@ class CoreAlgorithm(object):
       self._takeOneGreedyStep(cid, vnf.anti_aff_delegation_data)
       if not hasattr(self, 'delegated_anti_aff_crit'):
         setattr(self, 'delegated_anti_aff_crit', 
-                {vnf_id: vnf.constraints.antiaffinity.values()})
+                {vnf_id: vnf.constraints.antiaffinity})
       else:
         self.delegated_anti_aff_crit[vnf_id] = \
-             copy.deepcopy(vnf.constraints.antiaffinity.values())
+             copy.deepcopy(vnf.constraints.antiaffinity)
         # this anti-affinity is resolved for the current mapping process 
         # permanently (this cannot even be backstepped, because we have run out 
         # of backsteps earlier)
@@ -1063,7 +1063,7 @@ class CoreAlgorithm(object):
         nf_obj = nffg.network.node[vnf]
         hosting_infra1 = next(nffg.infra_neighbors(vnf))
         setattr(nf_obj, 'antiaffinity', [])
-        for anti_aff_pair in self.delegated_anti_aff_crit[vnf]:
+        for aff_id, anti_aff_pair in self.delegated_anti_aff_crit[vnf].iteritems():
           if anti_aff_pair in [n.id for n in nffg.running_nfs(hosting_infra1.id)]:
             hosting_infra2 = next(nffg.infra_neighbors(anti_aff_pair))
             anti_aff_pair_obj = nffg.network.node[anti_aff_pair]
@@ -1073,8 +1073,8 @@ class CoreAlgorithm(object):
                     "different hosting infras."%(vnf, anti_aff_pair))
             self.log.debug("Adding delegated (bidirectional) anti-affinity "
                            "criterion for BiSBiS node %s"%hosting_infra1.id)
-            nf_obj.add_antiaffinity(anti_aff_pair)
-            anti_aff_pair_obj.add_antiaffinity(vnf)
+            nf_obj.antiaffinity[aff_id] = anti_aff_pair
+            anti_aff_pair_obj.antiaffinity[aff_id] = vnf
 
   def constructOutputNFFG (self):
     # use the unchanged input from the lower layer (deepcopied in the
