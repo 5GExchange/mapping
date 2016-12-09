@@ -285,12 +285,12 @@ class CoreAlgorithm(object):
     """
     vnf = self.req.node[vnf_id]
     infra = self.net.node[node_id]
-    if len(vnf.constraints.antiaffinity) > 0:
+    if len(vnf.constraints.antiaffinity.values()) > 0:
       anti_aff_ruined = False
       setattr(vnf, 'anti_aff_metadata', {})
-      for anti_aff_pair in vnf.constraints.antiaffinity:
+      for anti_aff_pair in vnf.constraints.antiaffinity.values():
         vnf.anti_aff_metadata[anti_aff_pair] = 0
-      for anti_aff_pair in vnf.constraints.antiaffinity:
+      for anti_aff_pair in vnf.constraints.antiaffinity.values():
         host_of_aff_pair = self.manager.getIdOfChainEnd_fromNetwork(anti_aff_pair)
         if host_of_aff_pair != -1:
           vnf.anti_aff_metadata[anti_aff_pair] += 1
@@ -325,14 +325,14 @@ class CoreAlgorithm(object):
       self._takeOneGreedyStep(cid, vnf.anti_aff_delegation_data)
       if not hasattr(self, 'delegated_anti_aff_crit'):
         setattr(self, 'delegated_anti_aff_crit', 
-                {vnf_id: vnf.constraints.antiaffinity})
+                {vnf_id: vnf.constraints.antiaffinity.values()})
       else:
         self.delegated_anti_aff_crit[vnf_id] = \
-             copy.deepcopy(vnf.constraints.antiaffinity)
+             copy.deepcopy(vnf.constraints.antiaffinity.values())
         # this anti-affinity is resolved for the current mapping process 
         # permanently (this cannot even be backstepped, because we have run out 
         # of backsteps earlier)
-        vnf.constraints.antiaffinity = []
+        vnf.constraints.antiaffinity = {}
       return True
     else:
       return False
@@ -1047,7 +1047,7 @@ class CoreAlgorithm(object):
     """
     for nf in nffg.nfs:
       hosting_infra1 = next(nffg.infra_neighbors(nf.id))
-      for anti_aff_pair in nf.constraints.antiaffinity:
+      for anti_aff_pair in nf.constraints.antiaffinity.values():
         hosting_infra2 = next(nffg.infra_neighbors(anti_aff_pair))
         if hosting_infra1.id == hosting_infra2.id:
           raise uet.InternalAlgorithmException("Anti-affinity between NFs %s "
@@ -1057,7 +1057,7 @@ class CoreAlgorithm(object):
         else:
           # delete anti-affinity, in lower layers it would be invalid or 
           # already satisfied by this mapping.
-          nf.constraints.antiaffinity = []
+          nf.constraints.antiaffinity = {}
     if hasattr(self, 'delegated_anti_aff_crit'):
       for vnf in self.delegated_anti_aff_crit:
         nf_obj = nffg.network.node[vnf]
