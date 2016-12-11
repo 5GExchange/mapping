@@ -323,6 +323,9 @@ class CoreAlgorithm(object):
     if hasattr(vnf, 'anti_aff_delegation_data'):
       # anti_aff_delegation_data is a 'bt_record' type object
       self._takeOneGreedyStep(cid, vnf.anti_aff_delegation_data)
+      self.log.debug("Delegating anti-affinity requirement of %s: %s to lower "
+                     "layer on BiSBiS %s"%(vnf.id, vnf.constraints.antiaffinity,
+                     vnf.anti_aff_delegation_data['target_infra']))
       if not hasattr(self, 'delegated_anti_aff_crit'):
         setattr(self, 'delegated_anti_aff_crit', 
                 {vnf_id: vnf.constraints.antiaffinity})
@@ -334,8 +337,8 @@ class CoreAlgorithm(object):
       # of backsteps earlier)
       for aa_id, anti_aff_pair in vnf.constraints.antiaffinity.items():
         antiaff_pair_dict = self.req.node[anti_aff_pair].constraints.antiaffinity
-        antiaff_pair_dict = {k: v for k, v in antiaff_pair_dict.items() \
-                             if v != vnf_id}
+        self.req.node[anti_aff_pair].constraints.antiaffinity = {k: v for k, v in\
+                                     antiaff_pair_dict.items() if v != vnf_id}
       vnf.constraints.antiaffinity = {}
       return True
     else:
@@ -1066,7 +1069,6 @@ class CoreAlgorithm(object):
       for vnf in self.delegated_anti_aff_crit:
         nf_obj = nffg.network.node[vnf]
         hosting_infra1 = next(nffg.infra_neighbors(vnf))
-        setattr(nf_obj, 'antiaffinity', [])
         for aff_id, anti_aff_pair in self.delegated_anti_aff_crit[vnf].iteritems():
           if anti_aff_pair in [n.id for n in nffg.running_nfs(hosting_infra1.id)]:
             hosting_infra2 = next(nffg.infra_neighbors(anti_aff_pair))
@@ -1077,8 +1079,8 @@ class CoreAlgorithm(object):
                     "different hosting infras."%(vnf, anti_aff_pair))
             self.log.debug("Adding delegated (bidirectional) anti-affinity "
                            "criterion for BiSBiS node %s"%hosting_infra1.id)
-            nf_obj.antiaffinity[aff_id] = anti_aff_pair
-            anti_aff_pair_obj.antiaffinity[aff_id] = vnf
+            nf_obj.constraints.add_antiaffinity(aff_id, anti_aff_pair)
+            anti_aff_pair_obj.constraints.add_antiaffinity(aff_id, vnf)
 
   def constructOutputNFFG (self):
     # use the unchanged input from the lower layer (deepcopied in the
