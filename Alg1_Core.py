@@ -328,11 +328,15 @@ class CoreAlgorithm(object):
                 {vnf_id: vnf.constraints.antiaffinity})
       else:
         self.delegated_anti_aff_crit[vnf_id] = \
-             copy.deepcopy(vnf.constraints.antiaffinity)
-        # this anti-affinity is resolved for the current mapping process 
-        # permanently (this cannot even be backstepped, because we have run out 
-        # of backsteps earlier)
-        vnf.constraints.antiaffinity = {}
+             copy.deepcopy(vnf.constraints.antiaffinity.values())
+      # this anti-affinity is resolved for the current mapping process 
+      # permanently (this cannot even be backstepped, because we have run out 
+      # of backsteps earlier)
+      for aa_id, anti_aff_pair in vnf.constraints.antiaffinity.items():
+        antiaff_pair_dict = self.req.node[anti_aff_pair].constraints.antiaffinity
+        antiaff_pair_dict = {k: v for k, v in antiaff_pair_dict.items() \
+                             if v != vnf_id}
+      vnf.constraints.antiaffinity = {}
       return True
     else:
       return False
