@@ -242,7 +242,10 @@ class CoreAlgorithm(object):
         # to the lower orchestration layer.
         # But forwarding from the previous VNF to the collocated one
         # takes latency between a pair of dynamic ports
-        sum_lat = self.net.node[path_to_map[0]].resources['delay']
+
+        # TODO: ERDay branch hacking to resolve BiSBiS latency model mismatch
+        # sum_lat = self.net.node[path_to_map[0]].resources['delay']
+        sum_lat = 0
 
       else:
         self.log.warn("Tried to check latency sum on 0 length path!")

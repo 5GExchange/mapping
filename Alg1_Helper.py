@@ -103,7 +103,9 @@ def shortestPathsInLatency (G_full, enable_shortest_path_cache,
 
   for u in G:
     if G.node[u].type != 'SAP':
-      dist[u][u] = G.node[u].resources['delay']
+      # TODO: ERDay branch hacking to resolve BiSBiS latency model mismatch
+      # dist[u][u] = G.node[u].resources['delay']
+      dist[u][u] = 0
     else:
       dist[u][u] = 0
   try:
