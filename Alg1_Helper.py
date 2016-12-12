@@ -312,6 +312,7 @@ def mapConsumerSAPPort (req, net):
   Iterates on NFs to look for consumer SAP ports whihc should be mapped to 
   (one of) the Infra, which hosts a SAPPort provider NF. The mapping decision
   is made here, this cannot be backtracked during the core mapping procedure.
+  Returns the fake links which are added.
   """
   sap_total_consumer_counts = {}
   mapped_nfs_to_be_added = []
@@ -357,7 +358,7 @@ def mapConsumerSAPPort (req, net):
             raise uet.MappingException("No provider SAP could be found for "
                   "consumer SAP of VNF %s of service name %s"%(nf.id, p.sap), 
                                        backtrack_possible=False)
-          
+  sap_alias_links = []
   # the SG is prerocessed with the addition of the SAPProviderVNFs.
   for provider_nf, provider_port, consumer_nf, consumer_port, infra in \
       mapped_nfs_to_be_added:
@@ -367,15 +368,18 @@ def mapConsumerSAPPort (req, net):
 
     # NOTE: This would be better instead of 0-delay links!
     # setattr(consumer_nf, 'placement_criteria', [infra.id])
-    log.debug("Adding fake SGHops to indicate SAP provider-consumer connection "
-              "for service %s."%provider_port.sap)
-    req.add_sglink(provider_nf_copy.ports[provider_port.id], consumer_port,
-                   delay=0)
-    req.add_sglink(consumer_port, provider_nf_copy.ports[provider_port.id],
-                   delay=0)
+    log.debug("Adding fake SGHops between %s and %s to indicate SAP provider-"
+              "consumer connection for service %s."%
+              (provider_nf.id, consumer_nf.id, provider_port.sap))
+    sg1 = req.add_sglink(provider_nf_copy.ports[provider_port.id], consumer_port,
+                         delay=0)
+    sg2 = req.add_sglink(consumer_port, provider_nf_copy.ports[provider_port.id],
+                         delay=0)
+    sap_alias_links.append(sg1)
+    sap_alias_links.append(sg2)
 
   # return the modified SG
-  return req
+  return req, sap_alias_links 
 
 
 class MappingManager(object):

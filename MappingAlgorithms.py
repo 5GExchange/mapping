@@ -105,12 +105,15 @@ def MAP (request, network, enable_shortest_path_cache=False,
         return network
 
   if not mode == NFFG.MODE_DEL:
+    # helper.makeAntiAffinitySymmetric (request)
+
     # add fake SGHops to handle logical SAP aliases.
     sap_alias_links = helper.processInputSAPAlias(request)
+    request, consumer_sap_alias_links = helper.mapConsumerSAPPort(request, 
+                                                                  network)
+    sap_alias_links.extend(consumer_sap_alias_links)
     if len(sap_alias_links) > 0:
-      network.sap_alias_links = sap_alias_links
-
-    request = helper.mapConsumerSAPPort(request, network)
+      setattr(network, 'sap_alias_links', sap_alias_links)
 
   # Rebind EdgeReqs to SAP-to-SAP paths, instead of BiSBiS ports
   # So EdgeReqs should either go between SAP-s, or InfraPorts which are 
