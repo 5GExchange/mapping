@@ -345,11 +345,16 @@ def mapConsumerSAPPort (req, net):
           # so far. NOTE: the SAPconsumerNFs' resources are not subtracted 
           # greedily during this mapping, so this can cause mapping errors! If 
           # there is always only one SAPconsumer in the SG, this is not a problem.
-          infra, provider_nf, provider_port, cons_count = \
-            min(sap_provider_ports, key=lambda t: t[3])
-          sap_total_consumer_counts[infra.id] += 1
-          mapped_nfs_to_be_added.append((provider_nf, provider_port, 
-                                         nf, p, infra))
+          try:
+            infra, provider_nf, provider_port, cons_count = \
+                   min(sap_provider_ports, key=lambda t: t[3])
+            sap_total_consumer_counts[infra.id] += 1
+            mapped_nfs_to_be_added.append((provider_nf, provider_port, 
+                                           nf, p, infra))
+          except ValueError:
+            raise uet.MappingException("No provider SAP could be found for "
+                  "consumer SAP of VNF %s of service name %s"%(nf.id, p.sap), 
+                                       backtrack_possible=False)
           
   # the SG is prerocessed with the addition of the SAPProviderVNFs.
   for provider_nf, provider_port, consumer_nf, consumer_port, infra in \

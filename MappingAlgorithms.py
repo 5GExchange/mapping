@@ -83,13 +83,6 @@ def MAP (request, network, enable_shortest_path_cache=False,
                     "be retreived? based on the Flowrules?")
     NFFGToolBox.recreate_all_sghops(request)
 
-    # add fake SGHops to handle logical SAP aliases.
-    sap_alias_links = helper.processInputSAPAlias(request)
-    if len(sap_alias_links) > 0:
-      network.sap_alias_links = sap_alias_links
-      
-    request = helper.mapConsumerSAPPort(request, network)
-
     try:
       next(request.sg_hops)
     except StopIteration:
@@ -110,6 +103,13 @@ def MAP (request, network, enable_shortest_path_cache=False,
         
         #returning the substrate with the updated NF data
         return network
+
+  # add fake SGHops to handle logical SAP aliases.
+  sap_alias_links = helper.processInputSAPAlias(request)
+  if len(sap_alias_links) > 0:
+    network.sap_alias_links = sap_alias_links
+      
+  request = helper.mapConsumerSAPPort(request, network)
 
   # Rebind EdgeReqs to SAP-to-SAP paths, instead of BiSBiS ports
   # So EdgeReqs should either go between SAP-s, or InfraPorts which are 
