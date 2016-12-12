@@ -104,12 +104,13 @@ def MAP (request, network, enable_shortest_path_cache=False,
         #returning the substrate with the updated NF data
         return network
 
-  # add fake SGHops to handle logical SAP aliases.
-  sap_alias_links = helper.processInputSAPAlias(request)
-  if len(sap_alias_links) > 0:
-    network.sap_alias_links = sap_alias_links
-      
-  request = helper.mapConsumerSAPPort(request, network)
+  if not mode == NFFG.MODE_DEL:
+    # add fake SGHops to handle logical SAP aliases.
+    sap_alias_links = helper.processInputSAPAlias(request)
+    if len(sap_alias_links) > 0:
+      network.sap_alias_links = sap_alias_links
+
+    request = helper.mapConsumerSAPPort(request, network)
 
   # Rebind EdgeReqs to SAP-to-SAP paths, instead of BiSBiS ports
   # So EdgeReqs should either go between SAP-s, or InfraPorts which are 
@@ -238,14 +239,16 @@ def MAP (request, network, enable_shortest_path_cache=False,
   alg.setBacktrackParameters(bt_limit, bt_branching_factor)
   mappedNFFG = alg.start()
 
-  # eliminate fake SGHops and their flowrules for SAP Alias handling.
-  helper.processOutputSAPAlias(mappedNFFG)
+  if not mode == NFFG.MODE_DEL:
+    # eliminate fake SGHops and their flowrules for SAP Alias handling.
+    helper.processOutputSAPAlias(mappedNFFG)
+
   # replace Infinity values
   helper.purgeNFFGFromInfinityValues(mappedNFFG)
   # print mappedNFFG.dump()
   # The printed format is vnfs: (vnf_id, node_id) and links: MultiDiGraph, edge
   # data is the paths (with link ID-s) where the request links are mapped.
-  if not alg.mode == NFFG.MODE_DEL:
+  if not mode == NFFG.MODE_DEL:
     helper.log.info("The VNF mappings are (vnf_id, node_id): \n%s" % pformat(
       alg.manager.vnf_mapping))
     helper.log.debug("The link mappings are: \n%s" % pformat(
