@@ -1324,7 +1324,7 @@ class CoreAlgorithm(object):
                                       linkid)
             break
           except uet.MappingException as me:
-            self.log.debug("MappingException catched for backtrack purpose, "
+            self.log.info("MappingException catched for backtrack purpose, "
                            "its message is: "+me.msg)
             if not me.backtrack_possible:
               if self._resolveAntiAffinityDelegationIfPossible(c['id'], next_vnf):
