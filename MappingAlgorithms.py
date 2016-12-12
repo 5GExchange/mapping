@@ -85,25 +85,11 @@ def MAP (request, network, enable_shortest_path_cache=False,
 
     try:
       next(request.sg_hops)
+      sg_hops_retrieved = True
     except StopIteration:
-      for nf in request.nfs:
-        if nf.id not in network.network:
-          raise uet.BadInputException("If SGHops are not given, flowrules should"
-                                      " be in the NFFG",
-                                      "No SGHop could be retrieved based on the "
-                                      "flowrules of the NFFG. And there is a VNF"
-                                      " which is not mapped yet!")
-      else:
-        # if all the NFs in the request are mapped already, then it is only 
-        # an update on NF data.
-        helper.log.warn("Updating only the status of NFs! Differences in other"
-                        " attributes (resource, name, etc.) are ignored!")
-        for nf in request.nfs:
-          network.network.node[nf.id].status = nf.status
-        
-        #returning the substrate with the updated NF data
-        return network
+      sg_hops_retrieved = False
 
+  sap_alias_links = []
   if not mode == NFFG.MODE_DEL:
     # helper.makeAntiAffinitySymmetric (request)
 
@@ -114,6 +100,27 @@ def MAP (request, network, enable_shortest_path_cache=False,
     sap_alias_links.extend(consumer_sap_alias_links)
     if len(sap_alias_links) > 0:
       setattr(network, 'sap_alias_links', sap_alias_links)
+
+  # if after recreation and SAP alias handling there are at least one SGHop in
+  # the request we can proceed mapping.
+  if not sg_hops_given and not sg_hops_retrieved and len(sap_alias_links) == 0:
+    for nf in request.nfs:
+      if nf.id not in network.network:
+        raise uet.BadInputException("If SGHops are not given, flowrules should"
+                                    " be in the NFFG",
+                                    "No SGHop could be retrieved based on the "
+                                    "flowrules of the NFFG. And there is a VNF"
+                                    " which is not mapped yet!")
+    else:
+      # if all the NFs in the request are mapped already, then it is only 
+      # an update on NF data.
+      helper.log.warn("Updating only the status of NFs! Differences in other"
+                      " attributes (resource, name, etc.) are ignored!")
+      for nf in request.nfs:
+        network.network.node[nf.id].status = nf.status
+        
+      #returning the substrate with the updated NF data
+      return network
 
   # Rebind EdgeReqs to SAP-to-SAP paths, instead of BiSBiS ports
   # So EdgeReqs should either go between SAP-s, or InfraPorts which are 
