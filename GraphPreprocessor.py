@@ -723,18 +723,24 @@ class GraphPreprocessorClass(object):
             raise uet.BadInputException(
                "All NF-s in the substrate NFFG should be connected to some "
                "Infra node", "NF %s has no Infra neighbors" % vnf.id)
+          # NOTE: 'placement_criteria' is not used until it is commented out 
+          # from the node filtering during core mapping.
           if not hasattr(self.req_graph.network.node[vnf.id],
                          'placement_criteria') or len(
              vnf.placement_criteria) == 0:
             setattr(self.req_graph.network.node[vnf.id], 'placement_criteria',
                     [mapped_to_node])
             self.rechained[vnf.id] = True
+            # Add the VNFs to be left in place to mapped structure!
+            # Their resources will be subtracted by calculate_available_node_res
             self.manager.vnf_mapping.append((vnf.id, mapped_to_node))
           elif mapped_to_node in self.req_graph.network.node[vnf.id] \
              ['placement_criteria']:
             self.req_graph.network.node[vnf.id]['placement_criteria'] = \
               [mapped_to_node]
             self.rechained[vnf.id] = True
+            # Add the VNFs to be left in place to mapped structure!
+            # Their resources will be subtracted by calculate_available_node_res
             self.manager.vnf_mapping.append((vnf.id, mapped_to_node))
           else:
             raise uet.BadInputException(

@@ -91,7 +91,7 @@ def MAP (request, network, enable_shortest_path_cache=False,
 
   sap_alias_links = []
   if not mode == NFFG.MODE_DEL:
-    # helper.makeAntiAffinitySymmetric (request)
+    helper.makeAntiAffinitySymmetric (request, network)
 
     # add fake SGHops to handle logical SAP aliases.
     sap_alias_links = helper.processInputSAPAlias(request)

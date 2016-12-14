@@ -382,13 +382,48 @@ def mapConsumerSAPPort (req, net):
   return req, sap_alias_links 
 
 
+def _addBackwardAntiAffinity (nffg, nf_id, aaff_pair_id, aaff_id):
+  if nf_id not in nffg.network.node[aaff_pair_id].constraints.\
+     antiaffinity.itervalues():
+    log.debug("Add backward anti-affinity between VNFs %s and %s to "
+              "make it symmetric."%(nf_id, aaff_pair_id))
+    nffg.network.node[aaff_pair_id].\
+      constraints.antiaffinity[aaff_id+"-back"] = nf_id
+
+
+def makeAntiAffinitySymmetric (req, net):
+  """
+  Checks all anti-affinity requirements and makes them symmetric so the greedy
+  mapping pocess would see the requirement from each direction. If the anti-
+  affinity pair is not in the request graph, but it is in the substrate NFFG, 
+  then it is added to the request, so anti-affinity delegation could be resolved
+  in case of embedding failure due to the unresolvable anti-affinity.
+
+  These extra VNF-s are handled well as VNFs to be left in place both in terms 
+  of vnf_mapping stucture and substrate resource handling.
+  """
+  for nf in req.nfs:
+    if len(nf.constraints.antiaffinity) > 0:
+      for aaff_id, aaff_pair_id in nf.constraints.antiaffinity.iteritems():
+        if aaff_pair_id in req:
+          _addBackwardAntiAffinity(req, nf.id, aaff_pair_id, aaff_id)
+        elif aaff_pair_id in net:
+          req.add_node(copy.deepcopy(net.network.node[aaff_pair_id]))
+          _addBackwardAntiAffinity(req, nf.id, aaff_pair_id, aaff_id)
+        else:
+          raise uet.BadInputException("Anti-affinity should refer to a VNF "
+                "which is in the request graph or mapped already in the "
+                "substrate graph", "VNF %s not found for anti-affiny from %s"
+                " to %s"%(aaff_pair_id, nf.id, aaff_pair_id))
+          
+
 class MappingManager(object):
-  """Administrates the mapping of links and VNFs
+  """
+  Administrates the mapping of links and VNFs
   TODO: Connect subchain and chain requirements, controls dynamic objective
   function parametrization based on where the mapping process is in an
   (E2E) chain.
-  TODO: Could handle backtrack functionality, if other possible mappings
-  are also given (to some different structure)"""
+  """
 
   def __init__ (self, net, req, chains, overall_highest_delay):
     self.log = log.getChild(self.__class__.__name__)
