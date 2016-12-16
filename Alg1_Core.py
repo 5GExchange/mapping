@@ -244,8 +244,8 @@ class CoreAlgorithm(object):
         # takes latency between a pair of dynamic ports
 
         # TODO: ERDay branch hacking to resolve BiSBiS latency model mismatch
-        # sum_lat = self.net.node[path_to_map[0]].resources['delay']
-        sum_lat = 0
+        # sum_lat = 0
+        sum_lat = self.net.node[path_to_map[0]].resources['delay']
 
       else:
         self.log.warn("Tried to check latency sum on 0 length path!")
