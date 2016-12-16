@@ -39,7 +39,7 @@ try:
 except ImportError:
   import sys, os
   sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                  "../escape/escape/nffg_lib/")))
+                                  "../../escape/escape/nffg_lib/")))
   from nffg import NFFG
 
 # Aggregation links (100Gbps) Connecting Distribution nodes to Aggregation Nodes
@@ -441,14 +441,15 @@ def getPicoTopo():
     
   return nffg
 
-def getSNDlib_dfn_gwin(save_to_file = False):
+def getSNDlib_dfn_gwin(save_to_file = False, gen_sap_names = False, 
+                       abc_nf_type_num = 10):
   """
   Topology taken from SNDlib, dfn-gwin.
   """
   random.seed(0)
   gwin = nx.read_gml("dfn-gwin.gml")
   nffg = NFFG(id="dfn-gwin")
-  nf_types = list(string.ascii_uppercase)[:10]
+  nf_types = list(string.ascii_uppercase)[:abc_nf_type_num]
   switch = {'cpu': 0, 'mem': 0, 'storage': 0, 'delay': 0.5,
             'bandwidth': 40000, 'infra_type': NFFG.TYPE_INFRA_SDN_SW}
   infrares = {'cpu': 400, 'mem': 320000, 'storage': 1500, 'delay': 1.0,
@@ -479,13 +480,16 @@ def getSNDlib_dfn_gwin(save_to_file = False):
     
   nodeset2 = random.sample(gwinnodes, 3)
   nodeset2.extend(random.sample(gwinnodes, 3))
-  # add access switched to 6 random nodes
+  # add access switches to 6 random nodes
   for n in nodeset2:
     sw = nffg.add_infra(id=getName(n+"Sw"), **switch)
     nffg.add_undirected_link(nffg.network.node[n].add_port(), sw.add_port(),
                              **aggrlinkres)
     for i in xrange(0,random.randint(3,4)):
-      nameid = getName(n+"SAP")
+      if gen_sap_names:
+        nameid = getName("sap")
+      else:
+        nameid = getName(n+"SAP")
       sap = nffg.add_sap(id=nameid, name=nameid)
       nffg.add_undirected_link(sap.add_port(), sw.add_port(), **acclinkres)
   
@@ -518,3 +522,5 @@ if __name__ == '__main__':
   #                                 [4,8,12,16], [32000,64000], [200], 40000, 4)})
   # topo = getCarrierTopo(topoparams)
   # print topo.dump()
+  with open("augmented-dfn-gwin.nffg", "w") as f:
+    f.write(getSNDlib_dfn_gwin(abc_nf_type_num=10, gen_sap_names=True).dump())
