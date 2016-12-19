@@ -329,18 +329,18 @@ class GraphPreprocessorClass(object):
                 last_vnf = j
                 if self.rechained[j]:
                   break
-                terminating_nf, terminating_link = \
-                     self._checkIfNextVNFRechained(best_effort_graph, last_vnf)
-                if terminating_link is not None and terminating_nf is not None:
-                  # This can happen when the DFS path stopped before the last 
-                  # link of a loop back to a SAP or a rechained node.
-                  link_ids.append(terminating_link)
-                  subc_path.append(terminating_nf)
-                  last_vnf = terminating_nf
-                  break
               else:
                 # don't go further if the DFS would change path
                 break
+            terminating_nf, terminating_link = \
+                self._checkIfNextVNFRechained(best_effort_graph, last_vnf)
+            if terminating_link is not None and terminating_nf is not None:
+              # This can happen when the DFS path stopped before the last 
+              # link of a loop back to a SAP or a rechained node.
+              link_ids.append(terminating_link)
+              subc_path.append(terminating_nf)
+              last_vnf = terminating_nf
+              # break
             for i, j, k in zip(subc_path[:-1], subc_path[1:], link_ids):
               self.link_rechained.add_edge(i, j, key=k)
               # it is possible we have already removed this edge in previous 
