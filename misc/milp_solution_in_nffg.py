@@ -14,16 +14,23 @@
 # along with POX. If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+import os
+import sys
+
+# Needed to run the Algorithm scripts in the parent folder.
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 import UnifyExceptionTypes as uet
 import networkx as nx
 
 from Alg1_Core import CoreAlgorithm
+
 try:
   from escape.nffg_lib.nffg import NFFG, NFFGToolBox
 except ImportError:
   import sys, os
+
   sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                  "../escape/escape/nffg_lib/")))
+                                               "../escape/escape/nffg_lib/")))
   from nffg import NFFG, NFFGToolBox
 
 from MIPBaseline import Scenario, ModelCreator, isFeasibleStatus, \
@@ -34,6 +41,7 @@ import MappingAlgorithms
 log = logging.getLogger("MIP-NFFG-conv")
 logging.basicConfig(format='%(levelname)s:%(name)s:%(message)s')
 log.setLevel(logging.DEBUG)
+
 
 def get_MIP_solution (reqnffgs, netnffg):
   """
@@ -53,9 +61,9 @@ def get_MIP_solution (reqnffgs, netnffg):
   if isFeasibleStatus(mc.run_milp()):
     solution = mc.solution
     solution.validate_solution(debug_output=False)
-    
+
     return solution.mapping_of_request
-  
+
 
 def get_edge_id (g, srcid, srcpid, dstpid, dstid):
   """
@@ -68,11 +76,12 @@ def get_edge_id (g, srcid, srcpid, dstpid, dstid):
   srcp = src.ports[srcpid]
   dstp = dst.ports[dstpid]
   """
-  for i,j,k,d in g.edges_iter(data=True, keys=True):
+  for i, j, k, d in g.edges_iter(data=True, keys=True):
     if i == srcid and j == dstid and d.src.id == srcpid and d.dst.id == dstpid:
       return k
 
-def convert_mip_solution_to_nffg (reqs, net, file_inputs=False, 
+
+def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
                                   mode=NFFG.MODE_ADD):
   if file_inputs:
     request_seq = []
@@ -85,20 +94,20 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
       net = NFFG.parse(g.read())
   else:
     request_seq = reqs
-      
+
   # all input NFFG-s are obtained somehow
- 
+
 
   ######################################################################
   ##### This is taken from the MappingAlgorithms.MAP() function ####
   ######################################################################
-  
+
   request = request_seq[0]
-  
+
   # batch together all nffgs
   for r in request_seq[1:]:
-    request = NFFGToolBox.merge_nffgs (request, r)
-  
+    request = NFFGToolBox.merge_nffgs(request, r)
+
   chainlist = []
   cid = 1
   edgereqlist = []
@@ -112,7 +121,7 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
     if len(req.sg_path) == 1:
       # then add it as linklocal req instead of E2E req
       log.info("Interpreting one SGHop long EdgeReq (id: %s) as link "
-                      "requirement on SGHop: %s."%(req.id, req.sg_path[0]))
+               "requirement on SGHop: %s." % (req.id, req.sg_path[0]))
       reqlink = None
       for sg_link in request.sg_hops:
         if sg_link.id == req.sg_path[0]:
@@ -120,16 +129,16 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
           break
       if reqlink is None:
         log.warn("EdgeSGLink object not found for EdgeSGLink ID %s! "
-                        "(maybe ID-s stored in EdgeReq.sg_path are not the "
-                        "same type as EdgeSGLink ID-s?)")
+                 "(maybe ID-s stored in EdgeReq.sg_path are not the "
+                 "same type as EdgeSGLink ID-s?)")
       if req.delay is not None:
         setattr(reqlink, 'delay', req.delay)
       if req.bandwidth is not None:
         setattr(reqlink, 'bandwidth', req.bandwidth)
     elif len(req.sg_path) == 0:
       raise uet.BadInputException(
-         "If EdgeReq is given, it should specify which SGHop path does it "
-         "apply to", "Empty SGHop path was given to %s EdgeReq!" % req.id)
+        "If EdgeReq is given, it should specify which SGHop path does it "
+        "apply to", "Empty SGHop path was given to %s EdgeReq!" % req.id)
     else:
       try:
         chain = {'id': cid, 'link_ids': req.sg_path,
@@ -137,8 +146,8 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
                  'delay': req.delay if req.delay is not None else float("inf")}
       except AttributeError:
         raise uet.BadInputException(
-           "EdgeReq attributes are: sg_path, bandwidth, delay",
-           "Missing attribute of EdgeReq")
+          "EdgeReq attributes are: sg_path, bandwidth, delay",
+          "Missing attribute of EdgeReq")
       # reconstruct NF path from EdgeSGLink path
       nf_chain = []
       for reqlinkid in req.sg_path:
@@ -151,25 +160,25 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
             break
         else:
           raise uet.BadInputException(
-             "Elements of EdgeReq.sg_path should be EdgeSGLink.id-s.",
-             "SG link %s couldn't be found in input request NFFG" % reqlinkid)
+            "Elements of EdgeReq.sg_path should be EdgeSGLink.id-s.",
+            "SG link %s couldn't be found in input request NFFG" % reqlinkid)
         # add the source node id of the EdgeSGLink to NF path
         nf_chain.append(reqlink.src.node.id)
         # add the destination node id of the last EdgeSGLink to NF path
         if reqlinkid == req.sg_path[-1]:
           if reqlink.dst.node.id != req.dst.node.id:
             raise uet.BadInputException(
-               "EdgeReq.sg_path should select a path between its two ends",
-               "Last NF (%s) of EdgeReq.sg_path and destination of EdgeReq ("
-               "%s) are not the same!" % (reqlink.dst.node.id, req.dst.node.id))
+              "EdgeReq.sg_path should select a path between its two ends",
+              "Last NF (%s) of EdgeReq.sg_path and destination of EdgeReq ("
+              "%s) are not the same!" % (reqlink.dst.node.id, req.dst.node.id))
           nf_chain.append(reqlink.dst.node.id)
         # validate EdgeReq ends.
         if reqlinkid == req.sg_path[0] and \
               reqlink.src.node.id != req.src.node.id:
           raise uet.BadInputException(
-             "EdgeReq.sg_path should select a path between its two ends",
-             "First NF (%s) of EdgeReq.sg_path and source of EdgeReq (%s) are "
-             "not the same!" % (reqlink.src.node.id, req.src.node.id))
+            "EdgeReq.sg_path should select a path between its two ends",
+            "First NF (%s) of EdgeReq.sg_path and source of EdgeReq (%s) are "
+            "not the same!" % (reqlink.src.node.id, req.src.node.id))
         chain['chain'] = nf_chain
       cid += 1
       chainlist.append(chain)
@@ -181,11 +190,11 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
       if n.resources[respar] is None:
         if respar == 'delay':
           log.warn("Resource parameter %s is not given in %s, "
-                          "substituting with 0!"%(respar, n.id))
+                   "substituting with 0!" % (respar, n.id))
           n.resources[respar] = 0
         else:
           log.warn("Resource parameter %s is not given in %s, "
-                          "substituting with infinity!"%(respar, n.id))
+                   "substituting with infinity!" % (respar, n.id))
           n.resources[respar] = float("inf")
   # If link res is None or doesn't exist, replace it with a neutral value.
   for i, j, d in net.network.edges_iter(data=True):
@@ -193,12 +202,12 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
       if getattr(d, 'delay', None) is None:
         if d.src.node.type != 'SAP' and d.dst.node.type != 'SAP':
           log.warn("Resource parameter delay is not given in link %s "
-                          "substituting with zero!"%d.id)
+                   "substituting with zero!" % d.id)
         setattr(d, 'delay', 0)
       if getattr(d, 'bandwidth', None) is None:
         if d.src.node.type != 'SAP' and d.dst.node.type != 'SAP':
           log.warn("Resource parameter bandwidth is not given in link %s "
-                          "substituting with infinity!"%d.id)
+                   "substituting with infinity!" % d.id)
         setattr(d, 'bandwidth', float("inf"))
 
   # create the class of the algorithm
@@ -216,7 +225,7 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
   for d in net.links:
     # there shouldn't be any Dynamic links by now.
     d.bandwidth = d.availbandwidth
-  
+
   mapping_of_reqs = get_MIP_solution(request_seq, net)
 
   mappedNFFG = NFFG(id="MILP-mapped")
@@ -224,15 +233,15 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
     if mapping_of_reqs[transformed_req].is_embedded:
       alg.manager.vnf_mapping = []
       alg.manager.link_mapping = nx.MultiDiGraph()
-      for n, vlist in mapping_of_reqs[transformed_req].\
-          snode_to_hosted_vnodes.items():
+      for n, vlist in mapping_of_reqs[transformed_req]. \
+         snode_to_hosted_vnodes.items():
         for v in vlist:
           alg.manager.vnf_mapping.append((v, n))
       trans_link_mapping = mapping_of_reqs[transformed_req].vedge_to_spath
       for trans_sghop in trans_link_mapping:
         vnf1 = trans_sghop[0]
         vnf2 = trans_sghop[3]
-        reqlid = get_edge_id(alg.req, vnf1, trans_sghop[1], 
+        reqlid = get_edge_id(alg.req, vnf1, trans_sghop[1],
                              trans_sghop[2], vnf2)
         mapped_path = []
         path_link_ids = []
@@ -247,14 +256,14 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
         else:
           mapped_path.append(n2)
 
-        alg.manager.link_mapping.add_edge(vnf1, vnf2, key=reqlid, 
-                                          mapped_to=mapped_path, 
+        alg.manager.link_mapping.add_edge(vnf1, vnf2, key=reqlid,
+                                          mapped_to=mapped_path,
                                           path_link_ids=path_link_ids)
-    
+
       oneNFFG = alg.constructOutputNFFG()
       mappedNFFG = NFFGToolBox.merge_nffgs(mappedNFFG, oneNFFG)
     else:
-      print "MILP didn't produce a mapping for request %s"%transformed_req
+      print "MILP didn't produce a mapping for request %s" % transformed_req
       return None
 
   # replace Infinity values
@@ -263,7 +272,8 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
   # print mappedNFFG.dump()
   return mappedNFFG
 
+
 if __name__ == '__main__':
-  convert_mip_solution_to_nffg(['untracked/e2e-req-erronous.nffg'], 
-                               'untracked/mip_mapped-escape-mn-topo.nffg', 
+  convert_mip_solution_to_nffg(['../examples/escape-mn-req.nffg'],
+                               '../examples/escape-mn-topo-duplicatedlinks.nffg',
                                file_inputs=True)

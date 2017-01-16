@@ -47,15 +47,15 @@ The parameters of the algorithm are:
       * mode -- Mapping operation mode:
       	     	 NFFG.MODE_REMAP -- All network function and every reservation 
               		 attribute of the resource graph are ignored.
-		 NFFG.MODE_ADD -- The stored VNF information in the substrate 
-                         graph is interpreted as reservation state. Their 
-			 resource requirements are subtracted from the available.
-			 If an ID is present in both the substrate and request 
-			 graphs, the resource requirements (and the whole 
-			 instance) will be updated.
+		         NFFG.MODE_ADD -- The stored VNF information in the substrate
+                     graph is interpreted as reservation state. Their
+			         resource requirements are subtracted from the available.
+			         If an ID is present in both the substrate and request
+			         graphs, the resource requirements (and the whole
+			         instance) will be updated.
                  NFFG.MODE_DEL -- All the elements of the request will be 
-		         deleted from the resource graph which has all of its 
-			 connected components speficied in the service graph.
+		             deleted from the resource graph which has all of its
+			         connected components speficied in the service graph.
       * (shortest_paths -- The shortest path matrix can be added as an input 
       		 Python object.)
       * (return_dist -- The MAP function returns a tuple of the mapped NFFG and 
