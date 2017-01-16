@@ -29,7 +29,7 @@ class MappingManager(object):
   (E2E) chain.
   """
 
-  def __init__ (self, net, req, chains, overall_highest_delay):
+  def __init__ (self, net, req, chains, overall_highest_delay, dry_init):
     self.log = helper.log.getChild(self.__class__.__name__)
     self.log.setLevel(helper.log.getEffectiveLevel())
 
@@ -37,27 +37,28 @@ class MappingManager(object):
 
     # list of tuples of mapping (vnf_id, node_id)
     self.vnf_mapping = []
-    # SAP mapping can be done here based on their ID-s
-    try:
-      for vnf, dv in req.network.nodes_iter(data=True):
-        if dv.type == 'SAP':
-          sapid = dv.id
-          sapfound = False
-          for n, dn in net.network.nodes_iter(data=True):
-            if dn.type == 'SAP':
-              if dn.id == sapid:
-                self.vnf_mapping.append((vnf, n))
-                sapfound = True
-                break
-          if not sapfound:
-            self.log.error("No SAP found in network with ID: %s" % sapid)
-            raise uet.MappingException(
-              "No SAP found in network with ID: %s. SAPs are mapped "
-              "exclusively by their ID-s." % sapid,
-              backtrack_possible=False)
-    except AttributeError as e:
-      raise uet.BadInputException("Node data with name %s" % str(e),
-                                  "Node data not found")
+    if not dry_init:
+      # SAP mapping can be done here based on their ID-s
+      try:
+        for vnf, dv in req.network.nodes_iter(data=True):
+          if dv.type == 'SAP':
+            sapid = dv.id
+            sapfound = False
+            for n, dn in net.network.nodes_iter(data=True):
+              if dn.type == 'SAP':
+                if dn.id == sapid:
+                  self.vnf_mapping.append((vnf, n))
+                  sapfound = True
+                  break
+            if not sapfound:
+              self.log.error("No SAP found in network with ID: %s" % sapid)
+              raise uet.MappingException(
+                "No SAP found in network with ID: %s. SAPs are mapped "
+                "exclusively by their ID-s." % sapid,
+                backtrack_possible=False)
+      except AttributeError as e:
+        raise uet.BadInputException("Node data with name %s" % str(e),
+                                    "Node data not found")
 
     # same graph structure as the request, edge data stores the mapped path
     self.link_mapping = nx.MultiDiGraph()

@@ -26,17 +26,17 @@ with an SGLink) EdgeReqs are supported. After generating the service chains
 from the EdgeReqs, all SG links must be in one of the subchains. 
 """
 
-import traceback
 import sys
-
+import traceback
 from pprint import pformat
 
 try:
   from escape.nffg_lib.nffg import NFFG, NFFGToolBox
 except ImportError:
   import os
+
   sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                  "../escape/escape/nffg_lib/")))
+                                               "../escape/escape/nffg_lib/")))
   from nffg import NFFG, NFFGToolBox
 
 from Alg1_Core import CoreAlgorithm
@@ -45,8 +45,6 @@ import Alg1_Helper as helper
 
 # object for the algorithm instance
 alg = None
-
-
 
 
 def MAP (request, network, enable_shortest_path_cache=False,
@@ -67,10 +65,10 @@ def MAP (request, network, enable_shortest_path_cache=False,
   MODE_DEL: Finds the elements of the request NFFG in the substrate NFFG and
   removes them.
   """
-  
+
   # possible values are NFFG.MODE_ADD, NFFG.MODE_DELETE, NFFG.MODE_REMAP
   if mode is None:
-    raise uet.BadInputException("Mapping operation mode should always be set", 
+    raise uet.BadInputException("Mapping operation mode should always be set",
                                 "No mode specified for mapping operation!")
 
   try:
@@ -91,11 +89,11 @@ def MAP (request, network, enable_shortest_path_cache=False,
 
   sap_alias_links = []
   if not mode == NFFG.MODE_DEL:
-    helper.makeAntiAffinitySymmetric (request, network)
+    helper.makeAntiAffinitySymmetric(request, network)
 
     # add fake SGHops to handle logical SAP aliases.
     sap_alias_links = helper.processInputSAPAlias(request)
-    request, consumer_sap_alias_links = helper.mapConsumerSAPPort(request, 
+    request, consumer_sap_alias_links = helper.mapConsumerSAPPort(request,
                                                                   network)
     sap_alias_links.extend(consumer_sap_alias_links)
     if len(sap_alias_links) > 0:
@@ -118,128 +116,22 @@ def MAP (request, network, enable_shortest_path_cache=False,
                       " attributes (resource, name, etc.) are ignored!")
       for nf in request.nfs:
         network.network.node[nf.id].status = nf.status
-        
-      #returning the substrate with the updated NF data
+
+      # returning the substrate with the updated NF data
       return network
+
+  # a delay value which is assumed to be infinity in terms of connection RTT
+  # or latency requirement (set it to 100s = 100 000ms)
+  overall_highest_delay = 100000
 
   # Rebind EdgeReqs to SAP-to-SAP paths, instead of BiSBiS ports
   # So EdgeReqs should either go between SAP-s, or InfraPorts which are 
   # connected to a SAP
   request = NFFGToolBox.rebind_e2e_req_links(request)
 
-  chainlist = []
-  cid = 1
-  edgereqlist = []
-  # a delay value which is assumed to be infinity in terms of connection RTT 
-  # or latency requirement (set it to 100s = 100 000ms)
-  overall_highest_delay = 100000
-  for req in request.reqs:
-    edgereqlist.append(req)
-    request.del_edge(req.src, req.dst, req.id)
-    
-  # NOTE: this may not be needed because SGHop regeneration is safer now with 
-  # Flowrule ID-s being the same as SGHop ID-s.
-  if len(edgereqlist) != 0 and not sg_hops_given:
-    helper.log.warn("EdgeReqs were given, but the SGHops (which the EdgeReqs "
-                    "refer to by id) are retrieved based on the flowrules of "
-                    "infrastructure. This can cause error later if the "
-                    "flowrules was malformed...")
+  chainlist = helper.retrieveE2EServiceChainsFromEdgeReqs(request)
 
-  # construct chains from EdgeReqs
-  for req in edgereqlist:
-
-    if len(req.sg_path) == 1:
-      # then add it as linklocal req instead of E2E req
-      helper.log.info("Interpreting one SGHop long EdgeReq (id: %s) as link "
-                      "requirement on SGHop: %s."%(req.id, req.sg_path[0]))
-      reqlink = None
-      for sg_link in request.sg_hops:
-        if sg_link.id == req.sg_path[0]:
-          reqlink = sg_link
-          break
-      if reqlink is None:
-        helper.log.warn("EdgeSGLink object not found for EdgeSGLink ID %s! "
-                        "(maybe ID-s stored in EdgeReq.sg_path are not the "
-                        "same type as EdgeSGLink ID-s?)")
-      if req.delay is not None:
-        setattr(reqlink, 'delay', req.delay)
-      if req.bandwidth is not None:
-        setattr(reqlink, 'bandwidth', req.bandwidth)
-    elif len(req.sg_path) == 0:
-      raise uet.BadInputException(
-         "If EdgeReq is given, it should specify which SGHop path does it "
-         "apply to", "Empty SGHop path was given to %s EdgeReq!" % req.id)
-    else:
-      try:
-        chain = {'id': cid, 'link_ids': req.sg_path,
-                 'bandwidth': req.bandwidth if req.bandwidth is not None else 0,
-                 'delay': req.delay if req.delay is not None \
-                 else overall_highest_delay}
-      except AttributeError:
-        raise uet.BadInputException(
-           "EdgeReq attributes are: sg_path, bandwidth, delay",
-           "Missing attribute of EdgeReq")
-      # reconstruct NF path from EdgeSGLink path
-      nf_chain = []
-      for reqlinkid in req.sg_path:
-
-        # find EdgeSGLink object of 'reqlinkid'
-        reqlink = None
-        for sg_link in request.sg_hops:
-          if sg_link.id == reqlinkid:
-            reqlink = sg_link
-            break
-        else:
-          raise uet.BadInputException(
-             "Elements of EdgeReq.sg_path should be EdgeSGLink.id-s.",
-             "SG link %s couldn't be found in input request NFFG" % reqlinkid)
-        # add the source node id of the EdgeSGLink to NF path
-        nf_chain.append(reqlink.src.node.id)
-        # add the destination node id of the last EdgeSGLink to NF path
-        if reqlinkid == req.sg_path[-1]:
-          if reqlink.dst.node.id != req.dst.node.id:
-            raise uet.BadInputException(
-               "EdgeReq.sg_path should select a path between its two ends",
-               "Last NF (%s) of EdgeReq.sg_path and destination of EdgeReq ("
-               "%s) are not the same!" % (reqlink.dst.node.id, req.dst.node.id))
-          nf_chain.append(reqlink.dst.node.id)
-        # validate EdgeReq ends.
-        if reqlinkid == req.sg_path[0] and \
-              reqlink.src.node.id != req.src.node.id:
-          raise uet.BadInputException(
-             "EdgeReq.sg_path should select a path between its two ends",
-             "First NF (%s) of EdgeReq.sg_path and source of EdgeReq (%s) are "
-             "not the same!" % (reqlink.src.node.id, req.src.node.id))
-        chain['chain'] = nf_chain
-      cid += 1
-      chainlist.append(chain)
-
-  # if some resource value is not set (is None) then be permissive and set it
-  # to a comportable value.
-  for respar in ('cpu', 'mem', 'storage', 'delay', 'bandwidth'):
-    for n in network.infras:
-      if n.resources[respar] is None:
-        if respar == 'delay':
-          helper.log.warn("Resource parameter %s is not given in %s, "
-                          "substituting with 0!"%(respar, n.id))
-          n.resources[respar] = 0
-        else:
-          helper.log.warn("Resource parameter %s is not given in %s, "
-                          "substituting with infinity!"%(respar, n.id))
-          n.resources[respar] = float("inf")
-  # If link res is None or doesn't exist, replace it with a neutral value.
-  for i, j, d in network.network.edges_iter(data=True):
-    if d.type == 'STATIC':
-      if getattr(d, 'delay', None) is None:
-        if d.src.node.type != 'SAP' and d.dst.node.type != 'SAP':
-          helper.log.warn("Resource parameter delay is not given in link %s "
-                          "substituting with zero!"%d.id)
-        setattr(d, 'delay', 0)
-      if getattr(d, 'bandwidth', None) is None:
-        if d.src.node.type != 'SAP' and d.dst.node.type != 'SAP':
-          helper.log.warn("Resource parameter bandwidth is not given in link %s "
-                          "substituting with infinity!"%d.id)
-        setattr(d, 'bandwidth', float("inf"))
+  network = helper.substituteMissingValues(network)
 
   # create the class of the algorithm
   alg = CoreAlgorithm(network, request, chainlist, mode,
@@ -485,9 +377,10 @@ if __name__ == '__main__':
   try:
     argv = sys.argv[1:]
     if '-h' in argv or '--help' in argv:
-      print "A single mapping can be run as \"python MappingAlgorithms.py "\
-        "req.nffg net.nffg\" \nand the resulting NFFG is dumped to console. "\
-        "\nAll mapping algorithm parameters are default."
+      print "A single mapping can be run as \"python MappingAlgorithms.py " \
+            "req.nffg net.nffg\" \nand the resulting NFFG is dumped to " \
+            "console. " \
+            "\nAll mapping algorithm parameters are default."
       sys.exit()
     with open(argv[0], "r") as f:
       req = NFFG.parse(f.read())

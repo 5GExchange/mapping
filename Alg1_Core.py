@@ -41,16 +41,17 @@ except ImportError:
 class CoreAlgorithm(object):
   def __init__ (self, net0, req0, chains0, mode, cache_shortest_path,
                 overall_highest_delay,
-                bw_factor=1, res_factor=1, lat_factor=1, shortest_paths=None):
+                bw_factor=1, res_factor=1, lat_factor=1, shortest_paths=None,
+                dry_init=False):
     self.log = helper.log.getChild(self.__class__.__name__)
     self.log.setLevel(helper.log.getEffectiveLevel())
 
     self.log.info("Initializing algorithm variables")
-    # only needed to get SAP`s name by its ID and for reset()
-    self.req0 = copy.deepcopy(req0)
 
     # needed for reset()
+    self.req0 = copy.deepcopy(req0)
     self.net0 = copy.deepcopy(net0)
+
     self.original_chains = chains0
     self.enable_shortest_path_cache = cache_shortest_path
     self.mode = mode
@@ -59,6 +60,8 @@ class CoreAlgorithm(object):
     # how many of the best possible VNF mappings should be remembered
     self.bt_branching_factor = 3
     self.bt_limit = 6
+
+    self.dry_init = dry_init
 
     self._preproc(net0, req0, chains0, shortest_paths, overall_highest_delay)
 
@@ -70,19 +73,18 @@ class CoreAlgorithm(object):
     self.res_factor = res_factor
     self.lat_factor = lat_factor
 
-    ''' The new preference parameters are f(x) == 0 if x<c and f(1) == e,
-    exponential in between.
-    The bandwidth parameter refers to the average link utilization
-    on the paths to the nodes (and also collocated request links).
-    If  the even the agv is high it is much worse!'''
+    # The new preference parameters are f(x) == 0 if x<c and f(1) == e,
+    # exponential in between.
+    # The bandwidth parameter refers to the average link utilization
+    # on the paths to the nodes (and also collocated request links).
+    # If  the even the agv is high it is much worse!
     self.pref_params = dict(cpu=dict(c=0.4, e=2.5), mem=dict(c=0.4, e=2.5),
                             storage=dict(c=0.4, e=2.5),
                             bandwidth=dict(c=0.1, e=10.0))
-    """
-    Functions to give the prefence values of a given ratio of resource 
-    utilization. All fucntions should map every number between [0,1] to [0,1]
-    real intervals and should be monotonic!
-    """
+
+    # Functions to give the prefence values of a given ratio of resource
+    # utilization. All fucntions should map every number between [0,1] to [0,1]
+    # real intervals and should be monotonic!
     self.pref_funcs = dict(cpu=self._pref_noderes, mem=self._pref_noderes,
                            storage=self._pref_noderes, bandwidth=self._pref_bw)
 
@@ -106,19 +108,23 @@ class CoreAlgorithm(object):
 
     # 100 000ms is considered to be infinite latency
     self.manager = MappingManager(net0, req0, chains0,
-                                  overall_highest_delay)
+                                  overall_highest_delay, self.dry_init)
 
     self.preprocessor = GraphPreprocessor.GraphPreprocessorClass(net0, req0,
                                                                  chains0,
                                                                  self.manager)
     self.preprocessor.shortest_paths = shortest_paths
     self.net = self.preprocessor.processNetwork(self.mode,
-                                                self.enable_shortest_path_cache)
-    self.req, chains_with_subgraphs = self.preprocessor.processRequest(
-      self.mode, self.net)
-    self.bt_handler = backtrack.BacktrackHandler(chains_with_subgraphs,
-                                                 self.bt_branching_factor,
-                                                 self.bt_limit)
+                                                self.enable_shortest_path_cache,
+                                                self.dry_init)
+    if not self.dry_init:
+      self.req, chains_with_subgraphs = self.preprocessor.processRequest(
+        self.mode, self.net)
+      self.bt_handler = backtrack.BacktrackHandler(chains_with_subgraphs,
+                                                   self.bt_branching_factor,
+                                                   self.bt_limit)
+    else:
+      self.req = req0
 
   def _checkBandwidthUtilOnHost (self, i, bw_req):
     """
@@ -565,10 +571,10 @@ class CoreAlgorithm(object):
                       'reqlinkid': reqlinkid, 'last_used_node': start,
                       'bw_req': self.req[prev_vnf_id][vnf_id] \
                         [reqlinkid].bandwidth}
-    '''Edge data must be used from the substrate network!
-    NOTE(loops): shortest path from i to i is [i] (This path is the
-    collocation, and 1 long paths are handled right by the
-    _objectiveFunction()/_calculateAvgLinkUtil()/_sumLat() functions)'''
+    # Edge data must be used from the substrate network!
+    # NOTE(loops): shortest path from i to i is [i] (This path is the
+    # collocation, and 1 long paths are handled right by the
+    # _objectiveFunction()/_calculateAvgLinkUtil()/_sumLat() functions)
     paths, linkids = helper.shortestPathsBasedOnEdgeWeight(subgraph, start)
     # TODO: sort 'paths' in ordered dict according to new latency pref value.
     # allow only infras which has some 'supported'
@@ -1259,10 +1265,13 @@ class CoreAlgorithm(object):
         # i is always vnf
         self._addFlowrulesToNFFGDerivatedFromReqLinks(vnf, j, k, nffg)
 
-    self._addAntiAffinityDelegationToOutput(nffg)
+    # NOTE: in case of dry_init the E2E req pieces are not delegated to he
+    # lower orchestration layers!
+    if not self.dry_init:
+      self._addAntiAffinityDelegationToOutput(nffg)
 
-    # Add EdgeReqs to propagate E2E latency reqs.
-    self._divideEndToEndRequirements(nffg)
+      # Add EdgeReqs to propagate E2E latency reqs.
+      self._divideEndToEndRequirements(nffg)
 
     return nffg
 
@@ -1375,11 +1384,11 @@ class CoreAlgorithm(object):
                 self._takeOneGreedyStep(c['id'], bt_record)
 
             else:
-              '''We are on the end of the (sub)chain, and all chain
-              elements are mapped except the last link.
-              Execution is here if the IF condition evaluated to false:
-                - next_vnf is a SAP OR
-                - next_vnf is already mapped'''
+              # We are on the end of the (sub)chain, and all chain
+              # elements are mapped except the last link.
+              # Execution is here if the IF condition evaluated to false:
+              #   - next_vnf is a SAP OR
+              #   - next_vnf is already mapped
               self._mapOneRequestLink(c['id'], sub, curr_vnf, next_vnf,
                                       linkid)
             break

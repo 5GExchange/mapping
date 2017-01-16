@@ -42,10 +42,10 @@ class GraphPreprocessorClass(object):
     self.log.setLevel(helper.log.getEffectiveLevel())
     self.manager = manager0
 
-    '''Indicates if we have already inserted a vnf in a subchain.
-    At some state of the preprocessing,
-    if a VNF is rechained, it means that VNF will already have a place,
-    when we will be mapping (sub)chains with higher latency requirements.'''
+    # Indicates if we have already inserted a vnf in a subchain.
+    # At some state of the preprocessing,
+    # if a VNF is rechained, it means that VNF will already have a place,
+    # when we will be mapping (sub)chains with higher latency requirements.
     self.rechained = {}
 
     # If it has an edge i,j, this req. link is already included by a
@@ -163,7 +163,7 @@ class GraphPreprocessorClass(object):
     Subgraph intersections are unwrapped from the NFFG class
     """
     # why does this line hangs if we step on it with debugger??
-    relevant_ch_gr = filter(lambda b, ids=chain_ids: b[0]['id'] in ids, 
+    relevant_ch_gr = filter(lambda b, ids=chain_ids: b[0]['id'] in ids,
                             chains_w_graphs)
     intersect = min(map(lambda b: b[1], relevant_ch_gr),
                     key=lambda a: a.size()).copy()
@@ -360,7 +360,7 @@ class GraphPreprocessorClass(object):
 
           if not self.rechained[subc_path[-1]]:
             raise uet.BadInputException("There should be at least one directed"
-                      " path between SAPs in the Request Graph!", 
+                      " path between SAPs in the Request Graph!",
                       "Subchain finding couldn't get further than VNF %s."
                                         %last_vnf)
           for nf in subc_path:
@@ -391,17 +391,19 @@ class GraphPreprocessorClass(object):
     return subchains
 
   def _divideIntoDisjointSubchains (self, mode, e2e_w_graph, not_e2e):
-    """e2e is a list of tuples of SAP-SAP chains and corresponding subgraphs.
+    """
+    e2e is a list of tuples of SAP-SAP chains and corresponding subgraphs.
     not_e2e is a list of chains. Returns (subchain, subgraph) list of tuples,
-    in the order those should be mapped."""
+    in the order those should be mapped.
+    """
 
     colored_req = self._colorLinksAndVNFs(e2e_w_graph, not_e2e)
     self.manager.addReqLink_ChainMapping(colored_req)
     output = []
 
-    '''It is important to start with a chain with the most strict
-    latency req. They are the most difficult to map, because they have
-    fewer possible hosts in their corresponding subgraph.'''
+    # It is important to start with a chain with the most strict
+    # latency req. They are the most difficult to map, because they have
+    # fewer possible hosts in their corresponding subgraph.
     e2e_sorted = sorted([t[0] for t in e2e_w_graph], key=lambda c: c['delay'])
 
     rechaining_cycles = 0
@@ -413,7 +415,7 @@ class GraphPreprocessorClass(object):
       vnfs_sorted_by_degree = sorted(
          [tup for tup in colored_req.out_degree_iter() if tup[1] != 0],
          key=lambda t: t[1])
-      '''TODO: maybe delete sometimes the vnfs with 0 deg? '''
+      # TODO: maybe delete sometimes the vnfs with 0 deg?
       rechaining_cycles += 1
       for vnf, deg in vnfs_sorted_by_degree:
 
@@ -499,7 +501,7 @@ class GraphPreprocessorClass(object):
                       "network! Skipping and removing all connected edges from "
                       "the request graph..."%d.id)
         self.req_graph.del_node(d)
-      
+
     for d in self.req_graph.reqs:
       if d not in self.net.reqs:
         self.log.warn("SGHop %s to be deleted couldn't be found in substrate"
@@ -552,7 +554,7 @@ class GraphPreprocessorClass(object):
                     if sghop.dst.node.type != 'SAP':
                       raise uet.BadInputException("%s tag action should be"
                             " only in flow sequences leading to a SAP"\
-                                                  %specific_tag_format, 
+                                                  %specific_tag_format,
                             "SGHop %s doesn't end in SAP!"%sghop.id)
                     sghop.tag_info = act
     # we need to have different all-flowrule iteration, otherwise we couldn't
@@ -582,7 +584,7 @@ class GraphPreprocessorClass(object):
                     if sghop.src.node.type != 'SAP':
                       raise uet.BadInputException("%s matches without a "
                       "starting %s action in a flowrule sequence should "
-                      "originate from a SAP"%(specific_tag_format, 
+                      "originate from a SAP"%(specific_tag_format,
                        specific_tag_format), "SGHop %s doesn't originate from"
                                                   " a SAP"%sghop.id)
                     # tag_info indicates match in SGHop
@@ -692,7 +694,7 @@ class GraphPreprocessorClass(object):
     # chains. Handling this correctly is done by the MappingManager.
     return self.req_graph, divided_chains_with_graphs
 
-  def processNetwork (self, mode, cache_shortest_path):
+  def processNetwork (self, mode, cache_shortest_path, dry_init):
     """
     Computes link weights. Removes mapped VNFs from the substrate
     network, and calculates the available resources of the Infra node,
@@ -700,7 +702,7 @@ class GraphPreprocessorClass(object):
     from the network.
     Calculates shortest paths on the infrastructure, weighted by latency.
     """
-    
+
     if mode == NFFG.MODE_DEL:
       # we have to do the SG preprocessing before the substrate preprocessing
       self.preprocessed_del_req = self.processDelRequest()
@@ -748,7 +750,7 @@ class GraphPreprocessorClass(object):
                "mapped NF's host",
                "NF %s is already mapped outside of the currently given "
                "placement criteria." % vnf.id)
-    
+
     # Add available resources to 'availres' attribute of each NodeInfra.
     # Subtract the updated resource requirements of VNFs, which are in both the
     # request and substrate graphs.
@@ -777,7 +779,7 @@ class GraphPreprocessorClass(object):
         elif sg.id in sgs_in_network:
           raise uet.BadInputException("An SGHop which needs to be updated must"
                 " have both ends connected to a VNF which is left in place or a"
-                " SAP which is present in both the request and resource!", 
+                " SAP which is present in both the request and resource!",
                 "SGHop %s has one of its ends not mapped yet!"%sg.id)
     if mode != NFFG.MODE_DEL:
       # SGHops which need to be updated are ignored during available link 
@@ -800,8 +802,8 @@ class GraphPreprocessorClass(object):
                   d.availres.bandwidth > 0 else float("inf"))
           self.log.debug("Weight for node %s: %f" % (d.id, d.weight))
           self.log.debug("Supported types of node %s: %s" % (d.id, d.supported))
-    
-      # after all Flowrule sequences are traced back, and the reserved bandwidth 
+
+      # after all Flowrule sequences are traced back, and the reserved bandwidth
       # capacities are subtracted from the available resources, we can 
       # calculate the link weights. Needed in every mode, but DEL
       for i, j, k, d in net.network.edges_iter(data=True, keys=True):
@@ -861,7 +863,7 @@ class GraphPreprocessorClass(object):
          "NodeNF %s couldn`t be removed from the NFFG" % net.network.node[n].id,
          "This NodeNF probably isn`t mapped anywhere")
 
-    if mode != NFFG.MODE_DEL:
+    if mode != NFFG.MODE_DEL and not dry_init:
       if self.shortest_paths is None:
         self.log.info("Calculating shortest paths measured in latency...")
         self.shortest_paths = helper.shortestPathsInLatency(net.network,

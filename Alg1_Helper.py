@@ -13,14 +13,13 @@
 # You should have received a copy of the GNU General Public License
 # along with POX. If not, see <http://www.gnu.org/licenses/>.
 
+import copy
+import logging
 from collections import defaultdict
-import logging, copy
-
-import UnifyExceptionTypes as uet
-
-# these are needed for the modified NetworkX functions.
 from heapq import heappush, heappop
 from itertools import count
+
+import UnifyExceptionTypes as uet
 
 # Basic logger for mapping
 log = logging.getLogger("mapping")
@@ -34,6 +33,7 @@ if log.getEffectiveLevel() >= logging.WARNING:
   # If the RootLogger is not configured, setup a basic config here
   logging.basicConfig(format='%(levelname)s:%(name)s:%(message)s',
                       level=DEFAULT_LOG_LEVEL)
+
 
 def retrieveFullDistMtx (dist, G_full):
   # this fix access latency is used by CarrierTopoBuilder.py
@@ -76,13 +76,13 @@ def shortestPathsInLatency (G_full, enable_shortest_path_cache,
 
   if enable_network_cutting:
     G = copy.deepcopy(G_full)
-    for n,d in G.nodes(data=True):
+    for n, d in G.nodes(data=True):
       if d.type == 'SAP':
         G.remove_node(n)
   else:
     G = G_full
   filename = "shortest_paths_cut.txt" if enable_network_cutting \
-             else "shortest_paths.txt"
+    else "shortest_paths.txt"
   if enable_shortest_path_cache:
     try:
       with open(filename) as sp:
@@ -93,7 +93,7 @@ def shortestPathsInLatency (G_full, enable_shortest_path_cache,
       if enable_network_cutting:
         return dict(retrieveFullDistMtx(dist, G_full))
     except IOError:
-      log.warn("No input %s found, calculating shortest paths..."%filename)
+      log.warn("No input %s found, calculating shortest paths..." % filename)
     except ValueError:
       raise uet.BadInputException("Bad format in shortest_paths.txt",
                                   "In every line: src_id dst_id "
@@ -126,17 +126,19 @@ def shortestPathsInLatency (G_full, enable_shortest_path_cache,
               dist[u][v] = dist[u][w] - G.node[w].resources['delay'] + dist[w][
                 v]
               if bidirectional:
-                dist[v][u] = dist[v][w] - G.node[w].resources['delay'] + dist[w][
-                  u]
+                dist[v][u] = dist[v][w] - G.node[w].resources['delay'] + \
+                             dist[w][
+                               u]
             # Links are always considered bidirectional?!
             if u == v and bidirectional:
               break
   except KeyError as e:
     raise uet.BadInputException("",
-      "Node attribute missing %s {'delay': VALUE}" % e)
+                                "Node attribute missing %s {'delay': VALUE}"
+                                % e)
   if enable_shortest_path_cache:
     # write calclated paths to output for later use.
-    log.debug("Saving calculated shorest paths to %s."%filename)
+    log.debug("Saving calculated shorest paths to %s." % filename)
     sp = open(filename, "w")
     for u in G:
       for v in G:
@@ -167,10 +169,10 @@ def shortestPathsBasedOnEdgeWeight (G, source, weight='weight', target=None,
   edgekeys = {source: []}
   if weight == 'delay':
     selfweight = (G.node[source].resources[weight] if \
-                  G.node[source].type != 'SAP' else 0)
+                    G.node[source].type != 'SAP' else 0)
   else:
     selfweight = (getattr(G.node[source], weight, 0) if \
-                  G.node[source].type != 'SAP' else 0)
+                    G.node[source].type != 'SAP' else 0)
   seen = {source: selfweight}
   c = count()
   fringe = []  # use heapq with (distance,label) tuples
@@ -189,8 +191,9 @@ def shortestPathsBasedOnEdgeWeight (G, source, weight='weight', target=None,
       neighbourdata = []
       for k, dd in keydata.items():
         if not hasattr(dd, weight):
-          raise uet.BadInputException("Link %s should have edge attribute %s"%k,
-                                      "Link %s is %s"%(k, dd))
+          raise uet.BadInputException(
+            "Link %s should have edge attribute %s" % k,
+            "Link %s is %s" % (k, dd))
         neighbourdata.append((getattr(dd, weight), k))
       minweight, edgekey = min(neighbourdata, key=lambda t: t[0])
       edata.append((w, edgekey, {weight: minweight}))
@@ -214,12 +217,135 @@ def shortestPathsBasedOnEdgeWeight (G, source, weight='weight', target=None,
         push(fringe, (vw_dist, next(c), w))
         paths[w] = paths[v] + [w]
         edgekeys[w] = edgekeys[v] + [ekey]
-  log.debug("Calculated distances from %s based on %s: %s"%
+  log.debug("Calculated distances from %s based on %s: %s" %
             (source, weight, dist))
   return paths, edgekeys
 
 
-def purgeNFFGFromInfinityValues(nffg):
+def retrieveE2EServiceChainsFromEdgeReqs (request):
+  """
+  Processes the service graph to retrieve the SC information and deletes the
+  corresponding EdgeReq links from the SG.
+
+  :param request: The service graph which contains EdgeReqs
+  :return: a list of SC-s in format used by Algorithm1
+  """
+  chainlist = []
+  cid = 1
+  edgereqlist = []
+  for req in request.reqs:
+    edgereqlist.append(req)
+    request.del_edge(req.src, req.dst, req.id)
+
+  # construct chains from EdgeReqs
+  for req in edgereqlist:
+
+    if len(req.sg_path) == 1:
+      # then add it as linklocal req instead of E2E req
+      log.info("Interpreting one SGHop long EdgeReq (id: %s) as link "
+               "requirement on SGHop: %s." % (req.id, req.sg_path[0]))
+      reqlink = None
+      for sg_link in request.sg_hops:
+        if sg_link.id == req.sg_path[0]:
+          reqlink = sg_link
+          break
+      if reqlink is None:
+        log.warn("EdgeSGLink object not found for EdgeSGLink ID %s! "
+                 "(maybe ID-s stored in EdgeReq.sg_path are not the "
+                 "same type as EdgeSGLink ID-s?)")
+      if req.delay is not None:
+        setattr(reqlink, 'delay', req.delay)
+      if req.bandwidth is not None:
+        setattr(reqlink, 'bandwidth', req.bandwidth)
+    elif len(req.sg_path) == 0:
+      raise uet.BadInputException(
+        "If EdgeReq is given, it should specify which SGHop path does it "
+        "apply to", "Empty SGHop path was given to %s EdgeReq!" % req.id)
+    else:
+      try:
+        chain = {'id': cid, 'link_ids': req.sg_path,
+                 'bandwidth': req.bandwidth if req.bandwidth is not None else 0,
+                 'delay': req.delay if req.delay is not None else float("inf")}
+      except AttributeError:
+        raise uet.BadInputException(
+          "EdgeReq attributes are: sg_path, bandwidth, delay",
+          "Missing attribute of EdgeReq")
+      # reconstruct NF path from EdgeSGLink path
+      nf_chain = []
+      for reqlinkid in req.sg_path:
+
+        # find EdgeSGLink object of 'reqlinkid'
+        reqlink = None
+        for sg_link in request.sg_hops:
+          if sg_link.id == reqlinkid:
+            reqlink = sg_link
+            break
+        else:
+          raise uet.BadInputException(
+            "Elements of EdgeReq.sg_path should be EdgeSGLink.id-s.",
+            "SG link %s couldn't be found in input request NFFG" % reqlinkid)
+        # add the source node id of the EdgeSGLink to NF path
+        nf_chain.append(reqlink.src.node.id)
+        # add the destination node id of the last EdgeSGLink to NF path
+        if reqlinkid == req.sg_path[-1]:
+          if reqlink.dst.node.id != req.dst.node.id:
+            raise uet.BadInputException(
+              "EdgeReq.sg_path should select a path between its two ends",
+              "Last NF (%s) of EdgeReq.sg_path and destination of EdgeReq ("
+              "%s) are not the same!" % (reqlink.dst.node.id, req.dst.node.id))
+          nf_chain.append(reqlink.dst.node.id)
+        # validate EdgeReq ends.
+        if reqlinkid == req.sg_path[0] and \
+              reqlink.src.node.id != req.src.node.id:
+          raise uet.BadInputException(
+            "EdgeReq.sg_path should select a path between its two ends",
+            "First NF (%s) of EdgeReq.sg_path and source of EdgeReq (%s) are "
+            "not the same!" % (reqlink.src.node.id, req.src.node.id))
+        chain['chain'] = nf_chain
+      cid += 1
+      chainlist.append(chain)
+  return chainlist
+
+
+def substituteMissingValues (net):
+  """
+  Checks all resource parameters in the substrate network and substitutes the
+  missing ones with either infinity or zero depending on the resource type,
+  which means permissive behaviour. Modifies the input NFFG
+
+  :param net: substrate network NFFG to process
+  :return: the modified NFFG
+  """
+  # if some resource value is not set (is None) then be permissive and set it
+  # to a comfortable value.
+  for respar in ('cpu', 'mem', 'storage', 'delay', 'bandwidth'):
+    for n in net.infras:
+      if n.resources[respar] is None:
+        if respar == 'delay':
+          log.warn("Resource parameter %s is not given in %s, "
+                   "substituting with 0!" % (respar, n.id))
+          n.resources[respar] = 0
+        else:
+          log.warn("Resource parameter %s is not given in %s, "
+                   "substituting with infinity!" % (respar, n.id))
+          n.resources[respar] = float("inf")
+  # If link res is None or doesn't exist, replace it with a neutral value.
+  for i, j, d in net.network.edges_iter(data=True):
+    if d.type == 'STATIC':
+      if getattr(d, 'delay', None) is None:
+        if d.src.node.type != 'SAP' and d.dst.node.type != 'SAP':
+          log.warn("Resource parameter delay is not given in link %s "
+                   "substituting with zero!" % d.id)
+        setattr(d, 'delay', 0)
+      if getattr(d, 'bandwidth', None) is None:
+        if d.src.node.type != 'SAP' and d.dst.node.type != 'SAP':
+          log.warn("Resource parameter bandwidth is not given in link %s "
+                   "substituting with infinity!" % d.id)
+        setattr(d, 'bandwidth', float("inf"))
+  return net
+
+
+def purgeNFFGFromInfinityValues (nffg):
   """
   Before running the algorithm None values for resources were replaced by 
   Infinity value to ensure seamless mapping, in case of missing parameters.
@@ -262,13 +388,14 @@ def processInputSAPAlias (nffg):
         for ps in sap.ports:
           # This indicates that they are logically the same service access
           # points, which should be kept on the same infra after mapping.
-          if pn.sap == ps.sap and pn.sap is not None and ps.sap is not None and \
-             pn.role == nffg.PORT_ROLE_PROVIDER and \
-             ps.role == nffg.PORT_ROLE_PROVIDER:
+          if pn.sap == ps.sap and pn.sap is not None and ps.sap is not None \
+             and \
+                pn.role == nffg.PORT_ROLE_PROVIDER and \
+                ps.role == nffg.PORT_ROLE_PROVIDER:
             # id, bandwidth, flowclass are don't care
             log.debug("Adding fake SGHop for SAP alias handling between nodes"
-                      " %s, %s with SAP value: %s"%(pn.node.id, ps.node.id, 
-                                                    pn.sap))
+                      " %s, %s with SAP value: %s" % (pn.node.id, ps.node.id,
+                                                      pn.sap))
             sg1 = nffg.add_sglink(ps, pn, delay=0)
             sg2 = nffg.add_sglink(pn, ps, delay=0)
             sap_alias_links.append(sg1)
@@ -285,7 +412,7 @@ def processOutputSAPAlias (nffg):
   if hasattr(nffg, 'sap_alias_links'):
     for sg in nffg.sap_alias_links:
       log.debug("Deleting fake SGHop between nodes %s, %s with SAP value: %s"
-                %(sg.src.node.id, sg.dst.node.id, sg.src.sap))
+                % (sg.src.node.id, sg.dst.node.id, sg.src.sap))
       nffg.del_flowrules_of_SGHop(sg.id)
       if nffg.network.has_edge(sg.src.node.id, sg.dst.node.id, key=sg.id):
         nffg.del_edge(sg.src, sg.dst, sg.id)
@@ -335,7 +462,7 @@ def mapConsumerSAPPort (req, net):
                     sap_total_consumer_counts[hosting_infra.id] = consumer_count
                   else:
                     consumer_count = sap_total_consumer_counts[hosting_infra.id]
-                  sap_provider_ports.append((hosting_infra, nf2, p2, 
+                  sap_provider_ports.append((hosting_infra, nf2, p2,
                                              consumer_count))
                 # don't add this NF multiple times if it has more provider SAPs 
                 # for the same service, named 'sap'.
@@ -343,48 +470,54 @@ def mapConsumerSAPPort (req, net):
           # we can choose the Infra/VNF which host the least consumer SAP ports 
           # so far. NOTE: the SAPconsumerNFs' resources are not subtracted 
           # greedily during this mapping, so this can cause mapping errors! If 
-          # there is always only one SAPconsumer in the SG, this is not a problem.
+          # there is always only one SAPconsumer in the SG, this is not a
+          # problem.
           try:
             infra, provider_nf, provider_port, cons_count = \
-                   min(sap_provider_ports, key=lambda t: t[3])
+              min(sap_provider_ports, key=lambda t: t[3])
             sap_total_consumer_counts[infra.id] += 1
-            mapped_nfs_to_be_added.append((provider_nf, provider_port, 
+            mapped_nfs_to_be_added.append((provider_nf, provider_port,
                                            nf, p, infra))
           except ValueError:
             raise uet.MappingException("No provider SAP could be found for "
-                  "consumer SAP of VNF %s of service name %s"%(nf.id, p.sap), 
+                                       "consumer SAP of VNF %s of service "
+                                       "name %s" % (
+                                       nf.id, p.sap),
                                        backtrack_possible=False)
   sap_alias_links = []
   # the SG is prerocessed with the addition of the SAPProviderVNFs.
   for provider_nf, provider_port, consumer_nf, consumer_port, infra in \
-      mapped_nfs_to_be_added:
-    log.debug("Adding an already mapped NF to indicate the place of the provider"
-              " SAP for service name %s."%provider_port.sap)
+     mapped_nfs_to_be_added:
+    log.debug(
+      "Adding an already mapped NF to indicate the place of the provider"
+      " SAP for service name %s." % provider_port.sap)
     provider_nf_copy = req.add_nf(nf=copy.deepcopy(provider_nf))
 
     # NOTE: This would be better instead of 0-delay links!
     # setattr(consumer_nf, 'placement_criteria', [infra.id])
     log.debug("Adding fake SGHops between %s and %s to indicate SAP provider-"
-              "consumer connection for service %s."%
+              "consumer connection for service %s." %
               (provider_nf.id, consumer_nf.id, provider_port.sap))
-    sg1 = req.add_sglink(provider_nf_copy.ports[provider_port.id], consumer_port,
+    sg1 = req.add_sglink(provider_nf_copy.ports[provider_port.id],
+                         consumer_port,
                          delay=0)
-    sg2 = req.add_sglink(consumer_port, provider_nf_copy.ports[provider_port.id],
+    sg2 = req.add_sglink(consumer_port,
+                         provider_nf_copy.ports[provider_port.id],
                          delay=0)
     sap_alias_links.append(sg1)
     sap_alias_links.append(sg2)
 
   # return the modified SG
-  return req, sap_alias_links 
+  return req, sap_alias_links
 
 
 def _addBackwardAntiAffinity (nffg, nf_id, aaff_pair_id, aaff_id):
-  if nf_id not in nffg.network.node[aaff_pair_id].constraints.\
+  if nf_id not in nffg.network.node[aaff_pair_id].constraints. \
      antiaffinity.itervalues():
     log.debug("Add backward anti-affinity between VNFs %s and %s to "
-              "make it symmetric."%(nf_id, aaff_pair_id))
-    nffg.network.node[aaff_pair_id].\
-      constraints.antiaffinity[aaff_id+"-back"] = nf_id
+              "make it symmetric." % (nf_id, aaff_pair_id))
+    nffg.network.node[aaff_pair_id]. \
+      constraints.antiaffinity[aaff_id + "-back"] = nf_id
 
 
 def makeAntiAffinitySymmetric (req, net):
@@ -408,8 +541,8 @@ def makeAntiAffinitySymmetric (req, net):
           _addBackwardAntiAffinity(req, nf.id, aaff_pair_id, aaff_id)
         else:
           raise uet.BadInputException("Anti-affinity should refer to a VNF "
-                "which is in the request graph or mapped already in the "
-                "substrate graph", "VNF %s not found for anti-affiny from %s"
-                " to %s"%(aaff_pair_id, nf.id, aaff_pair_id))
-          
-
+                                      "which is in the request graph or mapped already in the "
+                                      "substrate graph",
+                                      "VNF %s not found for anti-affiny from %s"
+                                      " to %s" % (
+                                      aaff_pair_id, nf.id, aaff_pair_id))
