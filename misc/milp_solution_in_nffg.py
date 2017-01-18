@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with POX. If not, see <http://www.gnu.org/licenses/>.
 
+import copy
 import logging
 import os
 import sys
@@ -60,8 +61,11 @@ def get_MIP_solution (reqnffgs, netnffg):
   if isFeasibleStatus(mc.run_milp()):
     solution = mc.solution
     solution.validate_solution(debug_output=False)
-
-    return solution.mapping_of_request
+    if len(solution.mapping_of_request) > 1:
+      raise Exception(
+        "MILP shouldn't have produced multiple mappings, because the input "
+        "request NFFGs were merged together into one request NFFG")
+    return solution.mapping_of_request.values()[0]
 
 
 def get_edge_id (g, srcid, srcpid, dstpid, dstid):
@@ -109,7 +113,17 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
 
   # batch together all nffgs
   for r in request_seq[1:]:
+    log.critical(
+      "MILP shouldn't receive multiple request NFFGs (correct merge with "
+      "deepcopies takes too much time), although the MILP formulation can "
+      "handle multiple request NFFGs and embed only a part of them")
     request = NFFGToolBox.merge_nffgs(request, r)
+
+  # TEST to make heuristic and MILP even in number of large object deepcopies
+  # This would also be required for correct behaviour (Maybe the mapping
+  # shouldn't change the input NFFG)
+  request = copy.deepcopy(request)
+  net = copy.deepcopy(net)
 
   # Rebind EdgeReqs to SAP-to-SAP paths, instead of BiSBiS ports
   # So EdgeReqs should either go between SAP-s, or InfraPorts which are
@@ -141,49 +155,46 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
     time.time() - current_time))
   current_time = time.time()
 
-  mapping_of_reqs = get_MIP_solution(request_seq, net)
+  mapping_of_req = get_MIP_solution(request_seq, net)
 
   log.debug("TIMING: %ss has passed with MILP calculation" % (
     time.time() - current_time))
   current_time = time.time()
 
   mappedNFFG = NFFG(id="MILP-mapped")
-  for transformed_req in mapping_of_reqs:
-    if mapping_of_reqs[transformed_req].is_embedded:
-      alg.manager.vnf_mapping = []
-      alg.manager.link_mapping = nx.MultiDiGraph()
-      for n, vlist in mapping_of_reqs[transformed_req]. \
-         snode_to_hosted_vnodes.items():
-        for v in vlist:
-          alg.manager.vnf_mapping.append((v, n))
-      trans_link_mapping = mapping_of_reqs[transformed_req].vedge_to_spath
-      for trans_sghop in trans_link_mapping:
-        vnf1 = trans_sghop[0]
-        vnf2 = trans_sghop[3]
-        reqlid = get_edge_id(alg.req, vnf1, trans_sghop[1],
-                             trans_sghop[2], vnf2)
-        mapped_path = []
-        path_link_ids = []
-        for trans_link in trans_link_mapping[trans_sghop]:
-          n1 = trans_link[0]
-          n2 = trans_link[3]
-          lid = get_edge_id(alg.net, n1, trans_link[1], trans_link[2], n2)
-          mapped_path.append(n1)
-          path_link_ids.append(lid)
-        if len(trans_link_mapping[trans_sghop]) == 0:
-          mapped_path.append(alg.manager.getIdOfChainEnd_fromNetwork(vnf1))
-        else:
-          mapped_path.append(n2)
+  if mapping_of_req.is_embedded:
+    alg.manager.vnf_mapping = []
+    alg.manager.link_mapping = nx.MultiDiGraph()
+    for n, vlist in mapping_of_req.snode_to_hosted_vnodes.items():
+      for v in vlist:
+        alg.manager.vnf_mapping.append((v, n))
+    trans_link_mapping = mapping_of_req.vedge_to_spath
+    for trans_sghop in trans_link_mapping:
+      vnf1 = trans_sghop[0]
+      vnf2 = trans_sghop[3]
+      reqlid = get_edge_id(alg.req, vnf1, trans_sghop[1],
+                           trans_sghop[2], vnf2)
+      mapped_path = []
+      path_link_ids = []
+      for trans_link in trans_link_mapping[trans_sghop]:
+        n1 = trans_link[0]
+        n2 = trans_link[3]
+        lid = get_edge_id(alg.net, n1, trans_link[1], trans_link[2], n2)
+        mapped_path.append(n1)
+        path_link_ids.append(lid)
+      if len(trans_link_mapping[trans_sghop]) == 0:
+        mapped_path.append(alg.manager.getIdOfChainEnd_fromNetwork(vnf1))
+      else:
+        mapped_path.append(n2)
 
-        alg.manager.link_mapping.add_edge(vnf1, vnf2, key=reqlid,
-                                          mapped_to=mapped_path,
-                                          path_link_ids=path_link_ids)
+      alg.manager.link_mapping.add_edge(vnf1, vnf2, key=reqlid,
+                                        mapped_to=mapped_path,
+                                        path_link_ids=path_link_ids)
 
-      oneNFFG = alg.constructOutputNFFG()
-      mappedNFFG = NFFGToolBox.merge_nffgs(mappedNFFG, oneNFFG)
-    else:
-      print "MILP didn't produce a mapping for request %s" % transformed_req
-      return None
+    mappedNFFG = alg.constructOutputNFFG()
+  else:
+    log.info("MILP didn't produce a mapping for request %s" % mapping_of_req)
+    return None
 
   # replace Infinity values
   helper.purgeNFFGFromInfinityValues(mappedNFFG)

@@ -1335,6 +1335,10 @@ class CoreAlgorithm(object):
     return nffg
 
   def start (self):
+    if self.dry_init:
+      raise uet.BadInputException(
+        "With dry_init set True, mapping execution cannot proceed",
+        "Initialization was in dry_init mode!")
     if self.mode == NFFG.MODE_DEL:
       return self.constructDelOutputNFFG()
 
