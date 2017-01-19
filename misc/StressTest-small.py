@@ -21,7 +21,7 @@ network topology, reports how well the algorithm performed.
 import os
 import sys
 # Needed to run the Algorithm scripts in the parent folder.
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import getopt
 import logging
 import math

@@ -20,7 +20,7 @@ import sys
 import time
 
 # Needed to run the Algorithm scripts in the parent folder.
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import networkx as nx
 import Alg1_Helper as helper
 
@@ -128,7 +128,7 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
   # Rebind EdgeReqs to SAP-to-SAP paths, instead of BiSBiS ports
   # So EdgeReqs should either go between SAP-s, or InfraPorts which are
   # connected to a SAP
-  request = NFFGToolBox.rebind_e2e_req_links(request)
+  # request = NFFGToolBox.rebind_e2e_req_links(request)
 
   chainlist = helper.retrieveE2EServiceChainsFromEdgeReqs(request)
 
@@ -155,7 +155,7 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
     time.time() - current_time))
   current_time = time.time()
 
-  mapping_of_req = get_MIP_solution(request_seq, net)
+  mapping_of_req = get_MIP_solution([request], net)
 
   log.debug("TIMING: %ss has passed with MILP calculation" % (
     time.time() - current_time))
@@ -207,6 +207,6 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
 
 
 if __name__ == '__main__':
-  convert_mip_solution_to_nffg(['../examples/escape-mn-req.nffg'],
-                               '../examples/escape-mn-topo-duplicatedlinks.nffg',
+  convert_mip_solution_to_nffg(['../../examples/escape-mn-req.nffg'],
+                               '../../examples/escape-mn-topo-duplicatedlinks.nffg',
                                file_inputs=True)
