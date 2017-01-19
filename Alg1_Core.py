@@ -42,7 +42,7 @@ class CoreAlgorithm(object):
   def __init__ (self, net0, req0, chains0, mode, cache_shortest_path,
                 overall_highest_delay,
                 bw_factor=1, res_factor=1, lat_factor=1, shortest_paths=None,
-                dry_init=False):
+                dry_init=False, propagate_e2e_reqs=True):
     self.log = helper.log.getChild(self.__class__.__name__)
     self.log.setLevel(helper.log.getEffectiveLevel())
 
@@ -61,7 +61,11 @@ class CoreAlgorithm(object):
     self.bt_branching_factor = 3
     self.bt_limit = 6
 
+    # If dry_init the algorithm initialization avoids every calculation
+    # intensive step, could be used to change the mapping structure and
+    # construct an output NFFG based on a custom mapping structure
     self.dry_init = dry_init
+    self.propagate_e2e_reqs = propagate_e2e_reqs
 
     self._preproc(net0, req0, chains0, shortest_paths, overall_highest_delay)
 
@@ -1270,6 +1274,7 @@ class CoreAlgorithm(object):
     if not self.dry_init:
       self._addAntiAffinityDelegationToOutput(nffg)
 
+    if self.propagate_e2e_reqs:
       # Add EdgeReqs to propagate E2E latency reqs.
       self._divideEndToEndRequirements(nffg)
 
