@@ -1,4 +1,3 @@
-
 # Copyright (c) 2014 Balazs Nemeth
 #
 # This file is free software: you can redistribute it and/or modify it
@@ -28,8 +27,9 @@ try:
   from escape.nffg_lib.nffg import NFFG
 except ImportError:
   import sys, os
+
   sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                  "../escape/escape/nffg_lib/")))
+                                               "../escape/escape/nffg_lib/")))
   from nffg import NFFG
 
 
@@ -63,7 +63,7 @@ class GraphPreprocessorClass(object):
 
     if sap_end == -1 or sap_begin == -1:
       raise uet.InternalAlgorithmException(
-         "Called subgraph finding with one of the chain ends not yet mapped!")
+        "Called subgraph finding with one of the chain ends not yet mapped!")
 
     req_saps = {self.manager.getIdOfChainEnd_fromNetwork(sap.id)
                 for sap in self.req_graph.saps
@@ -72,10 +72,10 @@ class GraphPreprocessorClass(object):
     req_saps.add(sap_end)
     if -1 in req_saps:
       raise uet.BadInputException(
-         "All SAPs in the Request graph should have unambiguous pair in the "
-         "substrate network",
-         "One of the request SAPs couldn't be mapped to a SAP in the "
-         "substrate network!")
+        "All SAPs in the Request graph should have unambiguous pair in the "
+        "substrate network",
+        "One of the request SAPs couldn't be mapped to a SAP in the "
+        "substrate network!")
     current = sap_begin
     pending = []
     visited = {sap_begin}
@@ -107,15 +107,15 @@ class GraphPreprocessorClass(object):
     if sap_end not in visited:
       if nx.has_path(self.net.network, sap_begin, sap_end):
         self.log.error(
-           "Chain end is further than latency requirement, for chain: %s" %
-           chain)
+          "Chain end is further than latency requirement, for chain: %s" %
+          chain)
         raise uet.MappingException(
-           "Chain end is further than latency requirement, for chain: %s" %
-           chain, False)
+          "Chain end is further than latency requirement, for chain: %s" %
+          chain, False)
       else:
         raise uet.BadInputException(
-           "Ending SAP should be accessible from starting SAP.",
-           "There is no path between the ends of the service chain!")
+          "Ending SAP should be accessible from starting SAP.",
+          "There is no path between the ends of the service chain!")
 
     # attributes of nx::subgraph() points to the original, better call copy()
     # -DON`T we want attribute changes to be reflected in the big
@@ -162,9 +162,14 @@ class GraphPreprocessorClass(object):
     the given list of chain ids.
     Subgraph intersections are unwrapped from the NFFG class
     """
+    """
     # why does this line hangs if we step on it with debugger??
     relevant_ch_gr = filter(lambda b, ids=chain_ids: b[0]['id'] in ids,
                             chains_w_graphs)
+    # NOTE: optimization shortcut to avoid unnecessary copy - IS IT CORRECT??
+    # if len(relevant_ch_gr) == 1:
+    #   return relevant_ch_gr[0][1]
+
     intersect = min(map(lambda b: b[1], relevant_ch_gr),
                     key=lambda a: a.size()).copy()
     if len(relevant_ch_gr) > 1:
@@ -172,10 +177,10 @@ class GraphPreprocessorClass(object):
         if c['id'] in chain_ids and g is not intersect:
           intersect.remove_nodes_from(
              [n for n in intersect.nodes_iter() if n not in g])
-    '''We want only the graph structure to be copied, the attributes
-    shall point to the original ones. Set the references back to the
-    PREPROCESSED NETWORK wich`s attributes will be updated during mapping
-    NOTE:values are not changed in this stage.'''
+    # We want only the graph structure to be copied, the attributes
+    # shall point to the original ones. Set the references back to the
+    # PREPROCESSED NETWORK wich`s attributes will be updated during mapping
+    # NOTE:values are not changed in this stage.
     if intersect.size() == 0:
       self.log.warn("An intersection of subgraphs for determining the possible "
                     "hosting network part of a subchain doesn't contain nodes!")
@@ -184,6 +189,29 @@ class GraphPreprocessorClass(object):
     for n in intersect.nodes_iter():
       intersect.node[n] = self.net.network.node[n]
 
+    return intersect
+    """
+    self.log.debug(
+      "Calculating intersection over the subgraphs of chain IDs: %s" %
+      chain_ids)
+    # filter the graphs whose chain ID is contained in chain_ids.
+    relevant_ch_gr = filter(lambda b, ids=chain_ids: b[0]['id'] in ids,
+                            chains_w_graphs)
+    # add temporary nodes so the node set of the graphs would be the same,
+    # these nodes have 0 degress
+    for n in self.net.network:
+      for ch, g in filter(lambda t, nid=n: nid not in t[1], relevant_ch_gr):
+        g.add_node(n)
+    # make the intersections incrementally (this keeps the attribute pointers
+    #  to the original graph, referenced by self.net)
+    intersect = relevant_ch_gr[0][1]
+    for ch, g in relevant_ch_gr[1:]:
+      intersect = nx.intersection(intersect, g)
+
+    # remove the
+    intersect.remove_nodes_from([n for n, d in
+                                 filter(lambda t: t[1] == 0,
+                                        intersect.degree_iter())])
     return intersect
 
   def _getNextIdOfSubchain (self, curr_vnf, act_color, colored_req, path):
@@ -207,11 +235,11 @@ class GraphPreprocessorClass(object):
                                                  subc_path)
     if next_vnf is None:
       self.log.error(
-         "Subchain with color %s cannot consist of only one VNF: %s" % (
-           act_color, start))
+        "Subchain with color %s cannot consist of only one VNF: %s" % (
+          act_color, start))
       raise uet.InternalAlgorithmException(
-         "Subchain with color %s cannot consist of only one VNF: %s" % (
-           act_color, start))
+        "Subchain with color %s cannot consist of only one VNF: %s" % (
+          act_color, start))
     while next_vnf is not None:
       subc_path.append(next_vnf)
       link_ids.append(linkid)
@@ -219,7 +247,7 @@ class GraphPreprocessorClass(object):
         self.rechained[next_vnf] = True
         if hash(colored_req.node[next_vnf]['color']) != hash(act_color):
           subg_intersect = self._getIntersectionOfSubgraphs_by_ChainIds(
-             colored_req.node[next_vnf]['color'], e2e_w_graph).nodes()
+            colored_req.node[next_vnf]['color'], e2e_w_graph).nodes()
           current_place_crit = self.req_graph.network.node[
             next_vnf].placement_criteria
           if len(current_place_crit) > 0:
@@ -227,8 +255,8 @@ class GraphPreprocessorClass(object):
                               n in current_place_crit]
             if len(new_place_crit) == 0:
               raise uet.MappingException(
-                 "Given and internal placement criteria has no intersection.",
-                 False)
+                "Given and internal placement criteria has no intersection.",
+                False)
             self.req_graph.network.node[
               next_vnf].placement_criteria = new_place_crit
           else:
@@ -250,7 +278,7 @@ class GraphPreprocessorClass(object):
     subc['id'] = self.max_chain_id
 
     self.log.debug(
-       "Subchain added: %s \n with subgraph size: %s" % (subc, subg.size()))
+      "Subchain added: %s \n with subgraph size: %s" % (subc, subg.size()))
 
     for i, j, k in zip(subc_path[:-1], subc_path[1:], link_ids):
       self.link_rechained.add_edge(i, j, key=k)
@@ -288,10 +316,10 @@ class GraphPreprocessorClass(object):
 
   def _checkIfNextVNFRechained (self, best_effort_graph, last_vnf):
     for possible_subc_ending in \
-        best_effort_graph.neighbors_iter(last_vnf):
+       best_effort_graph.neighbors_iter(last_vnf):
       if self.rechained[possible_subc_ending]:
-        linkid = next(best_effort_graph[last_vnf][\
-                      possible_subc_ending].iterkeys())
+        linkid = next(best_effort_graph[last_vnf][ \
+                        possible_subc_ending].iterkeys())
         # if we succesfully found a rechained node, we can 
         # terminate this subchain.
         return possible_subc_ending, linkid
@@ -322,8 +350,8 @@ class GraphPreprocessorClass(object):
                 linkid = next(best_effort_graph[i][j].iterkeys())
                 if len(best_effort_graph[i][j][linkid]['color']) != 0:
                   raise uet.InternalAlgorithmException(
-                     "There should not be colored edges left in the helper "
-                     "request graph after rechaining all not best effort links!")
+                    "There should not be colored edges left in the helper "
+                    "request graph after rechaining all not best effort links!")
                 link_ids.append(linkid)
                 subc_path.append(j)
                 last_vnf = j
@@ -333,7 +361,7 @@ class GraphPreprocessorClass(object):
                 # don't go further if the DFS would change path
                 break
             terminating_nf, terminating_link = \
-                self._checkIfNextVNFRechained(best_effort_graph, last_vnf)
+              self._checkIfNextVNFRechained(best_effort_graph, last_vnf)
             if terminating_link is not None and terminating_nf is not None:
               # This can happen when the DFS path stopped before the last 
               # link of a loop back to a SAP or a rechained node.
@@ -345,7 +373,7 @@ class GraphPreprocessorClass(object):
               self.link_rechained.add_edge(i, j, key=k)
               # it is possible we have already removed this edge in previous 
               # DFS run of the rechaining.
-              if best_effort_graph.has_edge(i,j,k):
+              if best_effort_graph.has_edge(i, j, k):
                 best_effort_graph.remove_edge(i, j, k)
             if self.rechained[last_vnf]:
               # either because of the manual adding of the last link or the
@@ -360,9 +388,11 @@ class GraphPreprocessorClass(object):
 
           if not self.rechained[subc_path[-1]]:
             raise uet.BadInputException("There should be at least one directed"
-                      " path between SAPs in the Request Graph!",
-                      "Subchain finding couldn't get further than VNF %s."
-                                        %last_vnf)
+                                        " path between SAPs in the Request "
+                                        "Graph!",
+                                        "Subchain finding couldn't get "
+                                        "further than VNF %s."
+                                        % last_vnf)
           for nf in subc_path:
             self.rechained[nf] = True
           subc['chain'] = subc_path
@@ -372,7 +402,7 @@ class GraphPreprocessorClass(object):
           # the empty color means that this link is best effort.
           self.manager.addChain_SubChainDependency(subc['id'], [], subc_path,
                                                    link_ids)
-          self.log.debug("Adding best-effort subchain with path %s"%subc_path)
+          self.log.debug("Adding best-effort subchain with path %s" % subc_path)
           subchains.append((subc, self.net.network))
           consecutive_failure_counter = 0
         elif best_effort_graph.out_degree(vnf) == 0 and \
@@ -380,10 +410,14 @@ class GraphPreprocessorClass(object):
           best_effort_graph.remove_node(vnf)
           consecutive_failure_counter = 0
         elif consecutive_failure_counter > \
-             10 * best_effort_graph.number_of_edges():
+              10 * best_effort_graph.number_of_edges():
           raise uet.InternalAlgorithmException("Invalid or inconsistent graph "
-                "structure found during best-effort link extraction. Would have"
-                " run into infinite loop probably... Maybe unmapped graph part "
+                                               "structure found during "
+                                               "best-effort link extraction. "
+                                               "Would have"
+                                               " run into infinite loop "
+                                               "probably... Maybe unmapped "
+                                               "graph part "
                                                "not connected to any SAP?")
         else:
           consecutive_failure_counter += 1
@@ -413,8 +447,8 @@ class GraphPreprocessorClass(object):
                      colored_req.edges_iter(data=True))) != 0:
       e2e = e2e_sorted[rechaining_cycles % len(e2e_sorted)]
       vnfs_sorted_by_degree = sorted(
-         [tup for tup in colored_req.out_degree_iter() if tup[1] != 0],
-         key=lambda t: t[1])
+        [tup for tup in colored_req.out_degree_iter() if tup[1] != 0],
+        key=lambda t: t[1])
       # TODO: maybe delete sometimes the vnfs with 0 deg?
       rechaining_cycles += 1
       for vnf, deg in vnfs_sorted_by_degree:
@@ -445,7 +479,7 @@ class GraphPreprocessorClass(object):
               colored_req.remove_edge(i, j, k)
             except nx.NetworkXError as e:
               raise uet.InternalAlgorithmException(
-                 "Mistake in  colored request graph maintenance, error: %s" % e)
+                "Mistake in  colored request graph maintenance, error: %s" % e)
           break
 
     # by this time, only uncolored (best effort) links should be left in 
@@ -455,13 +489,13 @@ class GraphPreprocessorClass(object):
     if not reduce(lambda a, b: a and b, self.rechained.values()):
       self.log.critical("There is a VNF, which is not in any subchain!!")
       raise uet.InternalAlgorithmException(
-         "There is a VNF, which is not in any subchain!!")
+        "There is a VNF, which is not in any subchain!!")
     if not reduce(lambda a, b: a and b,
                   [self.link_rechained.has_edge(i, j, key=k) for i, j, k in
                    self.req_graph.network.edges_iter(keys=True)]):
       self.log.critical("There is a link, which is not in any subchain!!")
       raise uet.InternalAlgorithmException(
-         "There is a link, which is not in any subchain!!")
+        "There is a link, which is not in any subchain!!")
 
     # sort the subchains in predecessor order and secondly latency req order
     # - Does it make the earlier latency sorting unnecessary?
@@ -483,7 +517,7 @@ class GraphPreprocessorClass(object):
       output = [c for c in output if c not in next_subchains]
       # sort (now using delay too) and add next_subchains to sorted_output
       sorted_output.extend(
-         sorted(next_subchains, cmp=self._compareSubchainSubgraphTuples))
+        sorted(next_subchains, cmp=self._compareSubchainSubgraphTuples))
 
     # map best effort subchains only after all of the chains are mapped entirely
     sorted_output.extend(best_effort_subchains)
@@ -499,19 +533,20 @@ class GraphPreprocessorClass(object):
       if d.id not in self.net.network.nodes_iter():
         self.log.warn("NF %s to be deleted couldn't be found in substrate "
                       "network! Skipping and removing all connected edges from "
-                      "the request graph..."%d.id)
+                      "the request graph..." % d.id)
         self.req_graph.del_node(d)
 
     for d in self.req_graph.reqs:
       if d not in self.net.reqs:
         self.log.warn("SGHop %s to be deleted couldn't be found in substrate"
-                      " network! Skipping..."%d.id)
+                      " network! Skipping..." % d.id)
         self.req_graph.del_edge(d.src, d.dst, d.id)
 
     # Simply remove the infra nodes (The Dynamic and Static links go with them)
     for infra in [i for i in self.req_graph.infras]:
-      self.log.warn("Infra node %s found in DEL request graph! Removing with all"
-                    " connected edges!"%infra.id)
+      self.log.warn(
+        "Infra node %s found in DEL request graph! Removing with all"
+        " connected edges!" % infra.id)
       self.req_graph.del_node(infra)
 
     return self.req_graph
@@ -553,9 +588,11 @@ class GraphPreprocessorClass(object):
                     # tag_info indicates action in SGHop
                     if sghop.dst.node.type != 'SAP':
                       raise uet.BadInputException("%s tag action should be"
-                            " only in flow sequences leading to a SAP"\
-                                                  %specific_tag_format,
-                            "SGHop %s doesn't end in SAP!"%sghop.id)
+                                                  " only in flow sequences "
+                                                  "leading to a SAP" \
+                                                  % specific_tag_format,
+                                                  "SGHop %s doesn't end in "
+                                                  "SAP!" % sghop.id)
                     sghop.tag_info = act
     # we need to have different all-flowrule iteration, otherwise we couldn't
     # identify whether a specific_tag_format field in match would belong to 
@@ -564,7 +601,8 @@ class GraphPreprocessorClass(object):
     if len(infra_nodes) > 1:
       self.log.warn("If multiple infra nodes are present in the substrate graph"
                     " and their VNF-Infra mapping is supposed to mean a "
-                    "placement criterion on the (possibly decomposed) Infra node"
+                    "placement criterion on the (possibly decomposed) Infra "
+                    "node"
                     ", it will not be considered, because it is NYI.")
     for n in [node for node in self.req_graph.infras]:
       # we have to go through the iterator, because we want to delete from it,
@@ -583,10 +621,14 @@ class GraphPreprocessorClass(object):
                     # ACTION fields of Flowrules previously!
                     if sghop.src.node.type != 'SAP':
                       raise uet.BadInputException("%s matches without a "
-                      "starting %s action in a flowrule sequence should "
-                      "originate from a SAP"%(specific_tag_format,
-                       specific_tag_format), "SGHop %s doesn't originate from"
-                                                  " a SAP"%sghop.id)
+                                                  "starting %s action in a "
+                                                  "flowrule sequence should "
+                                                  "originate from a SAP" % (
+                                                    specific_tag_format,
+                                                    specific_tag_format),
+                                                  "SGHop %s doesn't originate "
+                                                  "from"
+                                                  " a SAP" % sghop.id)
                     # tag_info indicates match in SGHop
                     sghop.tag_info = mat
       # DYNAMIC and STATIC links should be removed by this.
@@ -598,8 +640,8 @@ class GraphPreprocessorClass(object):
     for i, j, k, d in self.req_graph.network.edges_iter(data=True, keys=True):
       if d.type != 'SG':
         raise uet.BadInputException(
-           "After removing the infras, only the service graph should remain.",
-           "Link %s between nodes %s and %s is a %s link" % (k, i, j, d.type))
+          "After removing the infras, only the service graph should remain.",
+          "Link %s between nodes %s and %s is a %s link" % (k, i, j, d.type))
       elif not hasattr(d, 'bandwidth') or getattr(d, 'bandwidth', 0) is None:
         setattr(d, 'bandwidth', 0)
 
@@ -607,8 +649,8 @@ class GraphPreprocessorClass(object):
     # the req graph has no SGHops!
     if self.req_graph.network.number_of_edges() == 0:
       raise uet.BadInputException(
-         "VNFs in the request graph should be connected by SGHops",
-         "There are no SGHops in the request graph!")
+        "VNFs in the request graph should be connected by SGHops",
+        "There are no SGHops in the request graph!")
 
     # If there is no SAP in the SG, the request can be meaningless
     try:
@@ -633,9 +675,9 @@ class GraphPreprocessorClass(object):
         self.rechained[vnf] = False
       elif data.type != 'NF':
         raise uet.BadInputException(
-           "After preprocessing stage, only SAPs or VNFs should be in the "
-           "request graph.", "Node %s, type: %s is still in the graph" % (
-             vnf, data.type))
+          "After preprocessing stage, only SAPs or VNFs should be in the "
+          "request graph.", "Node %s, type: %s is still in the graph" % (
+            vnf, data.type))
 
     # Give a spare chain ID for all the best effort subchains, so connect all
     # the subchains to this (self.max_input_chainid) chain in the helper graph
@@ -654,10 +696,10 @@ class GraphPreprocessorClass(object):
         setattr(vnfobj, 'placement_criteria', [])
       if vnfobj.type == 'NF':
         if reduce(lambda a, b: a or b, (vnfobj.resources[attr] is None \
-                  for attr in ['cpu', 'mem', 'storage'])):
+                                        for attr in ['cpu', 'mem', 'storage'])):
           raise uet.BadInputException("VNF resource requirements should always"
                                       " be given", "One of %s`s components is"
-                                      " None" % vnf)
+                                                   " None" % vnf)
 
     for chain in self.chains:
       node_path = chain['chain']
@@ -683,11 +725,12 @@ class GraphPreprocessorClass(object):
     # These chains are disjoint on the set of links, each has a subgraph
     # which it should be mapped to.
     divided_chains_with_graphs = self._divideIntoDisjointSubchains(mode,
-       e2e_chains_with_graphs, not_e2e_chains)
+                                                                   e2e_chains_with_graphs,
+                                                                   not_e2e_chains)
 
     for vnf, d in self.req_graph.network.nodes_iter(data=True):
       self.log.debug("Final placement criterion of VNF %s is %s"
-                     %(vnf, d.placement_criteria))
+                     % (vnf, d.placement_criteria))
 
     # After the request graph is divided, the latency and bw reqs of the
     # divided chains are not valid! because those corresponds to the e2e
@@ -723,13 +766,13 @@ class GraphPreprocessorClass(object):
             mapped_to_node = node.id
           if mapped_to_node is None:
             raise uet.BadInputException(
-               "All NF-s in the substrate NFFG should be connected to some "
-               "Infra node", "NF %s has no Infra neighbors" % vnf.id)
+              "All NF-s in the substrate NFFG should be connected to some "
+              "Infra node", "NF %s has no Infra neighbors" % vnf.id)
           # NOTE: 'placement_criteria' is not used until it is commented out 
           # from the node filtering during core mapping.
           if not hasattr(self.req_graph.network.node[vnf.id],
                          'placement_criteria') or len(
-             vnf.placement_criteria) == 0:
+            vnf.placement_criteria) == 0:
             setattr(self.req_graph.network.node[vnf.id], 'placement_criteria',
                     [mapped_to_node])
             self.rechained[vnf.id] = True
@@ -746,10 +789,10 @@ class GraphPreprocessorClass(object):
             self.manager.vnf_mapping.append((vnf.id, mapped_to_node))
           else:
             raise uet.BadInputException(
-               "Placement criteria should be consistent with the already "
-               "mapped NF's host",
-               "NF %s is already mapped outside of the currently given "
-               "placement criteria." % vnf.id)
+              "Placement criteria should be consistent with the already "
+              "mapped NF's host",
+              "NF %s is already mapped outside of the currently given "
+              "placement criteria." % vnf.id)
 
     # Add available resources to 'availres' attribute of each NodeInfra.
     # Subtract the updated resource requirements of VNFs, which are in both the
@@ -772,15 +815,18 @@ class GraphPreprocessorClass(object):
       sgs_in_network = [sg.id for sg in net.sg_hops]
       for sg in self.req_graph.sg_hops:
         if (sg.src.node.id in vnf_to_be_left_in_place or \
-            sg.src.node.id in sap_intersection)\
+                 sg.src.node.id in sap_intersection) \
            and (sg.dst.node.id in vnf_to_be_left_in_place or \
-                sg.dst.node.id in sap_intersection):
+                     sg.dst.node.id in sap_intersection):
           sg_hops_to_be_left_in_place.add(sg)
         elif sg.id in sgs_in_network:
           raise uet.BadInputException("An SGHop which needs to be updated must"
-                " have both ends connected to a VNF which is left in place or a"
-                " SAP which is present in both the request and resource!",
-                "SGHop %s has one of its ends not mapped yet!"%sg.id)
+                                      " have both ends connected to a VNF "
+                                      "which is left in place or a"
+                                      " SAP which is present in both the "
+                                      "request and resource!",
+                                      "SGHop %s has one of its ends not "
+                                      "mapped yet!" % sg.id)
     if mode != NFFG.MODE_DEL:
       # SGHops which need to be updated are ignored during available link 
       # resource calculation, because it will be decided during the mapping 
@@ -791,15 +837,15 @@ class GraphPreprocessorClass(object):
       # capacity. This only needed in not MODE_DEL.
       for d in net.infras:
         if d.availres.bandwidth < 0:
-          self.log.error("Available bandwidth of Infra %s got below zero: %s"%
-                   (d.id, d.availres.bandwidth))
+          self.log.error("Available bandwidth of Infra %s got below zero: %s" %
+                         (d.id, d.availres.bandwidth))
           raise uet.BadInputException(
-             "The sum of bandwidth capacity of internal Flowrules should be "
-             "less than the available internal bandwidth",
-             "On node %s internal bandwidth would get below zero!" % d.id)
+            "The sum of bandwidth capacity of internal Flowrules should be "
+            "less than the available internal bandwidth",
+            "On node %s internal bandwidth would get below zero!" % d.id)
         else:
           setattr(d, 'weight', 1.0 / d.availres.bandwidth if \
-                  d.availres.bandwidth > 0 else float("inf"))
+            d.availres.bandwidth > 0 else float("inf"))
           self.log.debug("Weight for node %s: %f" % (d.id, d.weight))
           self.log.debug("Supported types of node %s: %s" % (d.id, d.supported))
 
@@ -817,7 +863,8 @@ class GraphPreprocessorClass(object):
       self.log.info("Link and node weights calculated")
 
     # delete the ports which connect the to be deleted VNF-s to the Infras.
-    # NOTE: in case of ADD/DEL operation these ports will be still in the output,
+    # NOTE: in case of ADD/DEL operation these ports will be still in the
+    # output,
     # because then the saved original request NFFG is used as base to generate
     # output NFFG and these ports can be used there! Port removal here is good 
     # not to confuse anything with the invalid ports during the mapping. Other-
@@ -849,10 +896,12 @@ class GraphPreprocessorClass(object):
       if net.network[i][j][k].type != 'STATIC':
         # meaning there is a Dynamic, SG or Requirement link left
         if net.network[i][j][k].type == 'REQUIREMENT':
-          if net.network[i][j][k].dst.node.id != net.network[i][j][k].src.node.id:
+          if net.network[i][j][k].dst.node.id != net.network[i][j][
+            k].src.node.id:
             self.log.warn("Unexpected EdgeReq found between %s and %s nodes! "
-                 "They should only occour as loop links in BiS-BiS type "
-                 "Infras..."%(i,j))
+                          "They should only occour as loop links in BiS-BiS "
+                          "type "
+                          "Infras..." % (i, j))
         edges_to_delete.append(net.network[i][j][k])
     for e in edges_to_delete:
       self.log.debug("Removing unnecessary non-STATIC links...")
@@ -860,18 +909,24 @@ class GraphPreprocessorClass(object):
 
     for n in net.nfs:
       raise uet.BadInputException(
-         "NodeNF %s couldn`t be removed from the NFFG" % net.network.node[n].id,
-         "This NodeNF probably isn`t mapped anywhere")
+        "NodeNF %s couldn`t be removed from the NFFG" % net.network.node[n].id,
+        "This NodeNF probably isn`t mapped anywhere")
 
     if mode != NFFG.MODE_DEL and not dry_init:
       if self.shortest_paths is None:
         self.log.info("Calculating shortest paths measured in latency...")
         self.shortest_paths = helper.shortestPathsInLatency(net.network,
-             enable_shortest_path_cache=cache_shortest_path,
-             enable_network_cutting=False)
+                                                            enable_shortest_path_cache=cache_shortest_path,
+                                                            enable_network_cutting=False)
       else:
         self.log.info("Shortest paths are received from previous run!")
       self.manager.addShortestRoutesInLatency(self.shortest_paths)
       self.log.info("Shortest path calculation completed!")
+
+    for n, d in net.network.degree_iter():
+      if d == 0:
+        self.log.warn(
+          "Node %s in the resource graph has no connected edges, so it may be "
+          "removed later!" % n)
 
     return net
