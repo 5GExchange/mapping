@@ -142,7 +142,7 @@ def shortestPathsInLatency (G_full, enable_shortest_path_cache,
     sp = open(filename, "w")
     for u in G:
       for v in G:
-        sp.write(" ".join((u, v, str(dist[u][v]), "\n")))
+        sp.write(" ".join((str(u), str(v), str(dist[u][v]), "\n")))
     sp.close()
 
   if enable_network_cutting:

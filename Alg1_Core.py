@@ -496,7 +496,7 @@ class CoreAlgorithm(object):
         for i, j, k in zip(path[:-1], path[1:], linkids):
           self.net[i][j][k].availbandwidth -= bw_req
           new_bw = self.net[i][j][k].availbandwidth
-          if new_bw < 0 or new_bw > self.net[i][j][k].bandwidth:
+          if new_bw < 0 or new_bw*0.999 > self.net[i][j][k].bandwidth:
             self.log.error(
               "Link bandwidth is incorrect with value %s!" % new_bw)
             raise uet.InternalAlgorithmException("The bandwidth resource of "

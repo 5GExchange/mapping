@@ -128,7 +128,7 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
   # Rebind EdgeReqs to SAP-to-SAP paths, instead of BiSBiS ports
   # So EdgeReqs should either go between SAP-s, or InfraPorts which are
   # connected to a SAP
-  # request = NFFGToolBox.rebind_e2e_req_links(request)
+  request = NFFGToolBox.rebind_e2e_req_links(request)
 
   chainlist = helper.retrieveE2EServiceChainsFromEdgeReqs(request)
 
