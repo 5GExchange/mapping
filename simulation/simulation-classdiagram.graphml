@@ -16,7 +16,6 @@
     <data key="d0"/>
     <node id="n0">
       <data key="d4"/>
-      <data key="d5"/>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="168.125" width="260.0" x="431.0" y="271.0"/>
@@ -43,7 +42,6 @@
     </node>
     <node id="n1">
       <data key="d4"/>
-      <data key="d5"/>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="77.0" width="220.0" x="240.14697265625" y="508.0"/>
@@ -65,7 +63,6 @@
     </node>
     <node id="n2">
       <data key="d4"/>
-      <data key="d5"/>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="77.0" width="220.0" x="750.0" y="508.0"/>
@@ -87,7 +84,6 @@
     </node>
     <node id="n3">
       <data key="d4"/>
-      <data key="d5"/>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="35.0" width="220.0" x="189.0" y="681.0"/>
@@ -109,7 +105,6 @@
     </node>
     <node id="n4">
       <data key="d4"/>
-      <data key="d5"/>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="35.0" width="220.0" x="767.0" y="681.0"/>
@@ -131,7 +126,6 @@
     </node>
     <node id="n5">
       <data key="d4"/>
-      <data key="d5"/>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="130.75" width="153.25" x="-74.92499999999995" y="578.125"/>
@@ -156,7 +150,6 @@
     </node>
     <node id="n6">
       <data key="d4"/>
-      <data key="d5"/>
       <data key="d6">
         <y:UMLNoteNode>
           <y:Geometry height="62.0" width="190.0" x="730.0" y="193.0"/>
@@ -175,7 +168,6 @@ egy MAP hívás.<y:LabelModel>
     </node>
     <node id="n7">
       <data key="d4"/>
-      <data key="d5"/>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="77.0" width="244.0" x="-5.7060546875" y="161.0"/>
@@ -197,7 +189,6 @@ egy MAP hívás.<y:LabelModel>
     </node>
     <node id="n8">
       <data key="d4"/>
-      <data key="d5"/>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="35.0" width="212.0" x="-228.74544270833331" y="404.125"/>
@@ -219,7 +210,6 @@ egy MAP hívás.<y:LabelModel>
     </node>
     <node id="n9">
       <data key="d4"/>
-      <data key="d5"/>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="35.0" width="220.0" x="-108.29999999999995" y="479.9"/>
@@ -241,7 +231,6 @@ egy MAP hívás.<y:LabelModel>
     </node>
     <node id="n10">
       <data key="d4"/>
-      <data key="d5"/>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="26.115625000000023" width="220.0" x="31.300260416666788" y="371.009375"/>
@@ -263,7 +252,6 @@ egy MAP hívás.<y:LabelModel>
     </node>
     <node id="n11">
       <data key="d4"/>
-      <data key="d5"/>
       <data key="d6">
         <y:UMLNoteNode>
           <y:Geometry height="130.75" width="256.0" x="477.073486328125" y="620.009375"/>
@@ -283,9 +271,27 @@ téve az exp érkezési idők?<y:LabelModel>
         </y:UMLNoteNode>
       </data>
     </node>
+    <node id="n12">
+      <data key="d4"/>
+      <data key="d6">
+        <y:UMLNoteNode>
+          <y:Geometry height="130.75" width="756.3591022443891" x="-54.66084788029934" y="762.555174563591"/>
+          <y:Fill color="#00FF00" transparent="false"/>
+          <y:BorderStyle color="#000000" type="line" width="1.0"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="45.90625" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="747.982421875" x="4.188340184694539" y="42.421875">A Simulátor konstruktorában kellene megadni, hogy valós időt mérjünk-e (ilyenkor a MAP külön szálban indul és kérhetünk 
+új requesteket, amit a simulator megpróbálhat leküldeni, ha az előző MAP már visszatért) vagy pedig 
+egy szimulációs ciklusban szigorúan egy request érkezzen (ilyenkor a MAP blokkol)<y:LabelModel>
+              <y:SmartNodeLabelModel distance="4.0"/>
+            </y:LabelModel>
+            <y:ModelParameter>
+              <y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/>
+            </y:ModelParameter>
+          </y:NodeLabel>
+        </y:UMLNoteNode>
+      </data>
+    </node>
     <edge id="e0" source="n4" target="n2">
       <data key="d8"/>
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="17.0" ty="0.0"/>
@@ -297,7 +303,6 @@ téve az exp érkezési idők?<y:LabelModel>
     </edge>
     <edge id="e1" source="n3" target="n1">
       <data key="d8"/>
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="-12.999999999999998" ty="0.0">
@@ -312,7 +317,6 @@ téve az exp érkezési idők?<y:LabelModel>
     </edge>
     <edge id="e2" source="n0" target="n6">
       <data key="d8"/>
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0">
@@ -326,7 +330,6 @@ téve az exp érkezési idők?<y:LabelModel>
     </edge>
     <edge id="e3" source="n1" target="n0">
       <data key="d8"/>
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="-64.0" ty="31.42523364485981">
@@ -340,7 +343,6 @@ téve az exp érkezési idők?<y:LabelModel>
     </edge>
     <edge id="e4" source="n2" target="n0">
       <data key="d8"/>
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0">
@@ -362,7 +364,6 @@ téve az exp érkezési idők?<y:LabelModel>
     </edge>
     <edge id="e5" source="n7" target="n0">
       <data key="d8"/>
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="-56.565420560747675">
@@ -377,7 +378,6 @@ téve az exp érkezési idők?<y:LabelModel>
     </edge>
     <edge id="e6" source="n8" target="n7">
       <data key="d8"/>
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0">
@@ -391,7 +391,6 @@ téve az exp érkezési idők?<y:LabelModel>
     </edge>
     <edge id="e7" source="n9" target="n7">
       <data key="d8"/>
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="-114.59394531249995" ty="16.27999999999995"/>
@@ -403,7 +402,6 @@ téve az exp érkezési idők?<y:LabelModel>
     </edge>
     <edge id="e8" source="n5" target="n9">
       <data key="d8"/>
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
@@ -415,7 +413,6 @@ téve az exp érkezési idők?<y:LabelModel>
     </edge>
     <edge id="e9" source="n10" target="n7">
       <data key="d8"/>
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="25.006315104166788" ty="0.0"/>
