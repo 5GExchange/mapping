@@ -1,4 +1,4 @@
 [submodule "nffg_lib"]
 	path = nffg_lib
 	url = ssh://git@213.16.101.153:/unify/nffg.git
-	branch = master
+
