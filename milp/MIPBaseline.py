@@ -47,7 +47,6 @@ import Alg1_Helper as helper
 alg = None
 
 
-
 class Graph(object):
     """ represents a directed graph ( G = ( V , E) )
         is used for modeling the substrate as well as the request (service) graphs
@@ -483,8 +482,6 @@ def convert_nffg_to_substrate(nffg):
 
         print "\t\t [" + ', '.join("%s: %s" % item for item in vars(infra).items()) + "]"
 
-        delay = nffg.calculate_available_node_res('delay')
-
         result.add_node(id=infra.id,
                         type="INFRA",
                         types=infra.supported,
@@ -494,14 +491,15 @@ def convert_nffg_to_substrate(nffg):
                         memory=infra.resources.mem,
                         storage=infra.resources.storage)
 
-        # taking into account allocations..
-        for vnf in nffg.running_nfs(infra.id):
-            print "\t\t\t reducing resources of node {} according to resources {} of VNF {}".format(infra.id, vnf.resources, vnf.id)
-            result.reduce_available_resources_at_node(infra.id, vnf.resources)
-
-        print "\t\t final resources of node {} are {}".format(infra.id, result.node[infra.id])
-
-        #TODO: take into account the link allocations
+        # (Balazs): These are not needed, the MILP gets always the available resources
+        # # taking into account allocations..
+        # for vnf in nffg.running_nfs(infra.id):
+        #     print "\t\t\t reducing resources of node {} according to resources {} of VNF {}".format(infra.id, vnf.resources, vnf.id)
+        #     result.reduce_available_resources_at_node(infra.id, vnf.resources)
+        #
+        # print "\t\t final resources of node {} are {}".format(infra.id, result.node[infra.id])
+        #
+        # #TODO: take into account the link allocations
 
 
 
