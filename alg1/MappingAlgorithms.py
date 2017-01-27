@@ -30,27 +30,13 @@ import sys
 import traceback
 from pprint import pformat
 
-try:
-  from escape.nffg_lib.nffg import NFFG, NFFGToolBox
-except ImportError:
-  import sys, os
-
-  nffg_dir = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                          "../../escape/escape/nffg_lib/"))
-  if os.path.exists(nffg_dir):
-    sys.path.append(nffg_dir)
-  else:
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                 "../nffg_lib/")))
-  from nffg import NFFG, NFFGToolBox
-
-from Alg1_Core import CoreAlgorithm
-import UnifyExceptionTypes as uet
 import Alg1_Helper as helper
+import UnifyExceptionTypes as uet
+from Alg1_Core import CoreAlgorithm
+from Alg1_Helper import NFFG, NFFGToolBox
 
 # object for the algorithm instance
 alg = None
-
 
 def MAP (request, network, enable_shortest_path_cache=False,
          bw_factor=1, res_factor=1, lat_factor=1,

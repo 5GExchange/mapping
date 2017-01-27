@@ -21,6 +21,20 @@ from itertools import count
 
 import UnifyExceptionTypes as uet
 
+try:
+  from escape.nffg_lib.nffg import NFFG, NFFGToolBox
+except ImportError:
+  import sys, os
+
+  nffg_dir = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                          "../../escape/escape/nffg_lib/"))
+  if os.path.exists(nffg_dir):
+    sys.path.append(nffg_dir)
+  else:
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                 "../nffg_lib/")))
+  from nffg import NFFG, NFFGToolBox
+
 # Basic logger for mapping
 log = logging.getLogger("mapping")
 # Default log level
