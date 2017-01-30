@@ -10,7 +10,7 @@ class AbstractWhenToOptimizeStrategy:
 
     @abstractmethod
     def optimize(self, resource_to_optimize):
-
+        pass
 
 
 
@@ -19,19 +19,18 @@ class AbstractWhenToOptimizeStrategy:
 class ModelBased(AbstractWhenToOptimizeStrategy):
     def optimize(self, resource_to_optimize):
 
-
+        pass
 
 
 class FixedReqCount(AbstractWhenToOptimizeStrategy):
     def optimize(self, resource_to_optimize):
-
-
+        pass
 
 
 
 class Fixedtime(AbstractWhenToOptimizeStrategy):
     def optimize(self, resource_to_optimize):
-
+        pass
 
 
 
@@ -39,3 +38,4 @@ class Fixedtime(AbstractWhenToOptimizeStrategy):
 
 class PeriodicalModelBased(AbstractWhenToOptimizeStrategy):
     def optimize(self, resource_to_optimize):
+        pass
