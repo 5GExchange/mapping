@@ -27,10 +27,31 @@ class AbstractMigrationCostHandler(object):
     """
     self.initial_nffg = initial_nffg
     self.migration_cost = {}
-    # TODO: create migration cost placeholder for all mapping pairs, keyed by references
+    for i in self.initial_nffg.infras:
+      self.migration_cost[i] = {}
+      for v in self.initial_nffg.vnfs:
+        # meaning migrating VNF v to Infra node i.
+        self.migration_cost[i][v] = 0.0
+
+    self.maximal_cost = 0.0
 
   @abstractmethod
   def _create_migration_costs (self):
+    """
+    Fills migration_cost component with the appropriate values.
+
+    :return: dict of dicts of floats
+    """
+    pass
+
+  @abstractmethod
+  def get_maximal_cost (self):
+    """
+    Returns the possible maximal cost, which is the value in case when all
+    VNFs are moved.
+
+    :return: float
+    """
     pass
 
   def objective_migration_component (self):
@@ -44,6 +65,28 @@ class AbstractMigrationCostHandler(object):
 
 
 class ConstantMigrationCost(AbstractMigrationCostHandler):
+
+  def __init__ (self, initial_nffg, const_cost=1.0):
+    """
+    Creates all migration to be a constant value, equal to all migration
+    combinations.
+
+    :param initial_nffg:
+    :param const_cost: cost of moving a single VNF.
+    """
+    super(ConstantMigrationCost, self).__init__(initial_nffg)
+    self.const_cost = const_cost
+    self._create_migration_costs()
+
   def _create_migration_costs (self):
-    # TODO: fill up all migration cost with constant value if they are moved.
-    pass
+    for i in self.initial_nffg.infras:
+      for v in self.initial_nffg.vnfs:
+        if v not in self.initial_nffg.running_nfs(i):
+          self.migration_cost[i][v] = self.const_cost
+
+    # the total possible cost is when all VNFs are moved.
+    for _ in self.initial_nffg.vnfs:
+      self.maximal_cost += self.const_cost
+
+  def get_maximal_cost(self):
+    return self.maximal_cost
