@@ -7,9 +7,21 @@ import sys
 import traceback
 import string
 import os
+try:
+  from escape.escape.escape.nffg_lib.nffg import NFFG
+except ImportError:
+  import sys, os
+  sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                  "../nffg_lib/")))
+  from nffg import NFFG
 
 class AbstractRequestGenerator:
     __metaclass__ = ABCMeta
+
+
+
+    def __init__(self):
+        pass
 
     @abstractmethod
     def get_request(self, test_lvl, all_saps_beginning,
@@ -19,8 +31,9 @@ class AbstractRequestGenerator:
                                           vnf_sharing_probabilty=0.0,
                                           vnf_sharing_same_sg=0.0,
                                           shareable_sg_count=9999999999999999,
-                                          multiSC=False, max_sc_count=2)
+                                          multiSC=False, max_sc_count=2):
         pass
+
 
     def _shareVNFFromEarlierSG(self, nffg, running_nfs, nfs_this_sc, p):
         sumlen = sum([l * i for l, i in zip([len(running_nfs[n]) for n in running_nfs],
@@ -36,9 +49,9 @@ class AbstractRequestGenerator:
                 # failing to add a VNF due to this criteria infuences the provided
                 # vnf_sharing_probabilty, but it is estimated to be insignificant,
                 # otherwise the generation can run into infinite loop!
-            log.warn("All the VNF-s of the subchain selected for VNF sharing are"
-                         " already in the current chain under construction! Skipping"
-                         " VNF sharing...")
+            #log.warn("All the VNF-s of the subchain selected for VNF sharing are"
+              #           " already in the current chain under construction! Skipping"
+              #           " VNF sharing...")
             return False, None
         else:
             while nf in nfs_this_sc:
@@ -54,6 +67,9 @@ class AbstractRequestGenerator:
 
 
 class RequestGenerator(AbstractRequestGenerator):
+
+    nf_types = list(string.ascii_uppercase)[:10]
+
 
     def get_request(self, test_lvl, all_saps_beginning,
                                           all_saps_ending,
@@ -131,7 +147,7 @@ class RequestGenerator(AbstractRequestGenerator):
                         p = rnd.random()
                         if rnd.random() < vnf_sharing_probabilty and len(running_nfs) > 0 \
                                 and not multiSC:
-                            vnf_added, nf = _shareVNFFromEarlierSG(nffg, running_nfs, nfs_this_sc,
+                            vnf_added, nf = AbstractRequestGenerator._shareVNFFromEarlierSG(nffg, running_nfs, nfs_this_sc,
                                                                    p)
                         elif multiSC and \
                                         p < vnf_sharing_probabilty and len(current_nfs) > 0 \
@@ -139,8 +155,9 @@ class RequestGenerator(AbstractRequestGenerator):
                             # this influences the the given VNF sharing probability...
                             if reduce(lambda a, b: a and b, [v in nfs_this_sc for
                                                              v in current_nfs]):
-                                log.warn("All shareable VNF-s are already added to this chain! "
-                                         "Skipping VNF sharing...")
+                                pass
+                                #log.warn("All shareable VNF-s are already added to this chain! "
+                                         #"Skipping VNF sharing...")
                             elif rnd.random() < vnf_sharing_same_sg:
                                 nf = rnd.choice(current_nfs)
                                 while nf in nfs_this_sc:
@@ -149,18 +166,18 @@ class RequestGenerator(AbstractRequestGenerator):
                                     # vnf_added = True
                             else:
                                 # this happens when VNF sharing is needed but not with the actual SG
-                                vnf_added, nf = _shareVNFFromEarlierSG(nffg, running_nfs,
+                                vnf_added, nf = AbstractRequestGenerator._shareVNFFromEarlierSG(nffg, running_nfs,
                                                                        nfs_this_sc, p)
                         else:
                             if simple_sc:
                                 nf = nffg.add_nf(id="-".join(("Test", str(test_lvl), "SC", str(scid), "VNF", str(vnf))),
-                                                 func_type=rnd.choice(nf_types),
+                                                 func_type=rnd.choice(self.nf_types),
                                                  cpu=2,
                                                  mem=1600,
                                                  storage=5)
                             else:
                                 nf = nffg.add_nf(id="-".join(("Test", str(test_lvl), "SC", str(scid), "VNF", str(vnf))),
-                                                 func_type=rnd.choice(nf_types),
+                                                 func_type=rnd.choice(self.nf_types),
                                                  cpu=rnd.randint(1, 4),
                                                  mem=rnd.random() * 1600,
                                                  storage=rnd.random() * 3)
@@ -196,16 +213,19 @@ class RequestGenerator(AbstractRequestGenerator):
                             nffg.add_req(sap1port, sap2port, delay=140.0,
                                          bandwidth=4.0,
                                          sg_path=sg_path)
-                    log.info("Service Chain Request on NF-s added: %s" % [nf.id for nf in nfs_this_sc])
-                    writeToFile(outputfile, "Service Chain Request on NF-s added: %s" % [nf.id for nf in nfs_this_sc])
+                    #log.info("Service Chain Request on NF-s added: %s" % [nf.id for nf in nfs_this_sc])
+                    #writeToFile(outputfile, "Service Chain Request on NF-s added: %s" % [nf.id for nf in nfs_this_sc])
                     # this prevents loops in the chains and makes new and old NF-s equally
                     # preferable in total for NF sharing
                     new_nfs = [vnf for vnf in nfs_this_sc if vnf not in current_nfs]
                     for tmp in xrange(0, scid + 1):
                         current_nfs.extend(new_nfs)
                     if not multiSC:
-                        return nffg, all_saps_beginning, all_saps_ending
+                        return nffg #, all_saps_beginning, all_saps_ending
                 if multiSC:
-                    return nffg, all_saps_beginning, all_saps_ending
-            return None, all_saps_beginning, all_saps_ending
+                    return nffg #, all_saps_beginning, all_saps_ending
+            return None #, all_saps_beginning, all_saps_ending
 
+def gen_seq():
+    while True:
+        yield int(math.floor(rnd.random() * 999999999))
