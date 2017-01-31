@@ -4,6 +4,8 @@ from escape.mapping.alg1.misc.CarrierTopoBuilder import CarrierTopoBuilder
 class AbstractResourceGetter:
     __metaclass__ = ABCMeta
 
+    def GetNFFG(self, which):
+        return
 
 
 class ResouceGetter(AbstractResourceGetter):
