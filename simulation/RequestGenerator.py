@@ -7,7 +7,13 @@ import sys
 import traceback
 import string
 import os
-from escape.mapping.nffg_lib.nffg import NFFG, NFFGToolBox
+try:
+  from escape.escape.escape.nffg_lib.nffg import NFFG
+except ImportError:
+  import sys, os
+  sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                  "../nffg_lib/")))
+  from nffg import NFFG
 
 class AbstractRequestGenerator:
     __metaclass__ = ABCMeta
@@ -28,7 +34,7 @@ class AbstractRequestGenerator:
                                           multiSC=False, max_sc_count=2):
         pass
 
-    @abstractmethod
+
     def _shareVNFFromEarlierSG(self, nffg, running_nfs, nfs_this_sc, p):
         sumlen = sum([l * i for l, i in zip([len(running_nfs[n]) for n in running_nfs],
                                                 xrange(1, len(running_nfs) + 1))])
