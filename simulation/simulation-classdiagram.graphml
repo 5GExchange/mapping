@@ -85,14 +85,14 @@
     </node>
     <node id="n3">
       <data key="d4"/>
-      <data key="d5"><![CDATA[Mindig csak egy SC-t tartalmazo SG-ot ad vissza, ami mindig ugyanolyan hoszzu es a VNF-ek is egyformak
+      <data key="d5"><![CDATA[Mindig csak egy SC-t tartalmazo SG-ot ad vissza, ami mindig ugyanolyan hoszzu (4 db VNF) es a VNF-ek is egyformak
 ]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="35.0" width="220.0" x="160.15222628224586" y="648.031115751138"/>
           <y:Fill color="#FFCC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.1328125" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="63.76953125" x="78.115234375" y="3.0">TestReq<y:LabelModel>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.1328125" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="92.51171875" x="63.744140625" y="3.0">TestReqGen<y:LabelModel>
               <y:SmartNodeLabelModel distance="4.0"/>
             </y:LabelModel>
             <y:ModelParameter>
@@ -591,7 +591,7 @@ FIFO queue-ban.<y:LabelModel>
           <y:Geometry height="35.0" width="220.0" x="185.30445256449173" y="673.0622315022761"/>
           <y:Fill color="#FFCC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.1328125" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="82.076171875" x="68.9619140625" y="3.0">SimpleReq<y:LabelModel>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.1328125" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="110.818359375" x="54.5908203125" y="3.0">SimpleReqGen<y:LabelModel>
               <y:SmartNodeLabelModel distance="4.0"/>
             </y:LabelModel>
             <y:ModelParameter>
@@ -613,7 +613,7 @@ FIFO queue-ban.<y:LabelModel>
           <y:Geometry height="35.0" width="220.0" x="210.4566788467376" y="698.0933472534141"/>
           <y:Fill color="#FFCC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.1328125" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="69.45068359375" x="75.274658203125" y="3.0">MultiReq<y:LabelModel>
+          <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="13" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="19.1328125" horizontalTextPosition="center" iconTextGap="4" modelName="custom" textColor="#000000" verticalTextPosition="bottom" visible="true" width="98.19287109375" x="60.903564453125" y="3.0">MultiReqGen<y:LabelModel>
               <y:SmartNodeLabelModel distance="4.0"/>
             </y:LabelModel>
             <y:ModelParameter>
@@ -1037,7 +1037,6 @@ FIFO queue-ban.<y:LabelModel>
       </data>
     </edge>
     <edge id="e30" source="n30" target="n1">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="13.980660054628231" ty="0.0">
@@ -1051,7 +1050,6 @@ FIFO queue-ban.<y:LabelModel>
       </data>
     </edge>
     <edge id="e31" source="n31" target="n1">
-      <data key="d9"/>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="6.232763532624574" sy="0.0" tx="33.98066005462823" ty="27.068514427920718">
