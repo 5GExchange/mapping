@@ -2,7 +2,7 @@ from ResourceGetter import ResouceGetter
 from RequestGenerator import TestReqGen
 from RequestGenerator import SimpleReqGen
 from RequestGenerator import MultiReqGen
-from AbstractOrchestrator import *
+from OrchestratorAdaptor import *
 
 import sys
 #sys.path.append(./RequestGenerator)
