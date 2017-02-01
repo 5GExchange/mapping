@@ -15,15 +15,10 @@
 
 import copy
 import logging
-import os
-import sys
 import time
 
-# Needed to run the Algorithm scripts in the parent folder.
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-import networkx as nx
 import Alg1_Helper as helper
-
+import networkx as nx
 from Alg1_Core import CoreAlgorithm
 
 try:
@@ -43,7 +38,7 @@ logging.basicConfig(format='%(levelname)s:%(name)s:%(message)s')
 log.setLevel(logging.DEBUG)
 
 
-def get_MIP_solution (reqnffgs, netnffg):
+def get_MIP_solution (reqnffgs, netnffg, migration_handler):
   """
   Executes the MIP mapping for the input requests and network NFFGs.
   Returns the mapped structure and the references to the mapped requests.
@@ -56,7 +51,7 @@ def get_MIP_solution (reqnffgs, netnffg):
   substrate = convert_nffg_to_substrate(netnffg)
 
   scen = Scenario(substrate, request_seq)
-  mc = ModelCreator(scen)
+  mc = ModelCreator(scen, migration_handler)
   mc.init_model_creator()
   if isFeasibleStatus(mc.run_milp()):
     solution = mc.solution
@@ -85,7 +80,17 @@ def get_edge_id (g, srcid, srcpid, dstpid, dstid):
 
 
 def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
-                                  mode=NFFG.MODE_REMAP):
+                                  mode=NFFG.MODE_REMAP, migration_handler=None):
+  """
+  At this point the VNFs of 'net' should only represent the occupied
+  resources and reqs the request NFFGs to be mapped!
+  :param reqs:
+  :param net:
+  :param file_inputs: may read the input NFFGs from files.
+  :param mode:
+  :param migration_handler:
+  :return:
+  """
   if file_inputs:
     request_seq = []
     for reqfile in reqs:
@@ -143,7 +148,7 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
                       overall_highest_delay, dry_init=True)
 
   # move 'availres' and 'availbandwidth' values of the network to maxres, 
-  # because the MIP solution takes them as availabel resource.
+  # because the MIP solution takes them as available resource.
   net = alg.bare_infrastucture_nffg
   for n in net.infras:
     n.resources = n.availres
@@ -155,7 +160,7 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
     time.time() - current_time))
   current_time = time.time()
 
-  mapping_of_req = get_MIP_solution([request], net)
+  mapping_of_req = get_MIP_solution([request], net, migration_handler)
 
   log.debug("TIMING: %ss has passed with MILP calculation" % (
     time.time() - current_time))
@@ -204,6 +209,51 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
 
   # print mappedNFFG.dump()
   return mappedNFFG
+
+
+def MAP (request, resource, optimize_already_mapped_nfs=True,
+         migration_handler_name=None,
+         **migration_handler_kwargs):
+  """
+  Starts an offline optimization of the 'resource', which may contain NFs for
+  considering migration if optimize_already_mapped_nfs is set
+
+  :param optimize_already_mapped_nfs:
+  :param request:
+  :param resource:
+  :param migration_handler_name:
+  :param migration_handler_kwargs:
+  :return:
+  """
+  if optimize_already_mapped_nfs:
+    # We only have to deal with migration in this case.
+    if migration_handler_name is not None and type(migration_handler_name) is str:
+      migration_cls = eval("migration_costs." + migration_handler_name)
+
+      # This resource NFFG needs to include all VNFs, which may play any role in
+      # migration or mapping. Migration need to know about all of them for
+      # setting zero cost for not yet mapped VNFs
+      nffg_with_all_nfs = resource
+      tmp_vnfs_added = []
+      mapped_nf_ids = [nf.id for nf in resource.nfs]
+      for vnf in request.nfs:
+        if vnf.id not in mapped_nf_ids:
+          nffg_with_all_nfs.add_nf(nf=vnf)
+          tmp_vnfs_added.append(vnf)
+
+      migration_handler = migration_cls(nffg_with_all_nfs,
+                                        migration_handler_kwargs)
+
+      for vnf in tmp_vnfs_added:
+        resource.del_node(vnf)
+    else:
+      migration_handler = None
+    #TODO: add VNFs everything from resource to request for reoptimization!
+  else:
+    #TODO: what here?
+    pass
+  return convert_mip_solution_to_nffg([request], resource,
+                                      migration_handler=migration_handler)
 
 
 if __name__ == '__main__':
