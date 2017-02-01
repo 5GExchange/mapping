@@ -266,8 +266,8 @@ class MultiReqGen(AbstractRequestGenerator):
                 new_nfs = [vnf for vnf in nfs_this_sc if vnf not in current_nfs]
                 for tmp in xrange(0, scid + 1):
                     current_nfs.extend(new_nfs)
-            life_time = random.randint(1, 20)
-            return nffg, life_time
+                life_time = random.randint(1, 20)
+                return nffg, life_time
 
 
 
