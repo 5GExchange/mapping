@@ -76,7 +76,6 @@ class MappingSolutionFramework:
                 #TODO: create exception
                 pass
             service_graph, life_time  = request_generator.get_request(resource_graph,sim_iter)
-            life_time += 2000
 
             #Discrete working
             if discrete_sim:
