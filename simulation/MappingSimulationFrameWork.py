@@ -10,7 +10,7 @@ import sys
 #from escape.mapping.simulation import ResourceGetter
 #from escape.mapping.simulation import RequestGenerator
 
-log = logging.getLogger("")
+log = logging.getLogger("StressTest")
 log.setLevel(logging.DEBUG)
 logging.basicConfig(format='%(levelname)s:%(name)s:%(message)s')
 
@@ -26,16 +26,18 @@ class MappingSolutionFramework:
         self.__discreate_simulation = simulation_type
 
 
-    def __clean_expired_requests(self,time,service_graph):
+    def __clean_expired_requests(self,time,resource_graph):
 
         # Delete expired SCs
         for sc in self.__remaining_request_lifetimes:
-            if sc.dead_time < time:
+            if sc['dead_time'] < time:
                 # Delete mapping
-                for nf in sc.SC.nfs:
-                    service_graph.del_node(nf)
+                for nf in sc['SG'].nfs:
+                    resource_graph.del_node(nf)
                 # refresh the active SCs list
                 self.__remaining_request_lifetimes.remove(sc)
+
+        return resource_graph
 
 
 
@@ -64,6 +66,7 @@ class MappingSolutionFramework:
                 #TODO: create exception
                 pass
             service_graph, life_time  = request_generator.get_request(resource_graph,sim_iter)
+            life_time += 2000
 
             #Discrete working
             if discrete_sim:
@@ -84,15 +87,18 @@ class MappingSolutionFramework:
                 """
 
                 #Synchronous MAP call
-                orchestrator_adaptor.MAP(service_graph,resource_graph)
+                try:
+                    resource_graph = orchestrator_adaptor.MAP(service_graph,resource_graph)
 
-                #Adding successfully mapped request to the remaining_request_lifetimes
-                # TODO: ELLENORIZNI, HOGY MAPPING SIKERES-E
-                service_life_element = {"dead_time":time+life_time,"SG":service_graph}
-                self.__remaining_request_lifetimes.append(service_life_element)
+                    #Adding successfully mapped request to the remaining_request_lifetimes
+                    service_life_element = {"dead_time":time+life_time,"SG":service_graph}
+                    self.__remaining_request_lifetimes.append(service_life_element)
+                    log.info("Mapping service graph " + str(sim_iter) + " successfull")
+                except:
+                    log.info("Mapping service graph " + str(sim_iter) + " unsuccessfull")
 
                 #Remove expired service graph requests
-                self.__clean_expired_requests()
+                resource_graph = self.__clean_expired_requests(time,resource_graph)
 
 
             #Indiscrete working
@@ -111,4 +117,4 @@ if __name__ == "__main__":
 
     log.info("Start simulating")
     test = MappingSolutionFramework(True)
-    test.simulate("pico","test","online",100,True)
+    test.simulate("pico","multi","online",300,True)

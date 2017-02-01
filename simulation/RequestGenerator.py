@@ -45,7 +45,7 @@ class AbstractRequestGenerator:
 
 class TestReqGen(AbstractRequestGenerator):
 
-    nf_types = [1]
+    nf_types = ['A']
 
     def get_request(self, resource_graph, test_lvl):
         all_saps_ending = [s.id for s in resource_graph.saps]

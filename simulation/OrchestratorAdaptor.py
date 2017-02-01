@@ -48,3 +48,5 @@ class OnlineOrchestrator(AbstractOrchestratorAdaptor):
                                                         return_dist=True, mode=mode,
                                                         bt_limit=6,
                                                         bt_branching_factor=3)
+
+        return network
