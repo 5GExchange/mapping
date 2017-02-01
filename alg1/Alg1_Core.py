@@ -307,7 +307,10 @@ class CoreAlgorithm(object):
           vnf.anti_aff_metadata[anti_aff_pair] += 1
           if host_of_aff_pair == node_id:
             anti_aff_ruined = True
-            if self.net.node[host_of_aff_pair].infra_type == infra.TYPE_BISBIS:
+            if self.net.node[
+              host_of_aff_pair].infra_type == infra.TYPE_BISBIS and \
+               self.net.node[host_of_aff_pair].mapping_features.get(
+                  'antiaffinity', False):
               # it there are multiple Infras, where this can be delegated, the 
               # last visited is chosen. It could be done more sophisticatedly, 
               # now it is just a random selection among the feasible ones.
