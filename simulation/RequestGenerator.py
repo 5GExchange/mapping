@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 import math
 import random as rnd
 import string
+import random
 from collections import OrderedDict
 
 try:
@@ -109,7 +110,10 @@ class TestReqGen(AbstractRequestGenerator):
                 new_nfs = [ vnf for vnf in nfs_this_sc if vnf not in current_nfs ]
                 for tmp in xrange(0, scid + 1):
                     current_nfs.extend(new_nfs)
-                return nffg
+
+
+                life_time = random.randint(1,20)
+                return nffg, life_time
 
 class SimpleReqGen(AbstractRequestGenerator):
 
@@ -154,7 +158,7 @@ class SimpleReqGen(AbstractRequestGenerator):
                     vnf_added = False
                     p = rnd.random()
                     if rnd.random() < vnf_sharing_probabilty and len(running_nfs) > 0 and not multiSC:
-                        vnf_added, nf = AbstractRequestGenerator._shareVNFFromEarlierSG(nffg, running_nfs, nfs_this_sc,
+                        vnf_added, nf = self._shareVNFFromEarlierSG(nffg, running_nfs, nfs_this_sc,
                                                                                         p)
                     else:
                         nf = nffg.add_nf(id='-'.join(('Test',
@@ -182,7 +186,8 @@ class SimpleReqGen(AbstractRequestGenerator):
                 new_nfs = [vnf for vnf in nfs_this_sc if vnf not in current_nfs]
                 for tmp in xrange(0, scid + 1):
                     current_nfs.extend(new_nfs)
-                return nffg
+                life_time = random.randint(1, 20)
+                return nffg, life_time
 
 class MultiReqGen(AbstractRequestGenerator):
     nf_types = list(string.ascii_uppercase)[:10]
@@ -234,8 +239,7 @@ class MultiReqGen(AbstractRequestGenerator):
                             while nf in nfs_this_sc:
                                 nf = rnd.choice(current_nfs)
                         else:
-                            vnf_added, nf = AbstractRequestGenerator._shareVNFFromEarlierSG(nffg, running_nfs,
-                                                                                            nfs_this_sc, p)
+                            vnf_added, nf = self._shareVNFFromEarlierSG(nffg, running_nfs,nfs_this_sc, p)
                     else:
                         nf = nffg.add_nf(id='-'.join(('Test',
                                                           str(test_lvl),
@@ -262,7 +266,8 @@ class MultiReqGen(AbstractRequestGenerator):
                 new_nfs = [vnf for vnf in nfs_this_sc if vnf not in current_nfs]
                 for tmp in xrange(0, scid + 1):
                     current_nfs.extend(new_nfs)
-            return nffg
+            life_time = random.randint(1, 20)
+            return nffg, life_time
 
 
 
