@@ -2,7 +2,7 @@ from ResourceGetter import ResouceGetter
 from RequestGenerator import TestReqGen
 from RequestGenerator import SimpleReqGen
 from RequestGenerator import MultiReqGen
-from AbstractOrchestrator 
+from AbstractOrchestrator import *
 
 import sys
 #sys.path.append(./RequestGenerator)
@@ -12,15 +12,33 @@ import sys
 
 class MappingSolutionFramework:
 
-    #__request_generator = None
-    remaining_request_lifetimes = []
+    __discrete_simulation = True
+    __resource_getter = None
+    __request_generator = None
+    __orchestrator_adaptor = None
+    __remaining_request_lifetimes = list()
 
-    def __init__(self, resource_getter, request_generator): #, orchestrator_adaptor):
-        self.__resource_getter = resource_getter
-        self.__request_generator = request_generator
-        #self.__orchestrator_adaptor = orchestrator_adaptor
+    def __init__(self, simulation_type):
+        self.__discreate_simulation = simulation_type
 
-    def simulate(self,topology_type,request_type,sim_end,discrete_sim):
+
+    def __clean_expired_requests(self,time,service_graph):
+
+        # Delete expired SCs
+        for sc in self.__remaining_request_lifetimes:
+            if sc.dead_time < time:
+                # Delete mapping
+                for nf in sc.SC.nfs:
+                    service_graph.del_node(nf)
+                # refresh the active SCs list
+                self.__remaining_request_lifetimes.remove(sc)
+
+
+
+    def simulate(self,topology_type,request_type,orchestrator_type,sim_end,discrete_sim):
+
+        time = 0
+        mapping_level = 1
 
         #Get resource
         resource_getter = ResouceGetter()
@@ -42,15 +60,39 @@ class MappingSolutionFramework:
             else:
                 #TODO: create exception
                 pass
-            service_graph = request_generator.get_request()
+            service_graph, life_time  = request_generator.get_request(resource_graph,mapping_level)
 
             #Discrete working
             if discrete_sim:
 
+                time += 1
+
+                #Get Orchestrator
+                if orchestrator_type == "online":
+                    orchestrator_adaptor = OnlineOrchestrator()
+                elif orchestrator_type == "offline":
+                    orchestrator_adaptor = OfflineOrchestrator()
+                elif orchestrator_type == "hybrid":
+                    orchestrator_adaptor = HybridOrchestrator()
+                else:
+                    # TODO: create exception
+                    pass
+
+                #Synchronous MAP call
+                orchestrator_adaptor.MAP(service_graph,resource_graph)
+
+                #Adding successfully mapped request to the remaining_request_lifetimes
+                # TODO: ELLENORIZNI, HOGY MAPPING SIKERES-E
+                service_life_element = {"dead_time":time+life_time,"SG":service_graph}
+                self.__remaining_request_lifetimes.append(service_life_element)
+
+                #Remove expired service graph requests
+                self.__clean_expired_requests()
 
 
             #Indiscrete working
             else:
+                #TODO: Create this simulation type
                 pass
 
             #Increase simulation iteration
@@ -66,10 +108,4 @@ class MappingSolutionFramework:
 
 if __name__ == "__main__":
 
-    #Start simulate:
-
-    resource_graph = ResouceGetter()
-    asd = resource_graph.GetNFFG('pico')
-    request = RequestGenerator()
-   # orch_adaptor = OrchestratorAdaptor()
     test = MappingSolutionFramework(resource_graph,request) #,orch_adaptor)
