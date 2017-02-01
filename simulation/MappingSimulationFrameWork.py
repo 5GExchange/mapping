@@ -4,6 +4,14 @@ from RequestGenerator import SimpleReqGen
 from RequestGenerator import MultiReqGen
 from OrchestratorAdaptor import *
 import logging
+try:
+    from escape.mapping.alg1 import UnifyExceptionTypes as uet
+except ImportError:
+    import sys, os
+    nffg_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../alg1/'))
+    sys.path.append(nffg_dir)
+    import UnifyExceptionTypes as uet
+
 
 import sys
 #sys.path.append(./RequestGenerator)
@@ -13,6 +21,8 @@ import sys
 log = logging.getLogger("StressTest")
 log.setLevel(logging.DEBUG)
 logging.basicConfig(format='%(levelname)s:%(name)s:%(message)s')
+
+resource_graph = None
 
 class MappingSolutionFramework:
 
@@ -66,7 +76,6 @@ class MappingSolutionFramework:
                 #TODO: create exception
                 pass
             service_graph, life_time  = request_generator.get_request(resource_graph,sim_iter)
-            life_time += 2000
 
             #Discrete working
             if discrete_sim:
@@ -87,6 +96,7 @@ class MappingSolutionFramework:
                 """
 
                 #Synchronous MAP call
+                before_mapping_RG = resource_graph.copy()
                 try:
                     resource_graph = orchestrator_adaptor.MAP(service_graph,resource_graph)
 
@@ -94,8 +104,9 @@ class MappingSolutionFramework:
                     service_life_element = {"dead_time":time+life_time,"SG":service_graph}
                     self.__remaining_request_lifetimes.append(service_life_element)
                     log.info("Mapping service graph " + str(sim_iter) + " successfull")
-                except:
+                except uet.MappingException:
                     log.info("Mapping service graph " + str(sim_iter) + " unsuccessfull")
+                    resource_graph = before_mapping_RG
 
                 #Remove expired service graph requests
                 resource_graph = self.__clean_expired_requests(time,resource_graph)
@@ -115,6 +126,6 @@ class MappingSolutionFramework:
 
 if __name__ == "__main__":
 
-    log.info("Start simulating")
+    log.info("Start simulation")
     test = MappingSolutionFramework(True)
-    test.simulate("pico","multi","online",300,True)
+    test.simulate("pico","simple","online",300,True)
