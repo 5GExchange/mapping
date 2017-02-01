@@ -43,7 +43,8 @@ class AbstractRequestGenerator:
 
 
 class TestReqGen(AbstractRequestGenerator):
-    nf_type = [1]
+
+    nf_types = [1]
 
     def get_request(self, resource_graph, test_lvl):
         all_saps_ending = [s.id for s in resource_graph.saps]
@@ -85,7 +86,7 @@ class TestReqGen(AbstractRequestGenerator):
                     vnf_added = False
                     p = rnd.random()
                     if rnd.random() < vnf_sharing_probabilty and len(running_nfs) > 0 and not multiSC:
-                        vnf_added, nf = AbstractRequestGenerator._shareVNFFromEarlierSG(nffg, running_nfs, nfs_this_sc, p)
+                        vnf_added, nf = self._shareVNFFromEarlierSG(nffg, running_nfs, nfs_this_sc, p)
                     else:
                         nf = nffg.add_nf(id='-'.join(('Test',
                         str(test_lvl),
@@ -111,6 +112,7 @@ class TestReqGen(AbstractRequestGenerator):
                 return nffg
 
 class SimpleReqGen(AbstractRequestGenerator):
+
     nf_types = list(string.ascii_uppercase)[:10]
 
     def get_request(self,resource_graph, test_lvl):

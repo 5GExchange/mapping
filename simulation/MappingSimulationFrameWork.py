@@ -2,13 +2,18 @@ from ResourceGetter import ResouceGetter
 from RequestGenerator import TestReqGen
 from RequestGenerator import SimpleReqGen
 from RequestGenerator import MultiReqGen
-from AbstractOrchestrator import *
+from OrchestratorAdaptor import *
+import logging
 
 import sys
 #sys.path.append(./RequestGenerator)
 #from escape.mapping.simulation import ResourceGetter
 #from escape.mapping.simulation import RequestGenerator
 
+
+log = logging.getLogger("StressTest")
+log.setLevel(logging.DEBUG)
+logging.basicConfig(format='%(levelname)s:%(name)s:%(message)s')
 
 class MappingSolutionFramework:
 
@@ -51,15 +56,15 @@ class MappingSolutionFramework:
             #Get request
             #TODO: EZT MEG MODOSITANI AZ OSZTALYDIAGRAM SZERINT
             if request_type == "test":
-                request_generator = TestReqGen()
+                self.__request_generator = TestReqGen()
             elif request_type == "simple":
-                request_generator = SimpleReqGen()
+                self.__request_generator = SimpleReqGen()
             elif request_type == "multi":
-                request_generator = MultiReqGen()
+                self.__request_generator = MultiReqGen()
             else:
                 #TODO: create exception
                 pass
-            service_graph, life_time  = request_generator.get_request(resource_graph,sim_iter)
+            service_graph, life_time  = self.__request_generator.get_request(resource_graph,sim_iter)
 
             #Discrete working
             if discrete_sim:
@@ -69,6 +74,7 @@ class MappingSolutionFramework:
                 #Get Orchestrator
                 if orchestrator_type == "online":
                     orchestrator_adaptor = OnlineOrchestrator()
+                """
                 elif orchestrator_type == "offline":
                     orchestrator_adaptor = OfflineOrchestrator()
                 elif orchestrator_type == "hybrid":
@@ -76,6 +82,7 @@ class MappingSolutionFramework:
                 else:
                     # TODO: create exception
                     pass
+                """
 
                 #Synchronous MAP call
                 orchestrator_adaptor.MAP(service_graph,resource_graph)
@@ -102,6 +109,8 @@ class MappingSolutionFramework:
 
 
 if __name__ == "__main__":
+
+    log.info("Start simulating:\n---------------")
 
     test = MappingSolutionFramework(True)
     test.simulate("pico","test","online",100,True)
