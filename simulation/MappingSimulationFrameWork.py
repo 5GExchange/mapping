@@ -35,10 +35,9 @@ class MappingSolutionFramework:
 
 
 
-    def simulate(self,topology_type,request_type,orchestrator_type,sim_end,discrete_sim):
+    def simulate(self,topology_type,request_type,orchestrator_type,sim_end,discrete_sim=False):
 
         time = 0
-        mapping_level = 1
 
         #Get resource
         resource_getter = ResouceGetter()
@@ -60,7 +59,7 @@ class MappingSolutionFramework:
             else:
                 #TODO: create exception
                 pass
-            service_graph, life_time  = request_generator.get_request(resource_graph,mapping_level)
+            service_graph, life_time  = request_generator.get_request(resource_graph,sim_iter)
 
             #Discrete working
             if discrete_sim:
@@ -102,10 +101,7 @@ class MappingSolutionFramework:
                 sim_running = False
 
 
-
-
-
-
 if __name__ == "__main__":
 
-    test = MappingSolutionFramework(resource_graph,request) #,orch_adaptor)
+    test = MappingSolutionFramework(True)
+    test.simulate("pico","test","online",100,True)
