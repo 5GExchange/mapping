@@ -1,5 +1,9 @@
 from ResourceGetter import ResouceGetter
-from RequestGenerator import RequestGenerator
+from RequestGenerator import TestReqGen
+from RequestGenerator import SimpleReqGen
+from RequestGenerator import MultiReqGen
+from AbstractOrchestrator 
+
 import sys
 #sys.path.append(./RequestGenerator)
 #from escape.mapping.simulation import ResourceGetter
@@ -16,18 +20,38 @@ class MappingSolutionFramework:
         self.__request_generator = request_generator
         #self.__orchestrator_adaptor = orchestrator_adaptor
 
-    def simulate(self,topology,sim_end,discreate_sim):
+    def simulate(self,topology_type,request_type,sim_end,discrete_sim):
 
         #Get resource
         resource_getter = ResouceGetter()
-        pico_topo = resource_getter.GetNFFG(topology)
+        resource_graph = resource_getter.GetNFFG(topology_type)
 
+        #Simulation cycle
         sim_running = True
         sim_iter = 0
         while sim_running:
 
             #Get request
-            request_generator = RequestGenerator()
+            #TODO: EZT MEG MODOSITANI AZ OSZTALYDIAGRAM SZERINT
+            if request_type == "test":
+                request_generator = TestReqGen()
+            elif request_type == "simple":
+                request_generator = SimpleReqGen()
+            elif request_type == "multi":
+                request_generator = MultiReqGen()
+            else:
+                #TODO: create exception
+                pass
+            service_graph = request_generator.get_request()
+
+            #Discrete working
+            if discrete_sim:
+
+
+
+            #Indiscrete working
+            else:
+                pass
 
             #Increase simulation iteration
             if (sim_iter < sim_end):

@@ -1,13 +1,8 @@
 #Embedded file name: /home/dj/escape/mapping/simulation/RequestGenerator.py
 from abc import ABCMeta, abstractmethod
-import getopt
-import logging
 import math
 import random as rnd
-import sys
-import traceback
 import string
-import os
 try:
     from escape.escape.escape.nffg_lib.nffg import NFFG
 except ImportError:
@@ -66,6 +61,7 @@ class RequestGenerator(AbstractRequestGenerator):
         BUT we wait for 1 SG at least, but if by that time 4 units has already passed,
         map the SG alone (unbatched).
         """
+
         if simple_sc:
             chain_maxlen = 4
         else:
