@@ -16,7 +16,7 @@ class MappingSolutionFramework:
         self.__request_generator = request_generator
         #self.__orchestrator_adaptor = orchestrator_adaptor
 
-    def simulate(self,topology,sim_end):
+    def simulate(self,topology,sim_end,discreate_sim):
 
         #Get resource
         resource_getter = ResouceGetter()
@@ -29,8 +29,7 @@ class MappingSolutionFramework:
             #Get request
             request_generator = RequestGenerator()
 
-
-
+            #Increase simulation iteration
             if (sim_iter < sim_end):
                 sim_iter += 1
             else:
