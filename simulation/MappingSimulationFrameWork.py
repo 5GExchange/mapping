@@ -16,11 +16,35 @@ class MappingSolutionFramework:
         self.__request_generator = request_generator
         #self.__orchestrator_adaptor = orchestrator_adaptor
 
-    def simulate(self):
-        pass
+    def simulate(self,topology,sim_end):
+
+        #Get resource
+        resource_getter = ResouceGetter()
+        pico_topo = resource_getter.GetNFFG(topology)
+
+        sim_running = True
+        sim_iter = 0
+        while sim_running:
+
+            #Get request
+            request_generator = RequestGenerator()
+
+
+
+            if (sim_iter < sim_end):
+                sim_iter += 1
+            else:
+                sim_running = False
+
+
+
+
 
 
 if __name__ == "__main__":
+
+    #Start simulate:
+
     resource_graph = ResouceGetter()
     asd = resource_graph.GetNFFG('pico')
     request = RequestGenerator()
