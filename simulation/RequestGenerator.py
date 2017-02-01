@@ -112,7 +112,7 @@ class TestReqGen(AbstractRequestGenerator):
                     current_nfs.extend(new_nfs)
 
 
-                life_time = random.randint(1,20)
+                life_time = random.randint(10, 50)
                 return nffg, life_time
 
 class SimpleReqGen(AbstractRequestGenerator):
@@ -161,11 +161,7 @@ class SimpleReqGen(AbstractRequestGenerator):
                         vnf_added, nf = self._shareVNFFromEarlierSG(nffg, running_nfs, nfs_this_sc,
                                                                                         p)
                     else:
-                        nf = nffg.add_nf(id='-'.join(('Test',
-                                                          str(test_lvl),
-                                                          'SC',
-                                                          str(scid),
-                                                          'VNF',
+                        nf = nffg.add_nf(id='-'.join(('Test', str(test_lvl), 'SC', str(scid), 'VNF',
                                                           str(vnf))), func_type=rnd.choice(self.nf_types),
                                              cpu=rnd.randint(1, 4), mem=rnd.random() * 1600, storage=rnd.random() * 3)
                         vnf_added = True
@@ -186,7 +182,7 @@ class SimpleReqGen(AbstractRequestGenerator):
                 new_nfs = [vnf for vnf in nfs_this_sc if vnf not in current_nfs]
                 for tmp in xrange(0, scid + 1):
                     current_nfs.extend(new_nfs)
-                life_time = random.randint(1, 20)
+                life_time = random.randint(10, 50)
                 return nffg, life_time
 
 class MultiReqGen(AbstractRequestGenerator):
@@ -241,11 +237,7 @@ class MultiReqGen(AbstractRequestGenerator):
                         else:
                             vnf_added, nf = self._shareVNFFromEarlierSG(nffg, running_nfs,nfs_this_sc, p)
                     else:
-                        nf = nffg.add_nf(id='-'.join(('Test',
-                                                          str(test_lvl),
-                                                          'SC',
-                                                          str(scid),
-                                                          'VNF',
+                        nf = nffg.add_nf(id='-'.join(('Test', str(test_lvl), 'SC', str(scid), 'VNF',
                                                           str(vnf))), func_type=rnd.choice(self.nf_types),
                                              cpu=rnd.randint(1, 4), mem=rnd.random() * 1600, storage=rnd.random() * 3)
                         vnf_added = True
@@ -266,7 +258,7 @@ class MultiReqGen(AbstractRequestGenerator):
                 new_nfs = [vnf for vnf in nfs_this_sc if vnf not in current_nfs]
                 for tmp in xrange(0, scid + 1):
                     current_nfs.extend(new_nfs)
-                life_time = random.randint(1, 20)
+                life_time = random.randint(10, 50)
                 return nffg, life_time
 
 

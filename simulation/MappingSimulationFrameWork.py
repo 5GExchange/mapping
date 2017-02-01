@@ -117,4 +117,4 @@ if __name__ == "__main__":
 
     log.info("Start simulating")
     test = MappingSolutionFramework(True)
-    test.simulate("pico","multi","online",300,True)
+    test.simulate("pico", "multi", "online", 300, True)
