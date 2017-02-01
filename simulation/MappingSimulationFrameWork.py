@@ -16,6 +16,9 @@ class MappingSolutionFramework:
         self.__request_generator = request_generator
         #self.__orchestrator_adaptor = orchestrator_adaptor
 
+    def simulate(self):
+        pass
+
 
 if __name__ == "__main__":
     resource_graph = ResouceGetter()
