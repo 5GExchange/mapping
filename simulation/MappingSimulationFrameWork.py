@@ -1,5 +1,5 @@
-import ResourceGetter
-import RequestGenerator
+from ResourceGetter import ResouceGetter
+from RequestGenerator import RequestGenerator
 import sys
 #sys.path.append(./RequestGenerator)
 #from escape.mapping.simulation import ResourceGetter
@@ -8,6 +8,7 @@ import sys
 
 class MappingSolutionFramework:
 
+    #__request_generator = None
     remaining_request_lifetimes = []
 
     def __init__(self, resource_getter, request_generator): #, orchestrator_adaptor):
@@ -17,8 +18,8 @@ class MappingSolutionFramework:
 
 
 if __name__ == "__main__":
-    getresource = ResourceGetter.ResouceGetter()
-    asd = getresource.GetNFFG('pico')
-    getrequest = RequestGenerator.RequestGenerator()
+    resource_graph = ResouceGetter()
+    asd = resource_graph.GetNFFG('pico')
+    request = RequestGenerator()
    # orch_adaptor = OrchestratorAdaptor()
-    test = MappingSolutionFramework(getresource,getrequest) #,orch_adaptor)
+    test = MappingSolutionFramework(resource_graph,request) #,orch_adaptor)
