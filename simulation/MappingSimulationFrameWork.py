@@ -4,6 +4,7 @@ from RequestGenerator import SimpleReqGen
 from RequestGenerator import MultiReqGen
 from OrchestratorAdaptor import *
 import threading
+from multiprocessing import Pool
 import datetime
 import time
 import logging
@@ -18,12 +19,6 @@ except ImportError:
     sys.path.append(nffg_dir)
     import UnifyExceptionTypes as uet
 
-
-import sys
-#sys.path.append(./RequestGenerator)
-#from escape.mapping.simulation import ResourceGetter
-#from escape.mapping.simulation import RequestGenerator
-
 log = logging.getLogger("StressTest")
 log.setLevel(logging.DEBUG)
 logging.basicConfig(format='%(levelname)s:%(name)s:%(message)s')
@@ -31,10 +26,11 @@ logging.basicConfig(format='%(levelname)s:%(name)s:%(message)s')
 #Global variables
 resource_graph = None
 request_list = list()
+mapping_thread_running = False
 
 class MappingSolutionFramework:
 
-    __discrete_simulation = True
+    discrete_simulation = True
     __resource_getter = None
     __request_generator = None
     __orchestrator_adaptor = None
@@ -60,18 +56,33 @@ class MappingSolutionFramework:
         return resource_graph
 
 
-    def __mapping_thread(self,rg,orchestrator_adaptor,sim_iter):
+    def make_mapping(self,orchestrator_type):
 
         global request_list
         global resource_graph
 
+        # Get Orchestrator
+        if orchestrator_type == "online":
+            self.__orchestrator_adaptor = OnlineOrchestrator()
+        """
+        elif orchestrator_type == "offline":
+            orchestrator_adaptor = OfflineOrchestrator()
+        elif orchestrator_type == "hybrid":
+            orchestrator_adaptor = HybridOrchestrator()
+        else:
+            # TODO: create exception
+            pass
+        """
+
         log.info("Start mapping thread")
+
 
         while len(request_list) > 0:
             request_list_element = request_list.pop(0)
             request = request_list_element['request']
             life_time = request_list_element['life_time']
-            resource_graph = self.__mapping(rg,request,datetime.timedelta(0,life_time),orchestrator_adaptor,datetime.datetime.now(),sim_iter)
+            req_num = request_list_element['req_num']
+            resource_graph = self.__mapping(resource_graph,request,datetime.timedelta(0,life_time),self.__orchestrator_adaptor,datetime.datetime.now(),req_num)
 
         log.info("End mapping thread")
 
@@ -93,7 +104,7 @@ class MappingSolutionFramework:
 
 
 
-    def simulate(self,topology_type,request_type,orchestrator_type,sim_end,discrete_sim=False):
+    def simulate(self,topology_type,request_type,sim_end,discrete_sim=False):
 
         virtual_time = 0
 
@@ -120,48 +131,26 @@ class MappingSolutionFramework:
                 pass
             service_graph, life_time  = request_generator.get_request(resource_graph,sim_iter)
 
-            # Get Orchestrator
-            if orchestrator_type == "online":
-                orchestrator_adaptor = OnlineOrchestrator()
-            """
-            elif orchestrator_type == "offline":
-                orchestrator_adaptor = OfflineOrchestrator()
-            elif orchestrator_type == "hybrid":
-                orchestrator_adaptor = HybridOrchestrator()
-            else:
-                # TODO: create exception
-                pass
-            """
-
             #Discrete working
             if self.__discrete_simulation:
-
+                pass
+                """
                 virtual_time += 1
                 resource_graph = self.__mapping(resource_graph, service_graph, life_time, orchestrator_adaptor, virtual_time, sim_iter)
                 #Remove expired service graph requests
                 resource_graph = self.__clean_expired_requests(time,resource_graph)
-
+                """
 
             # Not discrete working
             else:
-                log.info("add request")
-                request_list_element = {"request": service_graph, "life_time": life_time}
+                log.info("Add request " + str(sim_iter))
+                request_list_element = {"request": service_graph, "life_time": life_time,"req_num":sim_iter}
                 request_list.append(request_list_element)
-
-                mapping_thread = threading.Thread(None,self.__mapping_thread(resource_graph,orchestrator_adaptor,sim_iter))
-                if not mapping_thread.isAlive():
-                    try:
-                        mapping_thread = threading.Thread(self.__mapping_thread, (resource_graph,orchestrator_adaptor,sim_iter))
-                        mapping_thread.start()
-                    except:
-                        log.error("Mapping thread doesn't start")
 
                 scale_radius = 2
                 n = 1000
                 exp_time = N.random.exponential(scale_radius, (n, 1))
-                time.sleep(exp_time)
-
-         
+                #time.sleep(exp_time)
 
                 # Remove expired service graph requests
                 #resource_graph = self.__clean_expired_requests(datetime.datetime.now(), resource_graph)
@@ -178,4 +167,20 @@ if __name__ == "__main__":
 
     log.info("Start simulation")
     test = MappingSolutionFramework(False)
-    test.simulate("pico","simple","online",300,True)
+
+    if not test.discrete_simulation:
+        pass
+    else:
+
+        try:
+            req_gen_thread = threading.Thread(None,test.simulate,"request_generator_thread",("pico","simple",300,True))
+            mapping_thread = threading.Thread(None,test.make_mapping,"mapping_thread",("online"),None,None)
+            #req_gen_thread.start()
+            mapping_thread.start()
+
+        except:
+            log.error("Unable to start threads")
+
+    #test.simulate("pico","simple","online",300,True)
+    req_gen_thread.join()
+    mapping_thread.join()
