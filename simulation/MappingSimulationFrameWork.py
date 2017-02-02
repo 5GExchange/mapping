@@ -26,7 +26,7 @@ logging.basicConfig(format='%(levelname)s:%(name)s:%(message)s')
 #Global variables
 resource_graph = None
 request_list = list()
-mapping_thread_running = False
+mapping_thread_flag = True
 
 class MappingSolutionFramework:
 
@@ -75,14 +75,15 @@ class MappingSolutionFramework:
         """
 
         log.info("Start mapping thread")
-
-
-        while len(request_list) > 0:
-            request_list_element = request_list.pop(0)
-            request = request_list_element['request']
-            life_time = request_list_element['life_time']
-            req_num = request_list_element['req_num']
-            resource_graph = self.__mapping(resource_graph,request,datetime.timedelta(0,life_time),self.__orchestrator_adaptor,datetime.datetime.now(),req_num)
+        while mapping_thread_flag:
+            while len(request_list) > 0:
+                request_list_element = request_list.pop(0)
+                request = request_list_element['request']
+                life_time = request_list_element['life_time']
+                req_num = request_list_element['req_num']
+                log.info("Start mapping " + str(req_num) + " SG")
+                resource_graph = self.__mapping(resource_graph,request,datetime.timedelta(0,life_time),self.__orchestrator_adaptor,datetime.datetime.now(),req_num)
+                log.info("Mapping " + str(req_num) + " SG: DONE")
 
         log.info("End mapping thread")
 
@@ -106,6 +107,7 @@ class MappingSolutionFramework:
 
     def simulate(self,topology_type,request_type,sim_end,discrete_sim=False):
 
+        global mapping_thread_flag
         virtual_time = 0
 
         #Get resource
@@ -161,6 +163,7 @@ class MappingSolutionFramework:
                 sim_iter += 1
             else:
                 sim_running = False
+                mapping_thread_flag = False
 
 
 if __name__ == "__main__":
@@ -173,9 +176,9 @@ if __name__ == "__main__":
     else:
 
         try:
-            req_gen_thread = threading.Thread(None,test.simulate,"request_generator_thread",("pico","simple",300,True))
-            mapping_thread = threading.Thread(None,test.make_mapping,"mapping_thread",("online"),None,None)
-            #req_gen_thread.start()
+            req_gen_thread = threading.Thread(None,test.simulate,"request_generator_thread",("pico","simple",10,True))
+            mapping_thread = threading.Thread(None,test.make_mapping,"mapping_thread",(["online"]))
+            req_gen_thread.start()
             mapping_thread.start()
 
         except:
