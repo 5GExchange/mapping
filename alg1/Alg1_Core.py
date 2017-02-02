@@ -59,7 +59,8 @@ class CoreAlgorithm(object):
     self.dry_init = dry_init
     self.propagate_e2e_reqs = propagate_e2e_reqs
 
-    self._preproc(net0, req0, chains0, shortest_paths, overall_highest_delay)
+    if mode != NFFG.MODE_DEL:
+      self._preproc(net0, req0, chains0, shortest_paths, overall_highest_delay)
 
     # must be sorted in alphabetic order of keys: cpu, mem, storage
     self.resource_priorities = [0.333, 0.333, 0.333]
@@ -310,7 +311,7 @@ class CoreAlgorithm(object):
             if self.net.node[
               host_of_aff_pair].infra_type == infra.TYPE_BISBIS and \
                self.net.node[host_of_aff_pair].mapping_features.get(
-                  'antiaffinity', False):
+                 'antiaffinity', False):
               # it there are multiple Infras, where this can be delegated, the 
               # last visited is chosen. It could be done more sophisticatedly, 
               # now it is just a random selection among the feasible ones.
@@ -607,7 +608,7 @@ class CoreAlgorithm(object):
       potential_hosts_sumlat.append((host, self._sumLatencyOnPath(paths[host],
                                                                   linkids[
                                                                     host])))
-    hosts_with_lat_prefvalues = self.manager.calcDelayPrefValues( \
+    hosts_with_lat_prefvalues = self.manager.calcDelayPrefValues(
       potential_hosts_sumlat, prev_vnf_id, vnf_id,
       reqlinkid, cid, subgraph, start)
     self.log.debug("Hosts with lat pref values from VNF %s: \n %s" % (vnf_id,
@@ -1280,50 +1281,15 @@ class CoreAlgorithm(object):
     Constructs an output NFFG, which can be used by the lower layered NFFG-s 
     for deletion. SG elements are matched exclusively by their ID-s.
     """
-    self.log.debug("Constructing output delete NFFG...")
+    self.log.debug(
+      "Deleting elements from output NFFG based on delete request...")
     nffg = self.net0
-    # we need the original copy not to spoil the struct during deletion.
-    original_nffg = copy.deepcopy(self.net0)
     # there should be only VNFs, SAPs, SGHops in the request graph. And all
     # of them should be in the substrate NFFG, otherwise they were removed.
 
-    # recreate SGHops in case they were not added before giving the substrate 
+    # recreate SGHops in case they were not added before giving the substrate
     # NFFG to the mapping
-    original_nffg = NFFGToolBox.recreate_all_sghops(original_nffg)
-    for vnf, d in self.req.nodes_iter(data=True):
-      # make the union of out and inbound edges.
-      if d.type != 'NF':
-        continue
-      all_connected_sghops = None
-      cnt = [0, 0]
-      for graph, idx in ((original_nffg.network, 0), (self.req, 1)):
-        all_connected_sghops = set([(i, j, k) for i, j, k in \
-                                    graph.out_edges_iter([vnf],
-                                                         keys=True) if
-                                    graph[i][j][k].type == 'SG']) | \
-                               set([(i, j, k) for i, j, k in \
-                                    graph.in_edges_iter([vnf],
-                                                        keys=True) if
-                                    graph[i][j][k].type == 'SG'])
-        # 0th is network, 1st is the request
-        cnt[idx] = len(all_connected_sghops)
-      if cnt[0] > cnt[1]:
-        # it is maybe used by some other request.
-        self.log.debug("Skipping deletion of VNF %s, it has not speficied edges"
-                       " connected in the substrate graph!" % vnf)
-      elif cnt[0] < cnt[1]:
-        # by this time this shouldn't happen, cuz those edges were removed.
-        raise uet.InternalAlgorithmException(
-          "After delete request preprocessing"
-          ", VNF %s has more edges than in the substrate graph! Are "
-          "there any SGHops in the resource graph?" % vnf)
-      else:
-        self.log.debug("Deleting VNF %s and all of its connected SGHops from "
-                       "output NFFG" % vnf)
-        hosting_infra = next(nffg.infra_neighbors(vnf))
-        for dyn_link in nffg.network[vnf][hosting_infra.id].itervalues():
-          hosting_infra.del_port(dyn_link.dst.id)
-        nffg.del_node(vnf)
+    nffg = NFFGToolBox.recreate_all_sghops(nffg)
 
     for i, j, k, d in self.req.edges_iter(data=True, keys=True):
       nffg.del_flowrules_of_SGHop(k)
@@ -1331,6 +1297,11 @@ class CoreAlgorithm(object):
       self.log.debug("SGHop %s with its flowrules are deleted from output NFFG"
                      % d.id)
       # Maybe the VNF ports should be deleted too?
+
+    # Delete everything which is in the DEL NFFG, will all the collateral
+    # edge deletion that it takes
+    for n, d in self.req.nodes_iter(data=True):
+      nffg.del_node(d)
 
     return nffg
 
