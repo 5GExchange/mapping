@@ -6,6 +6,9 @@ from OrchestratorAdaptor import *
 import threading
 import time
 import logging
+import numpy as N
+import pylab as plt
+
 try:
     from escape.mapping.alg1 import UnifyExceptionTypes as uet
 except ImportError:
@@ -144,8 +147,11 @@ class MappingSolutionFramework:
                     except:
                         log.error("Mapping thread doesn't start")
 
-                #TODO: sleep
-                time.sleep(3)
+                scale_radius = 2
+                n = 1000
+                exp_time = N.random.exponential(scale_radius, (n, 1))
+                time.sleep(exp_time)
+
 
                 # Remove expired service graph requests
                 resource_graph = self.__clean_expired_requests(time.ctime(), resource_graph)
