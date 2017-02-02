@@ -607,7 +607,7 @@ FIFO queue-ban.<y:LabelModel>
     </node>
     <node id="n31">
       <data key="d4"/>
-      <data key="d5"><![CDATA[Tobb SC is lehet egy SG-ban. Az egyes lancok hossza es a VNF-ek is valtozatosak]]></data>
+      <data key="d5"><![CDATA[Tobb SC is lehet egy SG-ban. Az egyes lancok hossza (2-10 db vnf) es a VNF-ek is valtozatosak]]></data>
       <data key="d6">
         <y:UMLClassNode>
           <y:Geometry height="35.0" width="220.0" x="210.4566788467376" y="698.0933472534141"/>
