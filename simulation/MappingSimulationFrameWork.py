@@ -4,7 +4,13 @@ from RequestGenerator import SimpleReqGen
 from RequestGenerator import MultiReqGen
 from OrchestratorAdaptor import *
 import threading
-from multiprocessing import Pool
+try:
+    from escape.nffg_lib.nffg import NFFG, NFFGToolBox
+except ImportError:
+    import sys, os
+    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                 "../nffg_lib/")))
+    from nffg import NFFG, NFFGToolBox
 import datetime
 import time
 import logging
@@ -19,9 +25,9 @@ except ImportError:
     sys.path.append(nffg_dir)
     import UnifyExceptionTypes as uet
 
-log = logging.getLogger("StressTest")
+log = logging.getLogger(" ")
 log.setLevel(logging.DEBUG)
-logging.basicConfig(format='%(levelname)s:%(name)s:%(message)s')
+logging.basicConfig(format='%(levelname)s:%(message)s')
 
 #Global variables
 resource_graph = None
@@ -88,7 +94,9 @@ class MappingSolutionFramework:
         log.info("End mapping thread")
 
 
-    def __clean_expired_requests(self,time,resource_graph):
+    def __clean_expired_requests(self,time):
+
+        global resource_graph
 
         # Delete expired SCs
         for sc in self.__remaining_request_lifetimes:
@@ -97,7 +105,8 @@ class MappingSolutionFramework:
                 log.debug("Request dead")
                 # Delete mapping
                 for nf in sc['SG'].nfs:
-                    resource_graph.del_node(nf)
+                    resource_graph = NFFGToolBox.remove_concrete_services(resource_graph, sc['SG'])
+                    #resource_graph.del_node(nf)
                 # refresh the active SCs list
                 self.__remaining_request_lifetimes.remove(sc)
 
@@ -151,11 +160,11 @@ class MappingSolutionFramework:
 
                 scale_radius = 2
                 n = 1000
-                exp_time = N.random.exponential(scale_radius, (n, 1))
-                #time.sleep(exp_time)
+                exp_time = N.random.exponential(scale_radius, (1, 1))
+                time.sleep(exp_time)
 
                 # Remove expired service graph requests
-                #resource_graph = self.__clean_expired_requests(datetime.datetime.now(), resource_graph)
+                resource_graph = self.__clean_expired_requests(datetime.datetime.now())
 
 
             #Increase simulation iteration
