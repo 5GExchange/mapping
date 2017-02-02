@@ -4,6 +4,7 @@ from RequestGenerator import SimpleReqGen
 from RequestGenerator import MultiReqGen
 from OrchestratorAdaptor import *
 import threading
+import datetime
 import time
 import logging
 try:
@@ -37,7 +38,7 @@ class MappingSolutionFramework:
     __remaining_request_lifetimes = list()
 
     def __init__(self, simulation_type):
-        self.__discreate_simulation = simulation_type
+        self.__discrete_simulation = simulation_type
 
     def __mapping(self,resource_graph,service_graph,life_time,orchestrator_adaptor,time,sim_iter):
         # Synchronous MAP call
@@ -61,11 +62,15 @@ class MappingSolutionFramework:
         global request_list
         global resource_graph
 
+        log.info("Start mapping thread")
+
         while len(request_list) > 0:
             request_list_element = request_list.pop(0)
             request = request_list_element['request']
             life_time = request_list_element['life_time']
-            resource_graph = self.__mapping(rg,request,life_time,orchestrator_adaptor,time.ctime(),sim_iter)
+            resource_graph = self.__mapping(rg,request,datetime.timedelta(0,life_time),orchestrator_adaptor,datetime.datetime.now(),sim_iter)
+
+        log.info("End mapping thread")
 
 
     def __clean_expired_requests(self,time,resource_graph):
@@ -73,6 +78,8 @@ class MappingSolutionFramework:
         # Delete expired SCs
         for sc in self.__remaining_request_lifetimes:
             if sc['dead_time'] < time:
+
+                log.debug("Request dead")
                 # Delete mapping
                 for nf in sc['SG'].nfs:
                     resource_graph.del_node(nf)
@@ -85,7 +92,7 @@ class MappingSolutionFramework:
 
     def simulate(self,topology_type,request_type,orchestrator_type,sim_end,discrete_sim=False):
 
-        time = 0
+        virtual_time = 0
 
         #Get resource
         resource_getter = ResouceGetter()
@@ -124,31 +131,35 @@ class MappingSolutionFramework:
             """
 
             #Discrete working
-            if discrete_sim:
+            if self.__discrete_simulation:
 
-                time += 1
-                resource_graph = self.__mapping(resource_graph, service_graph, life_time, orchestrator_adaptor, time, sim_iter)
+                virtual_time += 1
+                resource_graph = self.__mapping(resource_graph, service_graph, life_time, orchestrator_adaptor, virtual_time, sim_iter)
                 #Remove expired service graph requests
                 resource_graph = self.__clean_expired_requests(time,resource_graph)
 
 
             # Not discrete working
             else:
+                log.info("add request")
                 request_list_element = {"request": service_graph, "life_time": life_time}
                 request_list.append(request_list_element)
 
-                if not mapping_thread.is_alive:
+                mapping_thread = threading.Thread(None,self.__mapping_thread(resource_graph,orchestrator_adaptor,sim_iter))
+                if not mapping_thread.isAlive():
                     try:
-                        mapping_thread = threading.Thread(self.__mapping_thread, (resource_graph,orchestrator_adaptor,sim_iter))
                         mapping_thread.start()
                     except:
                         log.error("Mapping thread doesn't start")
 
+                else:
+                    log.debug("ez lenne a jo")
+
                 #TODO: sleep
-                time.sleep(3)
+                #time.sleep(3)
 
                 # Remove expired service graph requests
-                resource_graph = self.__clean_expired_requests(time.ctime(), resource_graph)
+                #resource_graph = self.__clean_expired_requests(datetime.datetime.now(), resource_graph)
 
 
             #Increase simulation iteration
@@ -161,5 +172,5 @@ class MappingSolutionFramework:
 if __name__ == "__main__":
 
     log.info("Start simulation")
-    test = MappingSolutionFramework(True)
+    test = MappingSolutionFramework(False)
     test.simulate("pico","simple","online",300,True)
