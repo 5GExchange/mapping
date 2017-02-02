@@ -7,6 +7,9 @@ import threading
 import datetime
 import time
 import logging
+import numpy as N
+import pylab as plt
+
 try:
     from escape.mapping.alg1 import UnifyExceptionTypes as uet
 except ImportError:
@@ -148,15 +151,17 @@ class MappingSolutionFramework:
                 mapping_thread = threading.Thread(None,self.__mapping_thread(resource_graph,orchestrator_adaptor,sim_iter))
                 if not mapping_thread.isAlive():
                     try:
+                        mapping_thread = threading.Thread(self.__mapping_thread, (resource_graph,orchestrator_adaptor,sim_iter))
                         mapping_thread.start()
                     except:
                         log.error("Mapping thread doesn't start")
 
-                else:
-                    log.debug("ez lenne a jo")
+                scale_radius = 2
+                n = 1000
+                exp_time = N.random.exponential(scale_radius, (n, 1))
+                time.sleep(exp_time)
 
-                #TODO: sleep
-                #time.sleep(3)
+         
 
                 # Remove expired service graph requests
                 #resource_graph = self.__clean_expired_requests(datetime.datetime.now(), resource_graph)
