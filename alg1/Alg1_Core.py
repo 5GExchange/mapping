@@ -1193,6 +1193,9 @@ class CoreAlgorithm(object):
           # We need to use try catch to test inclusion for port ID
           try:
             out_infra_port = nffg.network.node[host].ports[infra_port_id]
+            if len(filter(lambda l: l.type == l.DYNAMIC,
+                          nffg.network[host][vnf].itervalues())) == 0:
+              raise KeyError()
             self.log.debug("Port %s found in Infra %s leading to port %s of NF"
                            " %s." % (infra_port_id, host, d.src.id, vnf))
           except KeyError:
@@ -1225,6 +1228,9 @@ class CoreAlgorithm(object):
           infra_port_id = "|".join((str(host), str(vnf), str(d.dst.id)))
           try:
             in_infra_port = nffg.network.node[host].ports[infra_port_id]
+            if len(filter(lambda l: l.type == l.DYNAMIC,
+                          nffg.network[host][vnf].itervalues())) == 0:
+              raise KeyError()
             self.log.debug("Port %s found in Infra %s leading to port %s of NF"
                            " %s." % (infra_port_id, host, d.dst.id, vnf))
           except KeyError:
