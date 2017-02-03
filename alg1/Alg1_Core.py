@@ -62,42 +62,44 @@ class CoreAlgorithm(object):
     if mode != NFFG.MODE_DEL:
       self._preproc(net0, req0, chains0, shortest_paths, overall_highest_delay)
 
-    # must be sorted in alphabetic order of keys: cpu, mem, storage
-    self.resource_priorities = [0.333, 0.333, 0.333]
+      # must be sorted in alphabetic order of keys: cpu, mem, storage
+      self.resource_priorities = [0.333, 0.333, 0.333]
 
-    # which should count more in the objective function
-    self.bw_factor = bw_factor
-    self.res_factor = res_factor
-    self.lat_factor = lat_factor
+      # which should count more in the objective function
+      self.bw_factor = bw_factor
+      self.res_factor = res_factor
+      self.lat_factor = lat_factor
 
-    # The new preference parameters are f(x) == 0 if x<c and f(1) == e,
-    # exponential in between.
-    # The bandwidth parameter refers to the average link utilization
-    # on the paths to the nodes (and also collocated request links).
-    # If  the even the agv is high it is much worse!
-    self.pref_params = dict(cpu=dict(c=0.4, e=2.5), mem=dict(c=0.4, e=2.5),
-                            storage=dict(c=0.4, e=2.5),
-                            bandwidth=dict(c=0.1, e=10.0))
+      # The new preference parameters are f(x) == 0 if x<c and f(1) == e,
+      # exponential in between.
+      # The bandwidth parameter refers to the average link utilization
+      # on the paths to the nodes (and also collocated request links).
+      # If  the even the agv is high it is much worse!
+      self.pref_params = dict(cpu=dict(c=0.4, e=2.5), mem=dict(c=0.4, e=2.5),
+                              storage=dict(c=0.4, e=2.5),
+                              bandwidth=dict(c=0.1, e=10.0))
 
-    # Functions to give the prefence values of a given ratio of resource
-    # utilization. All fucntions should map every number between [0,1] to [0,1]
-    # real intervals and should be monotonic!
-    self.pref_funcs = dict(cpu=self._pref_noderes, mem=self._pref_noderes,
-                           storage=self._pref_noderes, bandwidth=self._pref_bw)
+      # Functions to give the prefence values of a given ratio of resource
+      # utilization. All fucntions should map every number between [0,1] to [
+      # 0,1]
+      # real intervals and should be monotonic!
+      self.pref_funcs = dict(cpu=self._pref_noderes, mem=self._pref_noderes,
+                             storage=self._pref_noderes,
+                             bandwidth=self._pref_bw)
 
-    # we need to store the original preprocessed NFFG too. with remove VNF-s 
-    # and not STATIC links
-    self.bare_infrastucture_nffg = self.net
+      # we need to store the original preprocessed NFFG too. with remove VNF-s
+      # and not STATIC links
+      self.bare_infrastucture_nffg = self.net
 
-    # peak number of VNFs that were mapped to resource at the same time
-    self.peak_mapped_vnf_count = 0
-    self.sap_count = len([i for i in self.req.saps])
+      # peak number of VNFs that were mapped to resource at the same time
+      self.peak_mapped_vnf_count = 0
+      self.sap_count = len([i for i in self.req.saps])
 
-    # The networkx graphs from the NFFG should be enough for the core
-    # unwrap them, to save one indirection after the preprocessor has
-    # finished.
-    self.net = self.net.network
-    self.req = self.req.network
+      # The networkx graphs from the NFFG should be enough for the core
+      # unwrap them, to save one indirection after the preprocessor has
+      # finished.
+      self.net = self.net.network
+      self.req = self.req.network
 
   def _preproc (self, net0, req0, chains0, shortest_paths,
                 overall_highest_delay):
@@ -1291,27 +1293,35 @@ class CoreAlgorithm(object):
     # NFFG to the mapping
     nffg = NFFGToolBox.recreate_all_sghops(nffg)
 
-    for i, j, k, d in self.req.edges_iter(data=True, keys=True):
+    for i, j, k, d in self.req0.network.edges_iter(data=True, keys=True):
       nffg.del_flowrules_of_SGHop(k)
       nffg.del_edge(d.src, d.dst, d.id)
-      self.log.debug("SGHop %s with its flowrules are deleted from output NFFG"
+      self.log.debug("SGHop %s with its flowrules are deleted from output NFFG."
                      % d.id)
       # Maybe the VNF ports should be deleted too?
 
     # Delete everything which is in the DEL NFFG, will all the collateral
     # edge deletion that it takes
-    for n, d in self.req.nodes_iter(data=True):
+    for n, d in self.req0.network.nodes_iter(data=True):
+      self.log.debug(
+        "Deleting node %s and all of its connected edges and their flowrules."
+        % n)
+      for edge_func in (nffg.network.out_edges,
+                        nffg.network.in_edges):
+        for _, _, k in edge_func([n], data=True):
+          nffg.del_flowrules_of_SGHop(k)
       nffg.del_node(d)
 
     return nffg
 
   def start (self):
+    if self.mode == NFFG.MODE_DEL:
+      return self.constructDelOutputNFFG()
+
     if self.dry_init:
       raise uet.BadInputException(
         "With dry_init set True, mapping execution cannot proceed",
         "Initialization was in dry_init mode!")
-    if self.mode == NFFG.MODE_DEL:
-      return self.constructDelOutputNFFG()
 
     # breaking when there are no more BacktrackLevels forward, meaning the 
     # mapping is full. Or exception is thrown, when mapping can't be finished.
@@ -1414,6 +1424,11 @@ class CoreAlgorithm(object):
     for backtracking purpose. bt_branching_factor determines how many possible 
     host-path pairs should be remembered at most for one VNF.
     """
+    if self.mode == NFFG.MODE_DEL:
+      self.log.warn(
+        "Setting backtrack parameters doesn't have any effect in DEL mapping "
+        "mode.")
+      return
     if bt_branching_factor < 1 or "." in str(bt_branching_factor) or \
           bt_limit < 1 or "." in str(bt_limit):
       raise uet.BadInputException("Branching factor and backtrack limit should "
