@@ -164,7 +164,7 @@ class MappingSolutionFramework:
                 time.sleep(exp_time)
 
                 # Remove expired service graph requests
-                resource_graph = self.__clean_expired_requests(datetime.datetime.now())
+                #resource_graph = self.__clean_expired_requests(datetime.datetime.now())
 
 
             #Increase simulation iteration
@@ -178,6 +178,8 @@ class MappingSolutionFramework:
 if __name__ == "__main__":
 
     log.info("Start simulation")
+
+
     test = MappingSolutionFramework(False)
 
     if not test.discrete_simulation:
@@ -185,7 +187,7 @@ if __name__ == "__main__":
     else:
 
         try:
-            req_gen_thread = threading.Thread(None,test.simulate,"request_generator_thread",("pico","simple",10,True))
+            req_gen_thread = threading.Thread(None,test.simulate,"request_generator_thread",("pico","simple",100,True))
             mapping_thread = threading.Thread(None,test.make_mapping,"mapping_thread",(["online"]))
             req_gen_thread.start()
             mapping_thread.start()
