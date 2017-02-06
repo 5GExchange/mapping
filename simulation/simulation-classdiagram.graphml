@@ -122,8 +122,9 @@
           </y:NodeLabel>
           <y:UML clipContent="true" constraint="" omitDetails="false" stereotype="" use3DEffect="true">
             <y:AttributeLabel>+status
--res_sharing_strat
--merge_strat</y:AttributeLabel>
+- res_share
+- when_to_opt
+- what_to_opt</y:AttributeLabel>
             <y:MethodLabel>+MAP (request, resource)
 +constructor (merge_strat, res_sharing_strat, opt_strat)</y:MethodLabel>
           </y:UML>
