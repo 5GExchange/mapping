@@ -111,7 +111,6 @@ class TestReqGen(AbstractRequestGenerator):
                 for tmp in xrange(0, scid + 1):
                     current_nfs.extend(new_nfs)
 
-
                 life_time = random.randint(10, 50)
                 return nffg, life_time
 
