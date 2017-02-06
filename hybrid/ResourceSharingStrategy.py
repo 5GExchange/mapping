@@ -12,14 +12,14 @@ class AbstractResourceSharingStrategy:
 
 class DynamicMaxOnlineToAll(AbstractResourceSharingStrategy):
     def share_resource(self,resource_graph):
-        #TODO: dinamikus RG generálás
+        #TODO: dinamikus RG gen
         #return toOffline, toOnline
         pass
 
 
 class DoubleHundred(AbstractResourceSharingStrategy):
-    def share_resource(self,resource_graph):
-        toOnline = resource_graph
-        toOffline = resource_graph
+    def share_resource(self, resource_graph):
+        toOnline = resource_graph.copy()
+        toOffline = resource_graph.copy()
 
         return toOffline, toOnline

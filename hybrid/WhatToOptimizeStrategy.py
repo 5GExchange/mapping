@@ -19,7 +19,7 @@ class AbstractWhatToOptimizeStrategy:
 class ReqsSinceLastOpt(AbstractWhatToOptimizeStrategy):
     def reqs_to_optimize(self):
 
-        #SUM_req - last_optimalized: ez benne van tdk-s progiban, de már nem érem el e VM-et
+        #S
         pass
 
 class AllReqsOpt(AbstractWhatToOptimizeStrategy):
@@ -31,4 +31,4 @@ class AllReqsOpt(AbstractWhatToOptimizeStrategy):
         while batched_request is not None:
             NFFGToolBox.merge_nffgs(SUM_request, batched_request)
 
-        return  SUM_request
+        return SUM_request

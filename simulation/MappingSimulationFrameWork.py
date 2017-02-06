@@ -166,7 +166,7 @@ class MappingSolutionFramework:
 if __name__ == "__main__":
 
     log.info("Start simulation")
-    test = MappingSolutionFramework(False,"pico","simple","online")
+    test = MappingSolutionFramework(False, "pico", "simple", "hybrid")
 
     try:
         req_gen_thread = threading.Thread(None,test.create_request,"request_generator_thread",([100]))
