@@ -133,7 +133,8 @@ def MAP (request, network, enable_shortest_path_cache=False,
                       bw_factor=bw_factor, res_factor=res_factor,
                       lat_factor=lat_factor, shortest_paths=shortest_paths,
                       propagate_e2e_reqs=propagate_e2e_reqs)
-  alg.setBacktrackParameters(bt_limit, bt_branching_factor)
+  if mode != NFFG.MODE_DEL:
+    alg.setBacktrackParameters(bt_limit, bt_branching_factor)
   mappedNFFG = alg.start()
 
   if not mode == NFFG.MODE_DEL:
