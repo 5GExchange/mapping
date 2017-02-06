@@ -93,14 +93,16 @@ def MAP (request, network, enable_shortest_path_cache=False,
 
     # if after recreation and SAP alias handling there are at least one SGHop in
     # the request we can proceed mapping.
-    if not sg_hops_given and not sg_hops_retrieved and len(sap_alias_links) == 0:
+    if not sg_hops_given and not sg_hops_retrieved and len(
+       sap_alias_links) == 0:
       for nf in request.nfs:
         if nf.id not in network.network:
-          raise uet.BadInputException("If SGHops are not given, flowrules should"
-                                      " be in the NFFG",
-                                      "No SGHop could be retrieved based on the "
-                                      "flowrules of the NFFG. And there is a VNF"
-                                      " which is not mapped yet!")
+          raise uet.BadInputException(
+            "If SGHops are not given, flowrules should"
+            " be in the NFFG",
+            "No SGHop could be retrieved based on the "
+            "flowrules of the NFFG. And there is a VNF"
+            " which is not mapped yet!")
       else:
         # if all the NFs in the request are mapped already, then it is only
         # an update on NF data.
@@ -150,7 +152,9 @@ def MAP (request, network, enable_shortest_path_cache=False,
       alg.manager.link_mapping.edges(data=True, keys=True)))
 
   if return_dist:
-    return mappedNFFG, alg.preprocessor.shortest_paths
+    return mappedNFFG, alg.preprocessor.shortest_paths if mode != \
+                                                          NFFG.MODE_DEL else \
+      None
   else:
     return mappedNFFG
 
