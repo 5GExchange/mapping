@@ -121,7 +121,7 @@
             </y:ModelParameter>
           </y:NodeLabel>
           <y:UML clipContent="true" constraint="" omitDetails="false" stereotype="" use3DEffect="true">
-            <y:AttributeLabel>+status
+            <y:AttributeLabel>+offline_status
 - res_share
 - when_to_opt
 - what_to_opt</y:AttributeLabel>

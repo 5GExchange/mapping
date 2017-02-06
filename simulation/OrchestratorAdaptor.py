@@ -8,6 +8,14 @@ except ImportError:
     import MappingAlgorithms as online_mapping
 
 try:
+    from escape.mapping.hybrid import HybridOrchestrator as hybrid_mapping
+except ImportError:
+    import sys, os
+    nffg_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../hybrid/'))
+    sys.path.append(nffg_dir)
+    import HybridOrchestrator as hybrid_mapping
+
+try:
     from escape.nffg_lib.nffg import NFFG, NFFGToolBox
 except ImportError:
     import sys, os
@@ -53,11 +61,8 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
         #mode = NFFG.MODE_REMAP if fullremap else NFFG.MODE_ADD
         mode = NFFG.MODE_ADD
 
-<<<<<<< HEAD
-        network, shortest_paths = online_mapping.MAP(request,resource,
-=======
+
         self.__resource_graph, shortest_paths = MappingAlgorithms.MAP(request,self.__resource_graph,
->>>>>>> 39e7dc5eb26fe4211cc8bbd0302f52dddb5fa415
                                                         enable_shortest_path_cache=True,
                                                         bw_factor=1, res_factor=1,
                                                         lat_factor=1,
@@ -86,5 +91,3 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
                                         return_dist=False, mode=mode)
 
 
-    def dump_mapped_nffg(self):
-        return self.__resource_graph

@@ -1,6 +1,5 @@
 import threading
 import logging
-from escape.mapping.simulation import AbstractOrchestratorAdaptor
 from WhatToOptimizeStrategy import *
 from WhenToOptimizeStrategy import *
 from ResourceSharingStrategy import *
@@ -35,11 +34,15 @@ log = logging.getLogger(" ")
 log.setLevel(logging.DEBUG)
 logging.basicConfig(format='%(levelname)s:%(message)s')
 
-class HybridOrchestrator(AbstractOrchestratorAdaptor):
+class HybridOrchestrator():
 
     __what_to_opt = None
     __when_to_opt = None
-    __res_share = None
+    __res_offline = None
+    __res_online = None
+    offline_status = False
+
+
     def __init__(self, resource_graph, what_to_opt_strat, when_to_opt_strat, res_share_strat):
 
         #What to optimize strategy
@@ -60,20 +63,9 @@ class HybridOrchestrator(AbstractOrchestratorAdaptor):
             self.__when_to_opt = PeriodicalModelBased()
         else: log.error("Invalid when_to_opt type!")
 
-        #Resource sharing strategy
-        if res_share_strat == "dynamic":
-            self.__res_share = DynamicMaxOnlineToAll().share_resource(resource_graph)
-        elif res_share_strat == "double_hundred":
-            self.__res_share = DoubleHundred().share_resource(resource_graph)
-        else: log.error("Invalid res_share type!")
-
-
-
-
-
 
         def merge_all_request(request):
-            #TODO: minden kérést összefűz egy nffg-be és egy globalis változóba tárolja
+            #TODO:
             global all_request
             pass
 
@@ -82,48 +74,68 @@ class HybridOrchestrator(AbstractOrchestratorAdaptor):
 
             mode = NFFG.MODE_ADD
 
-            network, shortest_paths = online_mapping.MAP(request, online_RG,
+            self.__res_online= online_mapping.MAP(request, online_RG,
                                                           enable_shortest_path_cache=True,
                                                           bw_factor=1,
                                                           res_factor=1,
                                                           lat_factor=1,
                                                           shortest_paths=None,
-                                                          return_dist=True,
+                                                          return_dist=False,
                                                           mode=mode,
                                                           bt_limit=6,
                                                           bt_branching_factor=3)
-            return network
+
 
 
         def do_offline_mapping(self, request, offline_RG):
 
             mode = NFFG.MODE_ADD
 
-            network, shortest_paths = offline_mapping.MAP(request, offline_RG,
+            self.__res_offline = offline_mapping.MAP(request, offline_RG,
                                                          enable_shortest_path_cache=True,
                                                          bw_factor=1,
                                                          res_factor=1,
                                                          lat_factor=1,
                                                          shortest_paths=None,
-                                                         return_dist=True,
+                                                         return_dist=False,
                                                          mode=mode,
                                                          bt_limit=6,
                                                          bt_branching_factor=3)
-            return network
+            self.offline_status= False
+
+
+
+        def merge_online_offline(self,onlineRG, offlineRG):
+            mergeRG= onlineRG.copy()
+
+            NFFGToolBox().merge_nffgs(mergeRG, offlineRG)
+
+            return mergeRG
 
         def MAP(self, request):
 
             #Collect the requests
             merge_all_request(request)
 
+            if not self.offline_status:
+                # Resource sharing strategy
+                if res_share_strat == "dynamic":
+                    self.__res_online, self.__res_offline = DynamicMaxOnlineToAll().share_resource(
+                        resource_graph)
+                elif res_share_strat == "double_hundred":
+                    self.__res_online, self.__res_offline = DoubleHundred().share_resource(
+                        resource_graph)
+                else:
+                    log.error("Invalid res_share type!")
 
-            offline_RG = self.__res_share[0]
-            online_RG = self.__res_share[1]
 
             #Start online mapping thread
-            online_mapping_thread = threading.Thread(None, online_mapping,
-                        "Online mapping thread", (request, online_RG))
-            online_mapping_thread.start()
+            try:
+                online_mapping_thread = threading.Thread(None, do_online_mapping,
+                        "Online mapping thread", (request, self.__res_online))
+                online_mapping_thread.start()
+            except:
+                log.error("Failed to start online thread")
 
 
             # Start offline mapping thread
@@ -131,15 +143,24 @@ class HybridOrchestrator(AbstractOrchestratorAdaptor):
 
                 requestToOpt = self.__what_to_opt.reqs_to_optimize()
 
-
-                offline_mapping_thread = threading.Thread(None, offline_mapping,
-                                "Offline mapping thread",(requestToOpt, offline_RG))
-                offline_mapping_thread.start()
+                try:
+                    offline_mapping_thread = threading.Thread(None, do_offline_mapping,
+                                    "Offline mapping thread",(requestToOpt, self.__res_offline))
+                    offline_mapping_thread.start()
+                    self.offline_status = True
+                except:
+                    log.error("Failed to start offline thread")
 
 
             elif not self.__when_to_opt.need_to_optimize():
                 log.info("No need to optimize!")
             else:
                 log.error("Failed to start offline")
+
+            online_mapping_thread.join()
+
+
+
+
 
 
