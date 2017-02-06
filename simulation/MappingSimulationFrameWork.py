@@ -154,7 +154,9 @@ class MappingSolutionFramework:
                 scale_radius = 2
                 n = 1000
                 exp_time = N.random.exponential(scale_radius, (1, 1))
-                #time.sleep(exp_time)
+                time.sleep(exp_time)
+
+                
 
             #Increase simulation iteration
             if (sim_iter < sim_end):

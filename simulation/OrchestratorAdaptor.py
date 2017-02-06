@@ -29,7 +29,11 @@ class AbstractOrchestratorAdaptor:
     def del_service(self,request,resource):
         return
 
-class OnlineOrchestrator(AbstractOrchestratorAdaptor):
+    @abstractmethod
+    def dump_mapped_nffg(self):
+        return
+
+class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
     def __init__(self,resource):
         self.__resource_graph = resource
@@ -77,4 +81,6 @@ class OnlineOrchestrator(AbstractOrchestratorAdaptor):
                                         shortest_paths=None,
                                         return_dist=False, mode=mode)
 
-        asd = 0
+
+    def dump_mapped_nffg(self):
+        return self.__resource_graph
