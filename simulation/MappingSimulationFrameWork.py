@@ -16,7 +16,6 @@ import datetime
 import time
 import logging
 import numpy as N
-import pylab as plt
 
 try:
     from escape.mapping.alg1 import UnifyExceptionTypes as uet
