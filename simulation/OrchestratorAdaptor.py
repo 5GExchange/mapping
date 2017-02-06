@@ -66,12 +66,10 @@ class OnlineOrchestrator(AbstractOrchestratorAdaptor):
         #TODO: bt_br_factor
 
         mode = NFFG.MODE_DEL
-        network, shortest_paths = MappingAlgorithms.MAP(request,resource,
-                                                        enable_shortest_path_cache=True,
-                                                        bw_factor=1, res_factor=1,
-                                                        lat_factor=1,
-                                                        shortest_paths=None,
-                                                        return_dist=True, mode=mode,
-                                                        bt_limit=6,
-                                                        bt_branching_factor=3)
+        network = MappingAlgorithms.MAP(request, resource,
+                                        enable_shortest_path_cache=False,
+                                        bw_factor=1, res_factor=1,
+                                        lat_factor=1,
+                                        shortest_paths=None,
+                                        return_dist=False, mode=mode)
         return network

@@ -1314,7 +1314,7 @@ class CoreAlgorithm(object):
         % n)
       for edge_func in (nffg.network.out_edges,
                         nffg.network.in_edges):
-        for _, _, k in edge_func([n], data=True):
+        for _, _, k in edge_func([n], keys=True):
           nffg.del_flowrules_of_SGHop(k)
       nffg.del_node(d)
 
