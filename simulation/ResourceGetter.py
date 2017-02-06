@@ -16,13 +16,13 @@ class AbstractResourceGetter:
     def GetNFFG(self):
         pass
 
-class PicoResouceGetter(AbstractResourceGetter):
+class PicoResourceGetter(AbstractResourceGetter):
 
     def GetNFFG(self):
         network = CarrierTopoBuilder.getPicoTopo()
         return network
 
-class GwinResouceGetter(AbstractResourceGetter):
+class GwinResourceGetter(AbstractResourceGetter):
 
     def GetNFFG(self):
         network = CarrierTopoBuilder.getSNDlib_dfn_gwin()
