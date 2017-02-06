@@ -1,11 +1,11 @@
 from abc import ABCMeta, abstractmethod
 try:
-    from escape.mapping.alg1 import MappingAlgorithms
+    from escape.mapping.alg1 import MappingAlgorithms as online_mapping
 except ImportError:
     import sys, os
     nffg_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../alg1/'))
     sys.path.append(nffg_dir)
-    import MappingAlgorithms
+    import MappingAlgorithms as online_mapping
 
 try:
     from escape.nffg_lib.nffg import NFFG, NFFGToolBox
@@ -44,7 +44,7 @@ class OnlineOrchestrator(AbstractOrchestratorAdaptor):
         #mode = NFFG.MODE_REMAP if fullremap else NFFG.MODE_ADD
         mode = NFFG.MODE_ADD
 
-        network, shortest_paths = MappingAlgorithms.MAP(request,resource,
+        network, shortest_paths = online_mapping.MAP(request,resource,
                                                         enable_shortest_path_cache=True,
                                                         bw_factor=1, res_factor=1,
                                                         lat_factor=1,
