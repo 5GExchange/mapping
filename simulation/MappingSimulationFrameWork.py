@@ -1,5 +1,4 @@
-from ResourceGetter import PicoResouceGetter
-from ResourceGetter import GwinResouceGetter
+from ResourceGetter import *
 from RequestGenerator import TestReqGen
 from RequestGenerator import SimpleReqGen
 from RequestGenerator import MultiReqGen
@@ -38,6 +37,7 @@ class MappingSolutionFramework:
 
     __discrete_simulation = None
     __resource_getter = None
+    __network_topology = None
     __request_generator = None
     __orchestrator_adaptor = None
     __remaining_request_lifetimes = list()
@@ -46,12 +46,15 @@ class MappingSolutionFramework:
         self.__discrete_simulation = simulation_type
         #Resoure
         if resource_type == "pico":
-            self.__resource_getter = PicoResouceGetter()
+            self.__resource_getter = PicoResourceGetter()
         elif resource_type == "gwin":
-            self.__resource_getter = GwinResouceGetter()
+            self.__resource_getter = GwinResourceGetter()
         else:
             # TODO: create exception
             pass
+
+        self.__network_topology = self.__resource_getter.GetNFFG()
+
         #Request
         if request_type == "test":
             self.__request_generator = TestReqGen()
@@ -64,43 +67,35 @@ class MappingSolutionFramework:
             pass
         #Orchestrator
         if orchestrator_type == "online":
-            self.__orchestrator_adaptor = OnlineOrchestrator()
+            self.__orchestrator_adaptor = OnlineOrchestrator(self.__network_topology)
         else:
             # TODO: create exception
             pass
 
-    def __mapping(self,resource_graph,service_graph,life_time,orchestrator_adaptor,time,sim_iter):
+    def __mapping(self,service_graph,life_time,orchestrator_adaptor,time,sim_iter):
         # Synchronous MAP call
-        before_mapping_RG = resource_graph.copy()
         try:
-            resource_graph = orchestrator_adaptor.MAP(service_graph, resource_graph)
-
+            orchestrator_adaptor.MAP(service_graph)
             # Adding successfully mapped request to the remaining_request_lifetimes
             service_life_element = {"dead_time": time + life_time, "SG": service_graph, "req_num": sim_iter}
             self.__remaining_request_lifetimes.append(service_life_element)
             log.info("Mapping service_request_" + str(sim_iter) + " successfull")
+
         except uet.MappingException:
             log.info("Mapping service_request_" + str(sim_iter) + " unsuccessfull")
-            resource_graph = before_mapping_RG
 
-        return resource_graph
+    def __del_service(self,service,sim_iter):
 
-    def __del_service(self,resource_graph,service,sim_iter):
-        before_mapping_RG = resource_graph.copy()
         try:
-            resource_graph = self.__orchestrator_adaptor.del_service(service['SG'], resource_graph)
+            self.__orchestrator_adaptor.del_service(service['SG'])
             log.info("Deleting service_request_" + str(sim_iter) + " successfull")
             self.__remaining_request_lifetimes.remove(service)
         except uet.MappingException:
             log.error("Deleting service_request_" + str(sim_iter) + " unsuccessfull")
-            resource_graph = before_mapping_RG
-
-        return resource_graph
 
     def make_mapping(self):
 
         global request_list
-        global resource_graph
 
         log.info("Start mapping thread")
         while mapping_thread_flag:
@@ -109,32 +104,28 @@ class MappingSolutionFramework:
                 request = request_list_element['request']
                 life_time = request_list_element['life_time']
                 req_num = request_list_element['req_num']
-                resource_graph = self.__mapping(resource_graph,request,datetime.timedelta(0,life_time),self.__orchestrator_adaptor,datetime.datetime.now(),req_num)
+                self.__mapping(request,datetime.timedelta(0,life_time),self.__orchestrator_adaptor,datetime.datetime.now(),req_num)
 
                 # Remove expired service graph requests
-                resource_graph = self.__clean_expired_requests(datetime.datetime.now())
+                self.__clean_expired_requests(datetime.datetime.now())
 
         log.info("End mapping thread")
 
     def __clean_expired_requests(self,time):
 
-        global resource_graph
-
         # Delete expired SCs
         for service in self.__remaining_request_lifetimes:
             if service['dead_time'] < time:
-                resource_graph = self.__del_service(resource_graph,service,service['req_num'])
+               self.__del_service(service,service['req_num'])
 
-        return resource_graph
 
-    def simulate(self,sim_end):
+    def create_request(self,sim_end):
 
-        global resource_graph
         global mapping_thread_flag
         virtual_time = 0
 
         log.info("Start request generator thread")
-        resource_graph = self.__resource_getter.GetNFFG()
+        topology = self.__network_topology
 
         #Simulation cycle
         sim_running = True
@@ -142,7 +133,7 @@ class MappingSolutionFramework:
         while sim_running:
 
             #Get request
-            service_graph, life_time  = self.__request_generator.get_request(resource_graph,sim_iter)
+            service_graph, life_time  = self.__request_generator.get_request(topology,sim_iter)
 
             #Discrete working
             if self.__discrete_simulation:
@@ -170,7 +161,7 @@ class MappingSolutionFramework:
                 sim_iter += 1
             else:
                 sim_running = False
-                mapping_thread_flag = False
+                mapping_thread_flag = True
 
 if __name__ == "__main__":
 
@@ -178,7 +169,7 @@ if __name__ == "__main__":
     test = MappingSolutionFramework(False,"pico","simple","online")
 
     try:
-        req_gen_thread = threading.Thread(None,test.simulate,"request_generator_thread",([100]))
+        req_gen_thread = threading.Thread(None,test.create_request,"request_generator_thread",([100]))
         mapping_thread = threading.Thread(None,test.make_mapping,"mapping_thread")
         req_gen_thread.start()
         mapping_thread.start()

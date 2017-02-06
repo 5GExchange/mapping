@@ -19,8 +19,10 @@ except ImportError:
 class AbstractOrchestratorAdaptor:
     __metaclass__ = ABCMeta
 
+    __resource_graph = None
+
     @abstractmethod
-    def MAP(self, request,resource):
+    def MAP(self, request):
         return
 
     @abstractmethod
@@ -29,7 +31,10 @@ class AbstractOrchestratorAdaptor:
 
 class OnlineOrchestrator(AbstractOrchestratorAdaptor):
 
-    def MAP(self, request,resource):
+    def __init__(self,resource):
+        self.__resource_graph = resource
+
+    def MAP(self, request):
 
         #Mik az alabbiak?
         #enable_shortest_path_cache
@@ -44,7 +49,11 @@ class OnlineOrchestrator(AbstractOrchestratorAdaptor):
         #mode = NFFG.MODE_REMAP if fullremap else NFFG.MODE_ADD
         mode = NFFG.MODE_ADD
 
+<<<<<<< HEAD
         network, shortest_paths = online_mapping.MAP(request,resource,
+=======
+        self.__resource_graph, shortest_paths = MappingAlgorithms.MAP(request,self.__resource_graph,
+>>>>>>> 39e7dc5eb26fe4211cc8bbd0302f52dddb5fa415
                                                         enable_shortest_path_cache=True,
                                                         bw_factor=1, res_factor=1,
                                                         lat_factor=1,
@@ -52,9 +61,8 @@ class OnlineOrchestrator(AbstractOrchestratorAdaptor):
                                                         return_dist=True, mode=mode,
                                                         bt_limit=6,
                                                         bt_branching_factor=3)
-        return network
 
-    def del_service(self, request,resource):
+    def del_service(self, request):
 
         #Mik az alabbiak?
         #enable_shortest_path_cache
@@ -66,10 +74,11 @@ class OnlineOrchestrator(AbstractOrchestratorAdaptor):
         #TODO: bt_br_factor
 
         mode = NFFG.MODE_DEL
-        network = MappingAlgorithms.MAP(request, resource,
+        self.__resource_graph = MappingAlgorithms.MAP(request, self.__resource_graph,
                                         enable_shortest_path_cache=False,
                                         bw_factor=1, res_factor=1,
                                         lat_factor=1,
                                         shortest_paths=None,
                                         return_dist=False, mode=mode)
-        return network
+
+        asd = 0
