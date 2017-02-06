@@ -42,13 +42,14 @@ class HybridOrchestrator(AbstractOrchestratorAdaptor):
     __res_share = None
     def __init__(self, resource_graph, what_to_opt_strat, when_to_opt_strat, res_share_strat):
 
+        #What to optimize strategy
         if what_to_opt_strat == "reqs_since_last":
             self.__what_to_opt = ReqsSinceLastOpt()
         elif what_to_opt_strat == "all_reqs":
             self.__what_to_opt = AllReqsOpt()
         else: log.error("Invalid what_to_opt type!")
 
-
+        # When to optimize strategy
         if when_to_opt_strat == "modell_based":
             self.__when_to_opt = ModelBased()
         elif when_to_opt_strat == "fixed_req_count":
@@ -59,18 +60,46 @@ class HybridOrchestrator(AbstractOrchestratorAdaptor):
             self.__when_to_opt = PeriodicalModelBased()
         else: log.error("Invalid when_to_opt type!")
 
-
+        #Resource sharing strategy
         if res_share_strat == "dynamic":
-            self.__res_share = DynamicMaxOnlineToAll()
+            self.__res_share = DynamicMaxOnlineToAll().share_resource(resource_graph)
         elif res_share_strat == "double_hundred":
-            self.__res_share = DoubleHundred()
+            self.__res_share = DoubleHundred().share_resource(resource_graph)
         else: log.error("Invalid res_share type!")
 
-        def MAP(self, request, resource):
+
+
+
+
+
+        def merge_all_request(request):
+            #TODO: minden kérést összefűz egy nffg-be és egy globalis változóba tárolja
+            global all_request
+            pass
+
+
+        def do_online_mapping(self,request, online_RG):
 
             mode = NFFG.MODE_ADD
 
-            network, shortest_paths = offline_mapping.MAP(request, resource,
+            network, shortest_paths = online_mapping.MAP(request, online_RG,
+                                                          enable_shortest_path_cache=True,
+                                                          bw_factor=1,
+                                                          res_factor=1,
+                                                          lat_factor=1,
+                                                          shortest_paths=None,
+                                                          return_dist=True,
+                                                          mode=mode,
+                                                          bt_limit=6,
+                                                          bt_branching_factor=3)
+            return network
+
+
+        def do_offline_mapping(self, request, offline_RG):
+
+            mode = NFFG.MODE_ADD
+
+            network, shortest_paths = offline_mapping.MAP(request, offline_RG,
                                                          enable_shortest_path_cache=True,
                                                          bw_factor=1,
                                                          res_factor=1,
@@ -81,3 +110,36 @@ class HybridOrchestrator(AbstractOrchestratorAdaptor):
                                                          bt_limit=6,
                                                          bt_branching_factor=3)
             return network
+
+        def MAP(self, request):
+
+            #Collect the requests
+            merge_all_request(request)
+
+
+            offline_RG = self.__res_share[0]
+            online_RG = self.__res_share[1]
+
+            #Start online mapping thread
+            online_mapping_thread = threading.Thread(None, online_mapping,
+                        "Online mapping thread", (request, online_RG))
+            online_mapping_thread.start()
+
+
+            # Start offline mapping thread
+            if self.__when_to_opt.need_to_optimize():
+
+                requestToOpt = self.__what_to_opt.reqs_to_optimize()
+
+
+                offline_mapping_thread = threading.Thread(None, offline_mapping,
+                                "Offline mapping thread",(requestToOpt, offline_RG))
+                offline_mapping_thread.start()
+
+
+            elif not self.__when_to_opt.need_to_optimize():
+                log.info("No need to optimize!")
+            else:
+                log.error("Failed to start offline")
+
+
