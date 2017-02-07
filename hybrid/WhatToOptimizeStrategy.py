@@ -7,7 +7,7 @@ class AbstractWhatToOptimizeStrategy:
 
     global last_optimalized
     @abstractmethod
-    def reqs_to_optimize(self):
+    def reqs_to_optimize(self,sum_req):
         pass
 
     def purge_to_be_expired_reqs(self):
@@ -15,18 +15,11 @@ class AbstractWhatToOptimizeStrategy:
 
 
 class ReqsSinceLastOpt(AbstractWhatToOptimizeStrategy):
-    def reqs_to_optimize(self):
+    def reqs_to_optimize(self,sum_req):
 
         #S
         pass
 
 class AllReqsOpt(AbstractWhatToOptimizeStrategy):
-    def reqs_to_optimize(self):
-        SUM_request = NFFG()
-        last_optimalized = SUM_request
-
-        batched_request = NFFG()
-        while batched_request is not None:
-            NFFGToolBox.merge_nffgs(SUM_request, batched_request)
-
-        return SUM_request
+    def reqs_to_optimize(self,sum_req):
+       return sum_req

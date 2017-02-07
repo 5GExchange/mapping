@@ -76,20 +76,24 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
     def dump_mapped_nffg(self):
         pass
 
-class HybridOrchestrator(AbstractOrchestratorAdaptor):
+class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
-    def __init__(self, resource):
-        self.__resource_graph = resource
+    concrete_hybrid_orchestrator = None
+
+    def __init__(self, resource,what_to_opt_strat, when_to_opt_strat, resource_share_strat):
+        self.concrete_hybrid_orchestrator = hybrid_mapping.HybridOrchestrator(resource, what_to_opt_strat, when_to_opt_strat, resource_share_strat)
 
     def MAP(self, request):
 
         mode = NFFG.MODE_ADD
-        self.__resource_graph = hybrid_mapping.MAP(request)
+        self.concrete_hybrid_orchestrator.MAP(request)
 
     def del_service(self, request):
-
+        """
         mode = NFFG.MODE_DEL
         self.__resource_graph = hybrid_mapping.MAP(request)
+        """
+        pass
 
     def dump_mapped_nffg(self):
         pass
