@@ -68,6 +68,8 @@ class MappingSolutionFramework:
         #Orchestrator
         if orchestrator_type == "online":
             self.__orchestrator_adaptor = OnlineOrchestrator(self.__network_topology)
+        elif orchestrator_type == "hybrid":
+            self.__orchestrator_adaptor = HybridOrchestrator(self.__network_topology)
         else:
             # TODO: create exception
             pass

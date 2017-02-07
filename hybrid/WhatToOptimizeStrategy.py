@@ -10,10 +10,8 @@ class AbstractWhatToOptimizeStrategy:
     def reqs_to_optimize(self):
         pass
 
-
     def purge_to_be_expired_reqs(self):
         pass
-
 
 
 class ReqsSinceLastOpt(AbstractWhatToOptimizeStrategy):

@@ -34,6 +34,7 @@ log = logging.getLogger(" ")
 log.setLevel(logging.DEBUG)
 logging.basicConfig(format='%(levelname)s:%(message)s')
 
+
 class HybridOrchestrator():
 
     __what_to_opt = None
@@ -43,38 +44,40 @@ class HybridOrchestrator():
     offline_status = False
 
 
-    def __init__(self, resource_graph, what_to_opt_strat, when_to_opt_strat, res_share_strat):
+    def __init__(self, RG, what_to_opt_strat, when_to_opt_strat, resource_share_strat):
 
-        #What to optimize strategy
-        if what_to_opt_strat == "reqs_since_last":
-            self.__what_to_opt = ReqsSinceLastOpt()
-        elif what_to_opt_strat == "all_reqs":
-            self.__what_to_opt = AllReqsOpt()
-        else: log.error("Invalid what_to_opt type!")
+            #What to optimize strategy
+            if what_to_opt_strat == "reqs_since_last":
+                self.__what_to_opt = ReqsSinceLastOpt()
+            elif what_to_opt_strat == "all_reqs":
+                self.__what_to_opt = AllReqsOpt()
+            else: log.error("Invalid what_to_opt type!")
 
-        # When to optimize strategy
-        if when_to_opt_strat == "modell_based":
-            self.__when_to_opt = ModelBased()
-        elif when_to_opt_strat == "fixed_req_count":
-            self.__when_to_opt = FixedReqCount()
-        elif when_to_opt_strat == "fixed_time":
-            self.__when_to_opt = Fixedtime()
-        elif when_to_opt_strat == "periodical_model_based":
-            self.__when_to_opt = PeriodicalModelBased()
-        else: log.error("Invalid when_to_opt type!")
+            # When to optimize strategy
+            if when_to_opt_strat == "modell_based":
+                self.__when_to_opt = ModelBased()
+            elif when_to_opt_strat == "fixed_req_count":
+                self.__when_to_opt = FixedReqCount()
+            elif when_to_opt_strat == "fixed_time":
+                self.__when_to_opt = Fixedtime()
+            elif when_to_opt_strat == "periodical_model_based":
+                self.__when_to_opt = PeriodicalModelBased()
+            else: log.error("Invalid when_to_opt type!")
 
+            global resource_graph
+            resource_graph = RG
+            global res_share_strat
+            resource_graph = RG
 
-        def merge_all_request(request):
-            #TODO:
-            global all_request
-            pass
+    def merge_all_request(self, request):
+        #TODO:
+        global all_request
+        pass
 
-
-        def do_online_mapping(self,request, online_RG):
+    def do_online_mapping(self, request, online_RG):
 
             mode = NFFG.MODE_ADD
-
-            self.__res_online= online_mapping.MAP(request, online_RG,
+            self.__res_online = online_mapping.MAP(request, online_RG,
                                                           enable_shortest_path_cache=True,
                                                           bw_factor=1,
                                                           res_factor=1,
@@ -85,12 +88,9 @@ class HybridOrchestrator():
                                                           bt_limit=6,
                                                           bt_branching_factor=3)
 
-
-
-        def do_offline_mapping(self, request, offline_RG):
+    def do_offline_mapping(self, request, offline_RG):
 
             mode = NFFG.MODE_ADD
-
             self.__res_offline = offline_mapping.MAP(request, offline_RG,
                                                          enable_shortest_path_cache=True,
                                                          bw_factor=1,
@@ -101,64 +101,65 @@ class HybridOrchestrator():
                                                          mode=mode,
                                                          bt_limit=6,
                                                          bt_branching_factor=3)
-            self.offline_status= False
+            self.offline_status = False
 
+    def set_resource_graphs(self):
+        # Resource sharing strategy
+        if res_share_strat == "dynamic":
+            self.__res_online, self.__res_offline = DynamicMaxOnlineToAll().\
+                share_resource(resource_graph)
+        elif res_share_strat == "double_hundred":
+            self.__res_online, self.__res_offline = DoubleHundred().\
+                share_resource(resource_graph)
+        else: log.error("Invalid res_share type!")
 
-
-        def merge_online_offline(self,onlineRG, offlineRG):
+    def merge_online_offline(self, onlineRG, offlineRG):
             mergeRG= onlineRG.copy()
 
             NFFGToolBox().merge_nffgs(mergeRG, offlineRG)
 
             return mergeRG
 
-        def MAP(self, request):
+    def MAP(self, request):
 
-            #Collect the requests
-            merge_all_request(request)
+        #Collect the requests
+        self.merge_all_request(request)
 
-            if not self.offline_status:
-                # Resource sharing strategy
-                if res_share_strat == "dynamic":
-                    self.__res_online, self.__res_offline = DynamicMaxOnlineToAll().share_resource(
-                        resource_graph)
-                elif res_share_strat == "double_hundred":
-                    self.__res_online, self.__res_offline = DoubleHundred().share_resource(
-                        resource_graph)
-                else:
-                    log.error("Invalid res_share type!")
+        if not self.offline_status:
+            self.set_resource_graphs()
 
 
-            #Start online mapping thread
+        #Start online mapping thread
+        try:
+            online_mapping_thread = threading.Thread(None, self.do_online_mapping,
+                    "Online mapping thread", (request, self.__res_online))
+            online_mapping_thread.start()
+        except:
+            log.error("Failed to start online thread")
+
+
+        # Start offline mapping thread
+        if self.__when_to_opt.need_to_optimize():
+            requestToOpt = self.__what_to_opt.reqs_to_optimize()
+
             try:
-                online_mapping_thread = threading.Thread(None, do_online_mapping,
-                        "Online mapping thread", (request, self.__res_online))
-                online_mapping_thread.start()
+                offline_mapping_thread = threading.Thread(None, self.do_offline_mapping,
+                                "Offline mapping thread", (requestToOpt, self.__res_offline))
+                offline_mapping_thread.start()
+                self.offline_status = True
             except:
-                log.error("Failed to start online thread")
+                log.error("Failed to start offline thread")
 
 
-            # Start offline mapping thread
-            if self.__when_to_opt.need_to_optimize():
+        elif not self.__when_to_opt.need_to_optimize():
+            log.info("No need to optimize!")
+        else:
+            log.error("Failed to start offline")
 
-                requestToOpt = self.__what_to_opt.reqs_to_optimize()
+        online_mapping_thread.join()
 
-                try:
-                    offline_mapping_thread = threading.Thread(None, do_offline_mapping,
-                                    "Offline mapping thread",(requestToOpt, self.__res_offline))
-                    offline_mapping_thread.start()
-                    self.offline_status = True
-                except:
-                    log.error("Failed to start offline thread")
-
-
-            elif not self.__when_to_opt.need_to_optimize():
-                log.info("No need to optimize!")
-            else:
-                log.error("Failed to start offline")
-
-            online_mapping_thread.join()
-
+        network = self.__res_online
+        return network
 
 
 

@@ -34,7 +34,7 @@ class AbstractOrchestratorAdaptor:
         return
 
     @abstractmethod
-    def del_service(self,request,resource):
+    def del_service(self, request):
         return
 
 class OnlineOrchestrator(AbstractOrchestratorAdaptor):
@@ -58,7 +58,7 @@ class OnlineOrchestrator(AbstractOrchestratorAdaptor):
         mode = NFFG.MODE_ADD
 
 
-        self.__resource_graph, shortest_paths = MappingAlgorithms.MAP(request,self.__resource_graph,
+        self.__resource_graph, shortest_paths = online_mapping.MAP(request,self.__resource_graph,
                                                         enable_shortest_path_cache=True,
                                                         bw_factor=1, res_factor=1,
                                                         lat_factor=1,
@@ -79,42 +79,26 @@ class OnlineOrchestrator(AbstractOrchestratorAdaptor):
         #TODO: bt_br_factor
 
         mode = NFFG.MODE_DEL
-        self.__resource_graph = MappingAlgorithms.MAP(request, self.__resource_graph,
+        self.__resource_graph = online_mapping.MAP(request, self.__resource_graph,
                                         enable_shortest_path_cache=False,
                                         bw_factor=1, res_factor=1,
                                         lat_factor=1,
                                         shortest_paths=None,
                                         return_dist=False, mode=mode)
 
-        asd = 0
-
 
 class HybridOrchestrator(AbstractOrchestratorAdaptor):
 
-    def __init__(self,resource):
+    def __init__(self, resource):
         self.__resource_graph = resource
 
     def MAP(self, request):
 
         mode = NFFG.MODE_ADD
-
-
-        self.__resource_graph, shortest_paths = hybrid_mapping.MAP(request,self.__resource_graph,
-                                                        enable_shortest_path_cache=True,
-                                                        bw_factor=1, res_factor=1,
-                                                        lat_factor=1,
-                                                        shortest_paths=None,
-                                                        return_dist=True, mode=mode,
-                                                        bt_limit=6,
-                                                        bt_branching_factor=3)
+        self.__resource_graph = hybrid_mapping.MAP(request)
 
     def del_service(self, request):
 
         mode = NFFG.MODE_DEL
-        self.__resource_graph = hybrid_mapping.MAP(request, self.__resource_graph,
-                                        enable_shortest_path_cache=False,
-                                        bw_factor=1, res_factor=1,
-                                        lat_factor=1,
-                                        shortest_paths=None,
-                                        return_dist=False, mode=mode)
+        self.__resource_graph = hybrid_mapping.MAP(request)
 

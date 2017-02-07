@@ -5,13 +5,13 @@ class AbstractResourceSharingStrategy:
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def share_resource(self,resource_graph):
+    def share_resource(self, resource_graph):
         pass
 
 
 
 class DynamicMaxOnlineToAll(AbstractResourceSharingStrategy):
-    def share_resource(self,resource_graph):
+    def share_resource(self, resource_graph):
         #TODO: dinamikus RG gen
         #return toOffline, toOnline
         pass
