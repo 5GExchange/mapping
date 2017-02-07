@@ -70,7 +70,9 @@ class HybridOrchestrator():
             resource_graph = RG
 
     def merge_all_request(self, request):
-        #TODO:
+        global SUM_request
+        SUM_request = NFFG
+        NFFGToolBox.merge_nffgs(SUM_request, request)
         global all_request
         pass
 
@@ -159,6 +161,7 @@ class HybridOrchestrator():
         online_mapping_thread.join()
 
         network = self.__res_online
+
         return network
 
 

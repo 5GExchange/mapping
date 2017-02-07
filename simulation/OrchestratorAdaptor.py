@@ -48,20 +48,7 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
     def MAP(self, request):
 
-        #Mik az alabbiak?
-        #enable_shortest_path_cache
-        #shortest paths
-
-        #TODO: bw_factor, res_factor es lat_factor bekotese
-        #TODO: fullremap parameter bekotese
-        #TODO: bt_limit bekotese
-        #TODO: bt_br_factor
-
-        fullremap = False
-        #mode = NFFG.MODE_REMAP if fullremap else NFFG.MODE_ADD
         mode = NFFG.MODE_ADD
-
-
         self.__resource_graph, shortest_paths = online_mapping.MAP(request,self.__resource_graph,
                                                         enable_shortest_path_cache=True,
                                                         bw_factor=1, res_factor=1,
@@ -72,10 +59,6 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
                                                         bt_branching_factor=3)
 
     def del_service(self, request):
-
-        #Mik az alabbiak?
-        #enable_shortest_path_cache
-        #shortest paths
 
         #TODO: bw_factor, res_factor es lat_factor bekotese
         #TODO: fullremap parameter bekotese
@@ -90,6 +73,8 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
                                         shortest_paths=None,
                                         return_dist=False, mode=mode)
 
+    def dump_mapped_nffg(self):
+        pass
 
 class HybridOrchestrator(AbstractOrchestratorAdaptor):
 
@@ -106,3 +91,5 @@ class HybridOrchestrator(AbstractOrchestratorAdaptor):
         mode = NFFG.MODE_DEL
         self.__resource_graph = hybrid_mapping.MAP(request)
 
+    def dump_mapped_nffg(self):
+        pass

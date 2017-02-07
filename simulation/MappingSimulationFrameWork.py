@@ -4,6 +4,11 @@ from RequestGenerator import SimpleReqGen
 from RequestGenerator import MultiReqGen
 from OrchestratorAdaptor import *
 import threading
+import datetime
+import time
+import logging
+import numpy as N
+
 try:
     from escape.nffg_lib.nffg import NFFG, NFFGToolBox
 except ImportError:
@@ -11,10 +16,13 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
                                                  "../nffg_lib/")))
     from nffg import NFFG, NFFGToolBox
-import datetime
-import time
-import logging
-import numpy as N
+try:
+    from escape.mapping.hybrid import HybridOrchestrator as hybrid_mapping
+except ImportError:
+    import sys, os
+    nffg_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../hybrid/'))
+    sys.path.append(nffg_dir)
+    import HybridOrchestrator as hybrid_mapping
 
 try:
     from escape.mapping.alg1 import UnifyExceptionTypes as uet
@@ -42,8 +50,9 @@ class MappingSolutionFramework:
     __orchestrator_adaptor = None
     __remaining_request_lifetimes = list()
 
-    def __init__(self, simulation_type,resource_type,request_type,orchestrator_type):
+    def __init__(self, simulation_type, resource_type, request_type, orchestrator_type):
         self.__discrete_simulation = simulation_type
+
         #Resoure
         if resource_type == "pico":
             self.__resource_getter = PicoResourceGetter()
@@ -65,16 +74,17 @@ class MappingSolutionFramework:
         else:
             # TODO: create exception
             pass
+
         #Orchestrator
         if orchestrator_type == "online":
-            self.__orchestrator_adaptor = OnlineOrchestrator(self.__network_topology)
+            self.__orchestrator_adaptor = OnlineOrchestratorAdaptor(self.__network_topology)
         elif orchestrator_type == "hybrid":
             self.__orchestrator_adaptor = HybridOrchestrator(self.__network_topology)
         else:
             # TODO: create exception
             pass
 
-    def __mapping(self,service_graph,life_time,orchestrator_adaptor,time,sim_iter):
+    def __mapping(self, service_graph, life_time, orchestrator_adaptor, time, sim_iter):
         # Synchronous MAP call
         try:
             orchestrator_adaptor.MAP(service_graph)
@@ -157,8 +167,6 @@ class MappingSolutionFramework:
                 n = 1000
                 exp_time = N.random.exponential(scale_radius, (1, 1))
                 time.sleep(exp_time)
-
-
 
             #Increase simulation iteration
             if (sim_iter < sim_end):
