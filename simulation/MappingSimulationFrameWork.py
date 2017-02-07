@@ -67,7 +67,7 @@ class MappingSolutionFramework:
             pass
         #Orchestrator
         if orchestrator_type == "online":
-            self.__orchestrator_adaptor = OnlineOrchestrator(self.__network_topology)
+            self.__orchestrator_adaptor = OnlineOrchestratorAdaptor(self.__network_topology)
         else:
             # TODO: create exception
             pass
@@ -168,7 +168,7 @@ class MappingSolutionFramework:
 if __name__ == "__main__":
 
     log.info("Start simulation")
-    test = MappingSolutionFramework(False, "pico", "simple", "hybrid")
+    test = MappingSolutionFramework(False, "pico", "simple", "online")
 
     try:
         req_gen_thread = threading.Thread(None,test.create_request,"request_generator_thread",([100]))

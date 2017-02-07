@@ -62,7 +62,7 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
         mode = NFFG.MODE_ADD
 
 
-        self.__resource_graph, shortest_paths = MappingAlgorithms.MAP(request,self.__resource_graph,
+        self.__resource_graph, shortest_paths = online_mapping.MAP(request,self.__resource_graph,
                                                         enable_shortest_path_cache=True,
                                                         bw_factor=1, res_factor=1,
                                                         lat_factor=1,
@@ -83,11 +83,14 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
         #TODO: bt_br_factor
 
         mode = NFFG.MODE_DEL
-        self.__resource_graph = MappingAlgorithms.MAP(request, self.__resource_graph,
+        self.__resource_graph = online_mapping.MAP(request, self.__resource_graph,
                                         enable_shortest_path_cache=False,
                                         bw_factor=1, res_factor=1,
                                         lat_factor=1,
                                         shortest_paths=None,
                                         return_dist=False, mode=mode)
+
+    def dump_mapped_nffg(self):
+        return
 
 
