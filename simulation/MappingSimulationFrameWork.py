@@ -156,7 +156,9 @@ class MappingSolutionFramework:
                 scale_radius = 2
                 n = 1000
                 exp_time = N.random.exponential(scale_radius, (1, 1))
-                #time.sleep(exp_time)
+                time.sleep(exp_time)
+
+
 
             #Increase simulation iteration
             if (sim_iter < sim_end):
@@ -168,7 +170,7 @@ class MappingSolutionFramework:
 if __name__ == "__main__":
 
     log.info("Start simulation")
-    test = MappingSolutionFramework(False, "pico", "simple", "hybrid")
+    test = MappingSolutionFramework(False, "pico", "simple", "online")
 
     try:
         req_gen_thread = threading.Thread(None,test.create_request,"request_generator_thread",([100]))
