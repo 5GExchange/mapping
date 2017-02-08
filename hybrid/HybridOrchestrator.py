@@ -45,7 +45,7 @@ class HybridOrchestrator():
     offline_status = False
     resource_graph = None
     SUM_req = NFFG()
-
+    offline_mapping_thread = None
 
     def __init__(self, RG, what_to_opt_strat, when_to_opt_strat, resource_share_strat):
 
@@ -142,15 +142,18 @@ class HybridOrchestrator():
         # Start offline mapping thread
 
         if self.__when_to_opt.need_to_optimize(self.offline_status, 3):
-            requestToOpt = self.__what_to_opt.reqs_to_optimize(self.SUM_req)
+            #if self.offline_status:
 
+            requestToOpt = self.__what_to_opt.reqs_to_optimize(self.SUM_req)
             try:
-                offline_mapping_thread = threading.Thread(None, self.do_offline_mapping,
-                                "Offline mapping thread", (requestToOpt, self.__res_offline))
-                offline_mapping_thread.start()
+                self.offline_mapping_thread = threading.Thread(None, self.do_offline_mapping,
+                                    "Offline mapping thread", (requestToOpt, self.__res_offline))
+                self.offline_mapping_thread.start()
                 self.offline_status = True
             except:
                 log.error("Failed to start offline thread")
+
+
 
             online_mapping_thread.join()
 
