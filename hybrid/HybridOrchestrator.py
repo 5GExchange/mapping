@@ -137,7 +137,7 @@ class HybridOrchestrator():
 
         # Start offline mapping thread
 
-        if self.__when_to_opt.need_to_optimize(self.offline_status):
+        if self.__when_to_opt.need_to_optimize(self.offline_status, 3):
             requestToOpt = self.__what_to_opt.reqs_to_optimize(self.SUM_req)
 
             try:
@@ -150,7 +150,7 @@ class HybridOrchestrator():
 
             online_mapping_thread.join()
 
-        elif not self.__when_to_opt.need_to_optimize(self.offline_status):
+        elif not self.__when_to_opt.need_to_optimize(self.offline_status, 3):
             online_mapping_thread.join()
             log.info("No need to optimize!")
         else:
