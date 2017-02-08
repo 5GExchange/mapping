@@ -10,7 +10,7 @@ import logging
 import numpy as N
 
 try:
-    from escape.nffg_lib.nffg import NFFG, NFFGToolBox
+    from escape.mapping.nffg_lib import NFFG, NFFGToolBox
 except ImportError:
     import sys, os
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
@@ -32,7 +32,7 @@ except ImportError:
     sys.path.append(nffg_dir)
     import UnifyExceptionTypes as uet
 
-log = logging.getLogger(" ")
+log = logging.getLogger(" Simulator")
 log.setLevel(logging.DEBUG)
 logging.basicConfig(format='%(levelname)s:%(message)s')
 
@@ -178,7 +178,7 @@ class MappingSolutionFramework:
 if __name__ == "__main__":
 
     log.info("Start simulation")
-    test = MappingSolutionFramework(False, "pico", "simple", "online")
+    test = MappingSolutionFramework(False, "pico", "simple", "hybrid")
 
     try:
         req_gen_thread = threading.Thread(None,test.create_request,"request_generator_thread",([100]))

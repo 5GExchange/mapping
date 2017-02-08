@@ -17,8 +17,10 @@ class FixedReqCount(AbstractWhenToOptimizeStrategy):
         self.req_counter += 1
         if self.req_counter % parameter == 0:
             return True
+
         else:
             return False
+
 
 class Allways(AbstractWhenToOptimizeStrategy):
 
