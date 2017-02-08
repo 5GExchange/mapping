@@ -98,8 +98,12 @@ class HybridOrchestrator():
 
             mode = NFFG.MODE_ADD
             #self.__res_offline = offline_mapping.MAP(request, offline_RG)
-            self.__res_offline = offline_mapping.convert_mip_solution_to_nffg(request, offline_RG)
-            self.offline_status = False
+            try:
+                self.__res_offline = offline_mapping.convert_mip_solution_to_nffg(request, offline_RG)
+                self.offline_status = False
+            except:
+                log.error("Unable to mapping offline")
+                self.offline_status = False
 
     def set_resource_graphs(self):
         # Resource sharing strategy
@@ -108,7 +112,7 @@ class HybridOrchestrator():
                 share_resource(self.resource_graph)
         elif self.__res_sharing_strat == "double_hundred":
             self.__res_online, self.__res_offline = DoubleHundred().\
-                share_resource(self.resource_graph)
+                share_resource(self.resource_graph,self.__res_online,self.__res_offline)
         else: log.error("Invalid res_share type!")
 
     def merge_online_offline(self, onlineRG, offlineRG):
