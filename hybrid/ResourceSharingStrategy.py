@@ -24,7 +24,7 @@ except ImportError:
     import MappingAlgorithms as online_mapping
 
 import logging
-log = logging.getLogger(" ")
+log = logging.getLogger(" Resource sharing")
 log.setLevel(logging.DEBUG)
 logging.basicConfig(format='%(levelname)s:%(message)s')
 
@@ -71,7 +71,7 @@ class DoubleHundred(AbstractResourceSharingStrategy):
             tempNetwork = res_online.copy()
             #TODO: del_service ertelmesebb lenne NFFGToolBox()-bol
             #tempNetwork = NFFGToolBox().remove_required_services(tempNetwork, res_offline)
-            tempNetwork = self.del_service(res_offline,tempNetwork)
+            #tempNetwork = self.del_service(res_offline,tempNetwork)
             #Try to merge online and offline results
             NFFGToolBox().merge_nffgs(tempNetwork, res_offline)
             #TODO: Kell ide az asd? Letezik meg a calculate_link_res BUG?

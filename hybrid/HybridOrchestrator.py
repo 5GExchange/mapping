@@ -30,7 +30,7 @@ except ImportError:
     sys.path.append(nffg_dir)
     import milp_solution_in_nffg as offline_mapping
 
-log = logging.getLogger(" ")
+log = logging.getLogger(" Hybrid Orchestrator")
 log.setLevel(logging.DEBUG)
 logging.basicConfig(format='%(levelname)s:%(message)s')
 

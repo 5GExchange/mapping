@@ -32,7 +32,7 @@ except ImportError:
     sys.path.append(nffg_dir)
     import UnifyExceptionTypes as uet
 
-log = logging.getLogger(" ")
+log = logging.getLogger(" Simulator")
 log.setLevel(logging.DEBUG)
 logging.basicConfig(format='%(levelname)s:%(message)s')
 
@@ -79,7 +79,7 @@ class MappingSolutionFramework:
         if orchestrator_type == "online":
             self.__orchestrator_adaptor = OnlineOrchestratorAdaptor(self.__network_topology)
         elif orchestrator_type == "hybrid":
-            self.__orchestrator_adaptor = HybridOrchestratorAdaptor(self.__network_topology,"all_reqs","allways","double_hundred")
+            self.__orchestrator_adaptor = HybridOrchestratorAdaptor(self.__network_topology,"all_reqs","fixed_req_count","double_hundred")
         else:
             # TODO: create exception
             pass

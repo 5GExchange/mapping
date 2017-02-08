@@ -20,19 +20,25 @@ class ModelBased(AbstractWhenToOptimizeStrategy):
 
 
 class FixedReqCount(AbstractWhenToOptimizeStrategy):
-    global req_counter
 
-    def __init__(self):
-        #super(FixedReqCount, self).__init__()
-        self.req_counter=0
+    req_counter = 0
 
-    def need_to_optimize(self):
-        req_counter += 1
+    def need_to_optimize(self,offline_status):
+        self.req_counter += 1
 
-        if req_counter%5 == 0:
+        if offline_status and self.req_counter%5 == 0:
+            self.req_counter -= 1
+            return False
+
+        elif offline_status:
+            return False
+
+        elif not offline_status and self.req_counter%5 == 0:
             return True
+
         else:
             return False
+
 
 class Allways(AbstractWhenToOptimizeStrategy):
     global req_counter
@@ -43,7 +49,7 @@ class Allways(AbstractWhenToOptimizeStrategy):
 
     def need_to_optimize(self,offline_status):
 
-        if offline_status == True:
+        if offline_status:
             return False
         else:
             return True
