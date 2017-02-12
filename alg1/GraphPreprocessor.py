@@ -318,7 +318,7 @@ class GraphPreprocessorClass(object):
     else:
       return None, None
 
-  def _extractBestEffortSubchains (self, best_effort_graph):
+  def _extractBestEffortSubchains (self, mode, best_effort_graph):
     """
     Removes all uncolored edges from the input and divides the best effort 
     links into subchains. Creates a common "fake" E2E chain for all the best 
@@ -416,7 +416,7 @@ class GraphPreprocessorClass(object):
 
     return subchains
 
-  def _divideIntoDisjointSubchains (self, e2e_w_graph, not_e2e):
+  def _divideIntoDisjointSubchains (self, mode, e2e_w_graph, not_e2e):
     """
     e2e is a list of tuples of SAP-SAP chains and corresponding subgraphs.
     not_e2e is a list of chains. Returns (subchain, subgraph) list of tuples,
@@ -476,7 +476,7 @@ class GraphPreprocessorClass(object):
 
     # by this time, only uncolored (best effort) links should be left in 
     # the colored_req graph.
-    best_effort_subchains = self._extractBestEffortSubchains(colored_req)
+    best_effort_subchains = self._extractBestEffortSubchains(mode, colored_req)
 
     if not reduce(lambda a, b: a and b, self.rechained.values()):
       self.log.critical("There is a VNF, which is not in any subchain!!")
@@ -516,12 +516,43 @@ class GraphPreprocessorClass(object):
 
     return sorted_output
 
+  def processDelRequest (self):
+    """
+    Checks whether there are SG elements in the request which are not in the 
+    substrate.
+    """
+    for d in self.req_graph.nfs:
+      if d.id not in self.net.network.nodes_iter():
+        self.log.warn("NF %s to be deleted couldn't be found in substrate "
+                      "network! Skipping and removing all connected edges from "
+                      "the request graph..." % d.id)
+        self.req_graph.del_node(d)
+
+    for d in self.req_graph.reqs:
+      if d not in self.net.reqs:
+        self.log.warn("SGHop %s to be deleted couldn't be found in substrate"
+                      " network! Skipping..." % d.id)
+        self.req_graph.del_edge(d.src, d.dst, d.id)
+
+    # Simply remove the infra nodes (The Dynamic and Static links go with them)
+    for infra in [i for i in self.req_graph.infras]:
+      self.log.warn(
+        "Infra node %s found in DEL request graph! Removing with all"
+        " connected edges!" % infra.id)
+      self.req_graph.del_node(infra)
+
+    return self.req_graph
+
   def processRequest (self, mode, preprocessed_network):
     """
     Translates the e2e bandwidth reqs to links, and chains to subchains,
     additionally finds subgraph for subchains.
     Removes the unneeded nodes and edges from the service graph.
     """
+    if mode == NFFG.MODE_DEL:
+      # the return value should be compatible with the other modes, but second 
+      # parameter won't be used.
+      return self.preprocessed_del_req, []
 
     e2e_chains_with_graphs = []
     not_e2e_chains = []
@@ -685,9 +716,9 @@ class GraphPreprocessorClass(object):
                     "mapped as best effort links!")
     # These chains are disjoint on the set of links, each has a subgraph
     # which it should be mapped to.
-    divided_chains_with_graphs = self._divideIntoDisjointSubchains(
-      e2e_chains_with_graphs,
-      not_e2e_chains)
+    divided_chains_with_graphs = self._divideIntoDisjointSubchains(mode,
+                                                                   e2e_chains_with_graphs,
+                                                                   not_e2e_chains)
 
     for vnf, d in self.req_graph.network.nodes_iter(data=True):
       self.log.debug("Final placement criterion of VNF %s is %s"
@@ -706,6 +737,10 @@ class GraphPreprocessorClass(object):
     from the network.
     Calculates shortest paths on the infrastructure, weighted by latency.
     """
+
+    if mode == NFFG.MODE_DEL:
+      # we have to do the SG preprocessing before the substrate preprocessing
+      self.preprocessed_del_req = self.processDelRequest()
 
     net = self.net
 

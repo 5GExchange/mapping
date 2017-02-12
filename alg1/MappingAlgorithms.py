@@ -38,7 +38,6 @@ from Alg1_Helper import NFFG, NFFGToolBox
 # object for the algorithm instance
 alg = None
 
-
 def MAP (request, network, enable_shortest_path_cache=False,
          bw_factor=1, res_factor=1, lat_factor=1,
          shortest_paths=None, return_dist=False, propagate_e2e_reqs=True,
@@ -79,8 +78,8 @@ def MAP (request, network, enable_shortest_path_cache=False,
     except StopIteration:
       sg_hops_retrieved = False
 
+  sap_alias_links = []
   if not mode == NFFG.MODE_DEL:
-    sap_alias_links = []
     helper.makeAntiAffinitySymmetric(request, network)
 
     # add fake SGHops to handle logical SAP aliases.
@@ -91,28 +90,26 @@ def MAP (request, network, enable_shortest_path_cache=False,
     if len(sap_alias_links) > 0:
       setattr(network, 'sap_alias_links', sap_alias_links)
 
-    # if after recreation and SAP alias handling there are at least one SGHop in
-    # the request we can proceed mapping.
-    if not sg_hops_given and not sg_hops_retrieved and len(
-       sap_alias_links) == 0:
+  # if after recreation and SAP alias handling there are at least one SGHop in
+  # the request we can proceed mapping.
+  if not sg_hops_given and not sg_hops_retrieved and len(sap_alias_links) == 0:
+    for nf in request.nfs:
+      if nf.id not in network.network:
+        raise uet.BadInputException("If SGHops are not given, flowrules should"
+                                    " be in the NFFG",
+                                    "No SGHop could be retrieved based on the "
+                                    "flowrules of the NFFG. And there is a VNF"
+                                    " which is not mapped yet!")
+    else:
+      # if all the NFs in the request are mapped already, then it is only 
+      # an update on NF data.
+      helper.log.warn("Updating only the status of NFs! Differences in other"
+                      " attributes (resource, name, etc.) are ignored!")
       for nf in request.nfs:
-        if nf.id not in network.network:
-          raise uet.BadInputException(
-            "If SGHops are not given, flowrules should"
-            " be in the NFFG",
-            "No SGHop could be retrieved based on the "
-            "flowrules of the NFFG. And there is a VNF"
-            " which is not mapped yet!")
-      else:
-        # if all the NFs in the request are mapped already, then it is only
-        # an update on NF data.
-        helper.log.warn("Updating only the status of NFs! Differences in other"
-                        " attributes (resource, name, etc.) are ignored!")
-        for nf in request.nfs:
-          network.network.node[nf.id].status = nf.status
+        network.network.node[nf.id].status = nf.status
 
-        # returning the substrate with the updated NF data
-        return network
+      # returning the substrate with the updated NF data
+      return network
 
   # a delay value which is assumed to be infinity in terms of connection RTT
   # or latency requirement (set it to 100s = 100 000ms)
@@ -133,8 +130,7 @@ def MAP (request, network, enable_shortest_path_cache=False,
                       bw_factor=bw_factor, res_factor=res_factor,
                       lat_factor=lat_factor, shortest_paths=shortest_paths,
                       propagate_e2e_reqs=propagate_e2e_reqs)
-  if mode != NFFG.MODE_DEL:
-    alg.setBacktrackParameters(bt_limit, bt_branching_factor)
+  alg.setBacktrackParameters(bt_limit, bt_branching_factor)
   mappedNFFG = alg.start()
 
   if not mode == NFFG.MODE_DEL:
@@ -153,9 +149,7 @@ def MAP (request, network, enable_shortest_path_cache=False,
       alg.manager.link_mapping.edges(data=True, keys=True)))
 
   if return_dist:
-    return mappedNFFG, alg.preprocessor.shortest_paths if mode != \
-                                                          NFFG.MODE_DEL else \
-      None
+    return mappedNFFG, alg.preprocessor.shortest_paths
   else:
     return mappedNFFG
 
