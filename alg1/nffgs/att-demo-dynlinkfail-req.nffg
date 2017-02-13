@@ -1,0 +1,420 @@
+{
+  "parameters": {
+    "id": "c81e8592-ec77-11e6-aa8e-3065ec956147",
+    "name": "Single-BiSBiS-View",
+    "version": "1.0",
+    "mode": "DELETE"
+  },
+  "node_nfs": [
+    {
+      "id": "2-PIDHELPER2",
+      "name": "2-PIDHELPER2",
+      "ports": [
+        {
+          "id": 1
+        },
+        {
+          "id": 2,
+          "sap": "PIDSAP",
+          "sap_data": {
+            "role": "consumer"
+          }
+        }
+      ],
+      "functional_type": "fe2sap",
+      "specification": {
+        "resources": {
+          "cpu": 1.0,
+          "mem": 1.0,
+          "storage": 0.0
+        }
+      }
+    },
+    {
+      "id": "2-PIDHELPER1",
+      "name": "2-PIDHELPER1",
+      "ports": [
+        {
+          "id": 1
+        },
+        {
+          "id": 2,
+          "sap": "PIDSAP",
+          "sap_data": {
+            "role": "consumer"
+          }
+        }
+      ],
+      "functional_type": "fe2sap",
+      "specification": {
+        "resources": {
+          "cpu": 1.0,
+          "mem": 1.0,
+          "storage": 0.0
+        }
+      }
+    },
+    {
+      "id": "2-SPLITTER",
+      "name": "2-SPLITTER",
+      "ports": [
+        {
+          "id": 1
+        },
+        {
+          "id": 2
+        },
+        {
+          "id": 3
+        }
+      ],
+      "functional_type": "splitter",
+      "specification": {
+        "resources": {
+          "cpu": 1.0,
+          "mem": 1.0,
+          "storage": 0.0
+        }
+      }
+    }
+  ],
+  "node_saps": [
+    {
+      "id": "fake_sap_for_edge_deleting",
+      "name": "fake_sap_for_edge_deleting",
+      "ports": [
+        {
+          "id": 1
+        }
+      ]
+    }
+  ],
+  "edge_links": [
+    {
+      "id": "c1b75cef-ec77-11e6-aa8e-3065ec956147",
+      "src_node": "2-PIDHELPER2",
+      "src_port": 1,
+      "dst_node": "2-PIDHELPER2",
+      "dst_port": 1
+    },
+    {
+      "id": "c1b75ced-ec77-11e6-aa8e-3065ec956147-back",
+      "src_node": "2-PIDHELPER2",
+      "src_port": 2,
+      "dst_node": "2-PIDHELPER2",
+      "dst_port": 2,
+      "backward": true
+    },
+    {
+      "id": "c1b75cef-ec77-11e6-aa8e-3065ec956147-back",
+      "src_node": "2-PIDHELPER2",
+      "src_port": 1,
+      "dst_node": "2-PIDHELPER2",
+      "dst_port": 1,
+      "backward": true
+    },
+    {
+      "id": "c1b75ced-ec77-11e6-aa8e-3065ec956147",
+      "src_node": "2-PIDHELPER2",
+      "src_port": 2,
+      "dst_node": "2-PIDHELPER2",
+      "dst_port": 2
+    },
+    {
+      "id": "c1b75cf1-ec77-11e6-aa8e-3065ec956147-back",
+      "src_node": "2-PIDHELPER1",
+      "src_port": 2,
+      "dst_node": "2-PIDHELPER1",
+      "dst_port": 2,
+      "backward": true
+    },
+    {
+      "id": "c1b75cf3-ec77-11e6-aa8e-3065ec956147",
+      "src_node": "2-PIDHELPER1",
+      "src_port": 1,
+      "dst_node": "2-PIDHELPER1",
+      "dst_port": 1
+    },
+    {
+      "id": "c1b75cf3-ec77-11e6-aa8e-3065ec956147-back",
+      "src_node": "2-PIDHELPER1",
+      "src_port": 1,
+      "dst_node": "2-PIDHELPER1",
+      "dst_port": 1,
+      "backward": true
+    },
+    {
+      "id": "c1b75cf1-ec77-11e6-aa8e-3065ec956147",
+      "src_node": "2-PIDHELPER1",
+      "src_port": 2,
+      "dst_node": "2-PIDHELPER1",
+      "dst_port": 2
+    },
+    {
+      "id": "ba790159-ec77-11e6-aa8e-3065ec956147",
+      "src_node": "fake_sap_for_edge_deleting",
+      "src_port": 1,
+      "dst_node": "fake_sap_for_edge_deleting",
+      "dst_port": 1
+    },
+    {
+      "id": "ba79015f-ec77-11e6-aa8e-3065ec956147-back",
+      "src_node": "fake_sap_for_edge_deleting",
+      "src_port": 1,
+      "dst_node": "fake_sap_for_edge_deleting",
+      "dst_port": 1,
+      "backward": true
+    },
+    {
+      "id": "ba79015d-ec77-11e6-aa8e-3065ec956147-back",
+      "src_node": "fake_sap_for_edge_deleting",
+      "src_port": 1,
+      "dst_node": "fake_sap_for_edge_deleting",
+      "dst_port": 1,
+      "backward": true
+    },
+    {
+      "id": "SAPblue-SingleBiSBiS@ESCAPE-right-link-back",
+      "src_node": "fake_sap_for_edge_deleting",
+      "src_port": 1,
+      "dst_node": "fake_sap_for_edge_deleting",
+      "dst_port": 1,
+      "delay": 0,
+      "backward": true
+    },
+    {
+      "id": "SAPgreen-SingleBiSBiS@ESCAPE-right-link-back",
+      "src_node": "fake_sap_for_edge_deleting",
+      "src_port": 1,
+      "dst_node": "fake_sap_for_edge_deleting",
+      "dst_port": 1,
+      "delay": 0,
+      "backward": true
+    },
+    {
+      "id": "SAPssh-SingleBiSBiS@ESCAPE-right-link",
+      "src_node": "fake_sap_for_edge_deleting",
+      "src_port": 1,
+      "dst_node": "fake_sap_for_edge_deleting",
+      "dst_port": 1,
+      "delay": 0
+    },
+    {
+      "id": "SAPgreen-SingleBiSBiS@ESCAPE-right-link",
+      "src_node": "fake_sap_for_edge_deleting",
+      "src_port": 1,
+      "dst_node": "fake_sap_for_edge_deleting",
+      "dst_port": 1,
+      "delay": 0
+    },
+    {
+      "id": "ba790159-ec77-11e6-aa8e-3065ec956147-back",
+      "src_node": "fake_sap_for_edge_deleting",
+      "src_port": 1,
+      "dst_node": "fake_sap_for_edge_deleting",
+      "dst_port": 1,
+      "backward": true
+    },
+    {
+      "id": "SAPblue-SingleBiSBiS@ESCAPE-right-link",
+      "src_node": "fake_sap_for_edge_deleting",
+      "src_port": 1,
+      "dst_node": "fake_sap_for_edge_deleting",
+      "dst_port": 1,
+      "delay": 0
+    },
+    {
+      "id": "ba79015d-ec77-11e6-aa8e-3065ec956147",
+      "src_node": "fake_sap_for_edge_deleting",
+      "src_port": 1,
+      "dst_node": "fake_sap_for_edge_deleting",
+      "dst_port": 1
+    },
+    {
+      "id": "SAPssh-SingleBiSBiS@ESCAPE-right-link-back",
+      "src_node": "fake_sap_for_edge_deleting",
+      "src_port": 1,
+      "dst_node": "fake_sap_for_edge_deleting",
+      "dst_port": 1,
+      "delay": 0,
+      "backward": true
+    },
+    {
+      "id": "SAPred-SingleBiSBiS@ESCAPE-left-link",
+      "src_node": "fake_sap_for_edge_deleting",
+      "src_port": 1,
+      "dst_node": "fake_sap_for_edge_deleting",
+      "dst_port": 1,
+      "delay": 0
+    },
+    {
+      "id": "ba790157-ec77-11e6-aa8e-3065ec956147",
+      "src_node": "fake_sap_for_edge_deleting",
+      "src_port": 1,
+      "dst_node": "fake_sap_for_edge_deleting",
+      "dst_port": 1
+    },
+    {
+      "id": "SAPred-SingleBiSBiS@ESCAPE-left-link-back",
+      "src_node": "fake_sap_for_edge_deleting",
+      "src_port": 1,
+      "dst_node": "fake_sap_for_edge_deleting",
+      "dst_port": 1,
+      "delay": 0,
+      "backward": true
+    },
+    {
+      "id": "ba790157-ec77-11e6-aa8e-3065ec956147-back",
+      "src_node": "fake_sap_for_edge_deleting",
+      "src_port": 1,
+      "dst_node": "fake_sap_for_edge_deleting",
+      "dst_port": 1,
+      "backward": true
+    },
+    {
+      "id": "ba79015f-ec77-11e6-aa8e-3065ec956147",
+      "src_node": "fake_sap_for_edge_deleting",
+      "src_port": 1,
+      "dst_node": "fake_sap_for_edge_deleting",
+      "dst_port": 1
+    },
+    {
+      "id": "ba79015b-ec77-11e6-aa8e-3065ec956147-back",
+      "src_node": "fake_sap_for_edge_deleting",
+      "src_port": 1,
+      "dst_node": "fake_sap_for_edge_deleting",
+      "dst_port": 1,
+      "backward": true
+    },
+    {
+      "id": "ba79015b-ec77-11e6-aa8e-3065ec956147",
+      "src_node": "fake_sap_for_edge_deleting",
+      "src_port": 1,
+      "dst_node": "fake_sap_for_edge_deleting",
+      "dst_port": 1
+    },
+    {
+      "id": "c1b75ceb-ec77-11e6-aa8e-3065ec956147-back",
+      "src_node": "2-SPLITTER",
+      "src_port": 1,
+      "dst_node": "2-SPLITTER",
+      "dst_port": 1,
+      "backward": true
+    },
+    {
+      "id": "c1b75ce7-ec77-11e6-aa8e-3065ec956147-back",
+      "src_node": "2-SPLITTER",
+      "src_port": 3,
+      "dst_node": "2-SPLITTER",
+      "dst_port": 3,
+      "backward": true
+    },
+    {
+      "id": "c1b75ceb-ec77-11e6-aa8e-3065ec956147",
+      "src_node": "2-SPLITTER",
+      "src_port": 1,
+      "dst_node": "2-SPLITTER",
+      "dst_port": 1
+    },
+    {
+      "id": "c1b75ce9-ec77-11e6-aa8e-3065ec956147-back",
+      "src_node": "2-SPLITTER",
+      "src_port": 2,
+      "dst_node": "2-SPLITTER",
+      "dst_port": 2,
+      "backward": true
+    },
+    {
+      "id": "c1b75ce7-ec77-11e6-aa8e-3065ec956147",
+      "src_node": "2-SPLITTER",
+      "src_port": 3,
+      "dst_node": "2-SPLITTER",
+      "dst_port": 3
+    },
+    {
+      "id": "c1b75ce9-ec77-11e6-aa8e-3065ec956147",
+      "src_node": "2-SPLITTER",
+      "src_port": 2,
+      "dst_node": "2-SPLITTER",
+      "dst_port": 2
+    }
+  ],
+  "edge_sg_nexthops": [
+    {
+      "id": 2085,
+      "src_node": "2-PIDHELPER2",
+      "src_port": 2,
+      "dst_node": "2-PIDHELPER2",
+      "dst_port": 2,
+      "flowclass": "dl_dst=9c:5c:8e:af:2e:e0,dl_type=0x0806",
+      "delay": 50.0,
+      "bandwidth": 0
+    },
+    {
+      "id": 2075,
+      "src_node": "2-PIDHELPER2",
+      "src_port": 2,
+      "dst_node": "2-PIDHELPER2",
+      "dst_port": 2,
+      "flowclass": "dl_dst=9c:5c:8e:af:2e:e0,dl_type=0x0800",
+      "delay": 50.0,
+      "bandwidth": 0
+    },
+    {
+      "id": 2084,
+      "src_node": "2-PIDHELPER1",
+      "src_port": 2,
+      "dst_node": "2-PIDHELPER1",
+      "dst_port": 2,
+      "flowclass": "dl_dst=9c:5c:8e:af:2e:e0,dl_type=0x0806",
+      "delay": 9.0,
+      "bandwidth": 0
+    },
+    {
+      "id": 2074,
+      "src_node": "2-PIDHELPER1",
+      "src_port": 2,
+      "dst_node": "2-PIDHELPER1",
+      "dst_port": 2,
+      "flowclass": "dl_dst=9c:5c:8e:af:2e:e0,dl_type=0x0800",
+      "delay": 9.0,
+      "bandwidth": 0
+    },
+    {
+      "id": 2053,
+      "src_node": "2-SPLITTER",
+      "src_port": 1,
+      "dst_node": "2-SPLITTER",
+      "dst_port": 1,
+      "flowclass": "dl_src=9c:5c:8e:af:2e:e0,dl_type=0x0800,nw_dst=192.168.1.156",
+      "delay": 9.0,
+      "bandwidth": 0
+    },
+    {
+      "id": 2063,
+      "src_node": "2-SPLITTER",
+      "src_port": 1,
+      "dst_node": "2-SPLITTER",
+      "dst_port": 1,
+      "flowclass": "dl_src=9c:5c:8e:af:2e:e0,dl_type=0x0806,nw_dst=192.168.1.156",
+      "delay": 9.0,
+      "bandwidth": 0
+    },
+    {
+      "id": 2002,
+      "src_node": "2-SPLITTER",
+      "src_port": 3,
+      "dst_node": "2-PIDHELPER2",
+      "dst_port": 1,
+      "bandwidth": 0
+    },
+    {
+      "id": 2001,
+      "src_node": "2-SPLITTER",
+      "src_port": 2,
+      "dst_node": "2-PIDHELPER1",
+      "dst_port": 1,
+      "bandwidth": 0
+    }
+  ]
+}

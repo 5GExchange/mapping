@@ -1,0 +1,534 @@
+{
+  "parameters": {
+    "id": "DoV", 
+    "name": "DoV", 
+    "version": "1.0"
+  }, 
+  "node_nfs": [
+    {
+      "id": "1-PID1", 
+      "name": "1-PID1", 
+      "ports": [
+        {
+          "id": 1, 
+          "sap": "PIDSAP", 
+          "sap_data": {
+            "role": "provider"
+          }
+        }
+      ], 
+      "functional_type": "balance_server:latest", 
+      "specification": {
+        "resources": {
+          "cpu": 1.0, 
+          "mem": 1.0, 
+          "storage": 0.0
+        }
+      }
+    }, 
+    {
+      "id": "1-PID2", 
+      "name": "1-PID2", 
+      "ports": [
+        {
+          "id": 1, 
+          "sap": "PIDSAP", 
+          "sap_data": {
+            "role": "provider"
+          }
+        }
+      ], 
+      "functional_type": "balance_server:latest", 
+      "specification": {
+        "resources": {
+          "cpu": 1.0, 
+          "mem": 1.0, 
+          "storage": 0.0
+        }
+      }
+    }, 
+    {
+      "id": "1-SPLITTER", 
+      "name": "1-SPLITTER", 
+      "ports": [
+        {
+          "id": 1
+        }, 
+        {
+          "id": 2
+        }, 
+        {
+          "id": 3
+        }
+      ], 
+      "functional_type": "splitter", 
+      "specification": {
+        "resources": {
+          "cpu": 1.0, 
+          "mem": 1.0, 
+          "storage": 0.0
+        }
+      }
+    }
+  ], 
+  "node_saps": [
+    {
+      "id": "SAPgreen", 
+      "name": "SAPgreen", 
+      "ports": [
+        {
+          "id": "port-SAPgreen", 
+          "name": "SAPgreen"
+        }
+      ]
+    }, 
+    {
+      "id": "SAPred", 
+      "name": "SAPred", 
+      "ports": [
+        {
+          "id": "port-SAPred", 
+          "name": "SAPred"
+        }
+      ]
+    }, 
+    {
+      "id": "SAPssh", 
+      "name": "SAPssh", 
+      "ports": [
+        {
+          "id": "port-SAPssh", 
+          "property": {
+            "type": "inter-domain", 
+            "sap": "SAPssh"
+          }, 
+          "name": "SAPssh", 
+          "sap": "SAPssh"
+        }
+      ]
+    }, 
+    {
+      "id": "SAPblue", 
+      "name": "SAPblue", 
+      "ports": [
+        {
+          "id": "port-SAPblue", 
+          "name": "SAPblue"
+        }
+      ]
+    }
+  ], 
+  "node_infras": [
+    {
+      "id": "SingleBiSBiS@ESCAPE-left", 
+      "name": "SingleBiSBiS", 
+      "ports": [
+        {
+          "id": "port-SAP13", 
+          "property": {
+            "sap": "SAP13", 
+            "type": "inter-domain"
+          }, 
+          "name": "SAP13", 
+          "sap": "SAP13", 
+          "sap_data": {
+            "resources": {
+              "delay": 5.0
+            }
+          }, 
+          "flowrules": [
+            {
+              "id": 1002, 
+              "match": "in_port=port-SAP13;TAG=1-SPLITTER|1-PID2|1002", 
+              "action": "output=SingleBiSBiS@ESCAPE-left|1-PID2|1;UNTAG"
+            }
+          ]
+        }, 
+        {
+          "id": "port-SAPred", 
+          "name": "SAPred"
+        }, 
+        {
+          "id": "SingleBiSBiS@ESCAPE-left|1-PID2|1", 
+          "flowrules": [
+            {
+              "id": 1034, 
+              "match": "in_port=SingleBiSBiS@ESCAPE-left|1-PID2|1;flowclass=dl_dst=bc:ee:7b:e6:8c:07,dl_type=0x0800", 
+              "action": "output=port-SAP13;TAG=1-PID2|SAPblue|1034", 
+              "delay": 50.0
+            }, 
+            {
+              "id": 1044, 
+              "match": "in_port=SingleBiSBiS@ESCAPE-left|1-PID2|1;flowclass=dl_dst=bc:ee:7b:e6:8c:07,dl_type=0x0806", 
+              "action": "output=port-SAP13;TAG=1-PID2|SAPblue|1044", 
+              "delay": 50.0
+            }
+          ]
+        }, 
+        {
+          "id": "SingleBiSBiS@ESCAPE-left|2-SPLITTER|3"
+        }, 
+        {
+          "id": "SingleBiSBiS@ESCAPE-left|2-SPLITTER|2"
+        }, 
+        {
+          "id": "SingleBiSBiS@ESCAPE-left|2-SPLITTER|1"
+        }, 
+        {
+          "id": "SingleBiSBiS@ESCAPE-left|2-PIDHELPER1|2"
+        }, 
+        {
+          "id": "SingleBiSBiS@ESCAPE-left|2-PIDHELPER1|1"
+        }
+      ], 
+      "domain": "ESCAPE-left", 
+      "type": "BiSBiS", 
+      "supported": [
+        "balance_server:latest", 
+        "fe2sap", 
+        "splitter"
+      ], 
+      "resources": {
+        "cpu": 9.0, 
+        "mem": 50721069056.0, 
+        "storage": 25010148352.0, 
+        "delay": 0.0
+      }
+    }, 
+    {
+      "id": "SingleBiSBiS@ESCAPE-right", 
+      "name": "SingleBiSBiS", 
+      "ports": [
+        {
+          "id": "port-SAP13", 
+          "property": {
+            "sap": "SAP13", 
+            "type": "inter-domain"
+          }, 
+          "name": "SAP13", 
+          "sap": "SAP13", 
+          "sap_data": {
+            "resources": {
+              "delay": 5.0
+            }
+          }, 
+          "flowrules": [
+            {
+              "id": 1034, 
+              "match": "in_port=port-SAP13;flowclass=dl_dst=bc:ee:7b:e6:8c:07,dl_type=0x0800;TAG=1-PID2|SAPblue|1034", 
+              "action": "output=port-SAPblue;UNTAG", 
+              "delay": 50.0
+            }, 
+            {
+              "id": 1044, 
+              "match": "in_port=port-SAP13;flowclass=dl_dst=bc:ee:7b:e6:8c:07,dl_type=0x0806;TAG=1-PID2|SAPblue|1044", 
+              "action": "output=port-SAPblue;UNTAG", 
+              "delay": 50.0
+            }
+          ]
+        }, 
+        {
+          "id": "port-SAPblue", 
+          "name": "SAPblue", 
+          "flowrules": [
+            {
+              "id": 1013, 
+              "match": "in_port=port-SAPblue;flowclass=dl_src=bc:ee:7b:e6:8c:07,dl_type=0x0800,nw_dst=192.168.1.156", 
+              "action": "output=SingleBiSBiS@ESCAPE-right|1-SPLITTER|1;UNTAG", 
+              "delay": 9.0
+            }, 
+            {
+              "id": 1023, 
+              "match": "in_port=port-SAPblue;flowclass=dl_src=bc:ee:7b:e6:8c:07,dl_type=0x0806,nw_dst=192.168.1.156", 
+              "action": "output=SingleBiSBiS@ESCAPE-right|1-SPLITTER|1;UNTAG", 
+              "delay": 9.0
+            }
+          ]
+        }, 
+        {
+          "id": "port-SAPgreen", 
+          "name": "SAPgreen"
+        }, 
+        {
+          "id": "port-SAPssh", 
+          "property": {
+            "sap": "SAPssh"
+          }, 
+          "name": "SAPssh", 
+          "sap": "SAPssh"
+        }, 
+        {
+          "id": "SingleBiSBiS@ESCAPE-right|1-SPLITTER|2", 
+          "flowrules": [
+            {
+              "id": 1001, 
+              "match": "in_port=SingleBiSBiS@ESCAPE-right|1-SPLITTER|2", 
+              "action": "output=SingleBiSBiS@ESCAPE-right|1-PID1|1"
+            }
+          ]
+        }, 
+        {
+          "id": "SingleBiSBiS@ESCAPE-right|1-SPLITTER|3", 
+          "flowrules": [
+            {
+              "id": 1002, 
+              "match": "in_port=SingleBiSBiS@ESCAPE-right|1-SPLITTER|3", 
+              "action": "output=port-SAP13;TAG=1-SPLITTER|1-PID2|1002"
+            }
+          ]
+        }, 
+        {
+          "id": "SingleBiSBiS@ESCAPE-right|1-SPLITTER|1"
+        }, 
+        {
+          "id": "SingleBiSBiS@ESCAPE-right|1-PID1|1", 
+          "flowrules": [
+            {
+              "id": 1035, 
+              "match": "in_port=SingleBiSBiS@ESCAPE-right|1-PID1|1;flowclass=dl_dst=bc:ee:7b:e6:8c:07,dl_type=0x0800", 
+              "action": "output=port-SAPblue;UNTAG", 
+              "delay": 9.0
+            }, 
+            {
+              "id": 1045, 
+              "match": "in_port=SingleBiSBiS@ESCAPE-right|1-PID1|1;flowclass=dl_dst=bc:ee:7b:e6:8c:07,dl_type=0x0806", 
+              "action": "output=port-SAPblue;UNTAG", 
+              "delay": 9.0
+            }
+          ]
+        }, 
+        {
+          "id": "SingleBiSBiS@ESCAPE-right|2-PIDHELPER2|2"
+        }, 
+        {
+          "id": "SingleBiSBiS@ESCAPE-right|2-PIDHELPER2|1"
+        }
+      ], 
+      "domain": "ESCAPE-right", 
+      "type": "BiSBiS", 
+      "supported": [
+        "balance_server:latest", 
+        "fe2sap", 
+        "splitter"
+      ], 
+      "resources": {
+        "cpu": 18.0, 
+        "mem": 101442138112.0, 
+        "storage": 50020296704.0, 
+        "delay": 0.0
+      }
+    }
+  ], 
+  "edge_links": [
+    {
+      "id": "SAPgreen-SingleBiSBiS@ESCAPE-right-link", 
+      "src_node": "SAPgreen", 
+      "src_port": "port-SAPgreen", 
+      "dst_node": "SingleBiSBiS@ESCAPE-right", 
+      "dst_port": "port-SAPgreen", 
+      "delay": 0
+    }, 
+    {
+      "id": "SAPred-SingleBiSBiS@ESCAPE-left-link", 
+      "src_node": "SAPred", 
+      "src_port": "port-SAPred", 
+      "dst_node": "SingleBiSBiS@ESCAPE-left", 
+      "dst_port": "port-SAPred", 
+      "delay": 0
+    }, 
+    {
+      "id": "SAPssh-SingleBiSBiS@ESCAPE-right-link", 
+      "src_node": "SAPssh", 
+      "src_port": "port-SAPssh", 
+      "dst_node": "SingleBiSBiS@ESCAPE-right", 
+      "dst_port": "port-SAPssh", 
+      "delay": 0
+    }, 
+    {
+      "id": "SAPblue-SingleBiSBiS@ESCAPE-right-link", 
+      "src_node": "SAPblue", 
+      "src_port": "port-SAPblue", 
+      "dst_node": "SingleBiSBiS@ESCAPE-right", 
+      "dst_port": "port-SAPblue", 
+      "delay": 0
+    }, 
+    {
+      "id": "SAPred-SingleBiSBiS@ESCAPE-left-link-back", 
+      "src_node": "SingleBiSBiS@ESCAPE-left", 
+      "src_port": "port-SAPred", 
+      "dst_node": "SAPred", 
+      "dst_port": "port-SAPred", 
+      "delay": 0, 
+      "backward": true
+    }, 
+    {
+      "id": "inter-domain-link-SAP13-back", 
+      "src_node": "SingleBiSBiS@ESCAPE-left", 
+      "src_port": "port-SAP13", 
+      "dst_node": "SingleBiSBiS@ESCAPE-right", 
+      "dst_port": "port-SAP13", 
+      "delay": 5.0, 
+      "backward": true
+    }, 
+    {
+      "id": "acd9e2c8-ea17-11e6-88f3-3065ec956147", 
+      "src_node": "SingleBiSBiS@ESCAPE-left", 
+      "src_port": "SingleBiSBiS@ESCAPE-left|1-PID2|1", 
+      "dst_node": "1-PID2", 
+      "dst_port": 1
+    }, 
+    {
+      "id": "acd9e2c7-ea17-11e6-88f3-3065ec956147", 
+      "src_node": "1-PID1", 
+      "src_port": 1, 
+      "dst_node": "SingleBiSBiS@ESCAPE-right", 
+      "dst_port": "SingleBiSBiS@ESCAPE-right|1-PID1|1", 
+      "backward": true
+    }, 
+    {
+      "id": "SAPgreen-SingleBiSBiS@ESCAPE-right-link-back", 
+      "src_node": "SingleBiSBiS@ESCAPE-right", 
+      "src_port": "port-SAPgreen", 
+      "dst_node": "SAPgreen", 
+      "dst_port": "port-SAPgreen", 
+      "delay": 0, 
+      "backward": true
+    }, 
+    {
+      "id": "SAPssh-SingleBiSBiS@ESCAPE-right-link-back", 
+      "src_node": "SingleBiSBiS@ESCAPE-right", 
+      "src_port": "port-SAPssh", 
+      "dst_node": "SAPssh", 
+      "dst_port": "port-SAPssh", 
+      "delay": 0, 
+      "backward": true
+    }, 
+    {
+      "id": "SAPblue-SingleBiSBiS@ESCAPE-right-link-back", 
+      "src_node": "SingleBiSBiS@ESCAPE-right", 
+      "src_port": "port-SAPblue", 
+      "dst_node": "SAPblue", 
+      "dst_port": "port-SAPblue", 
+      "delay": 0, 
+      "backward": true
+    }, 
+    {
+      "id": "inter-domain-link-SAP13", 
+      "src_node": "SingleBiSBiS@ESCAPE-right", 
+      "src_port": "port-SAP13", 
+      "dst_node": "SingleBiSBiS@ESCAPE-left", 
+      "dst_port": "port-SAP13", 
+      "delay": 5.0
+    }, 
+    {
+      "id": "acd9e2c6-ea17-11e6-88f3-3065ec956147", 
+      "src_node": "SingleBiSBiS@ESCAPE-right", 
+      "src_port": "SingleBiSBiS@ESCAPE-right|1-PID1|1", 
+      "dst_node": "1-PID1", 
+      "dst_port": 1
+    }, 
+    {
+      "id": "acd9e2c2-ea17-11e6-88f3-3065ec956147", 
+      "src_node": "SingleBiSBiS@ESCAPE-right", 
+      "src_port": "SingleBiSBiS@ESCAPE-right|1-SPLITTER|3", 
+      "dst_node": "1-SPLITTER", 
+      "dst_port": 3
+    }, 
+    {
+      "id": "acd9e2c0-ea17-11e6-88f3-3065ec956147", 
+      "src_node": "SingleBiSBiS@ESCAPE-right", 
+      "src_port": "SingleBiSBiS@ESCAPE-right|1-SPLITTER|2", 
+      "dst_node": "1-SPLITTER", 
+      "dst_port": 2
+    }, 
+    {
+      "id": "acd9e2c4-ea17-11e6-88f3-3065ec956147", 
+      "src_node": "SingleBiSBiS@ESCAPE-right", 
+      "src_port": "SingleBiSBiS@ESCAPE-right|1-SPLITTER|1", 
+      "dst_node": "1-SPLITTER", 
+      "dst_port": 1
+    }, 
+    {
+      "id": "acd9e2c9-ea17-11e6-88f3-3065ec956147", 
+      "src_node": "1-PID2", 
+      "src_port": 1, 
+      "dst_node": "SingleBiSBiS@ESCAPE-left", 
+      "dst_port": "SingleBiSBiS@ESCAPE-left|1-PID2|1", 
+      "backward": true
+    }, 
+    {
+      "id": "acd9e2c5-ea17-11e6-88f3-3065ec956147", 
+      "src_node": "1-SPLITTER", 
+      "src_port": 1, 
+      "dst_node": "SingleBiSBiS@ESCAPE-right", 
+      "dst_port": "SingleBiSBiS@ESCAPE-right|1-SPLITTER|1", 
+      "backward": true
+    }, 
+    {
+      "id": "acd9e2c3-ea17-11e6-88f3-3065ec956147", 
+      "src_node": "1-SPLITTER", 
+      "src_port": 3, 
+      "dst_node": "SingleBiSBiS@ESCAPE-right", 
+      "dst_port": "SingleBiSBiS@ESCAPE-right|1-SPLITTER|3", 
+      "backward": true
+    }, 
+    {
+      "id": "acd9e2c1-ea17-11e6-88f3-3065ec956147", 
+      "src_node": "1-SPLITTER", 
+      "src_port": 2, 
+      "dst_node": "SingleBiSBiS@ESCAPE-right", 
+      "dst_port": "SingleBiSBiS@ESCAPE-right|1-SPLITTER|2", 
+      "backward": true
+    }
+  ], 
+  "edge_sg_nexthops": [
+    {
+      "id": 1013, 
+      "src_node": "SAPblue", 
+      "src_port": "port-SAPblue", 
+      "dst_node": "1-SPLITTER", 
+      "dst_port": 1, 
+      "flowclass": "dl_src=bc:ee:7b:e6:8c:07,dl_type=0x0800,nw_dst=192.168.1.156", 
+      "delay": 9.0, 
+      "bandwidth": 0
+    }, 
+    {
+      "id": 1023, 
+      "src_node": "SAPblue", 
+      "src_port": "port-SAPblue", 
+      "dst_node": "1-SPLITTER", 
+      "dst_port": 1, 
+      "flowclass": "dl_src=bc:ee:7b:e6:8c:07,dl_type=0x0806,nw_dst=192.168.1.156", 
+      "delay": 9.0, 
+      "bandwidth": 0
+    }, 
+    {
+      "id": 1035, 
+      "src_node": "1-PID1", 
+      "src_port": 1, 
+      "dst_node": "SAPblue", 
+      "dst_port": "port-SAPblue", 
+      "flowclass": "dl_dst=bc:ee:7b:e6:8c:07,dl_type=0x0800", 
+      "delay": 9.0, 
+      "bandwidth": 0
+    }, 
+    {
+      "id": 1045, 
+      "src_node": "1-PID1", 
+      "src_port": 1, 
+      "dst_node": "SAPblue", 
+      "dst_port": "port-SAPblue", 
+      "flowclass": "dl_dst=bc:ee:7b:e6:8c:07,dl_type=0x0806", 
+      "delay": 9.0, 
+      "bandwidth": 0
+    }, 
+    {
+      "id": 1001, 
+      "src_node": "1-SPLITTER", 
+      "src_port": 2, 
+      "dst_node": "1-PID1", 
+      "dst_port": 1, 
+      "bandwidth": 0
+    }
+  ]
+}

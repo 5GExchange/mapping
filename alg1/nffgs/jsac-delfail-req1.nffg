@@ -1,0 +1,263 @@
+{
+  "parameters": {
+    "id": "Benchmark-Req-2-Piece",
+    "version": "1.0",
+    "mode": "DELETE"
+  },
+  "node_nfs": [
+    {
+      "id": "Test-2-SC-0-VNF-7",
+      "name": "Test-2-SC-0-VNF-7",
+      "ports": [
+        {
+          "id": "f1e2e96e-ec50-11e6-90b7-f8d111b51780"
+        },
+        {
+          "id": "f1e2e970-ec50-11e6-90b7-f8d111b51780"
+        }
+      ],
+      "functional_type": "G",
+      "specification": {
+        "resources": {
+          "cpu": 3,
+          "mem": 625.935054916523,
+          "storage": 1.1104198210055625
+        }
+      }
+    },
+    {
+      "id": "Test-2-SC-0-VNF-6",
+      "name": "Test-2-SC-0-VNF-6",
+      "ports": [
+        {
+          "id": "f1e2e96b-ec50-11e6-90b7-f8d111b51780"
+        },
+        {
+          "id": "f1e2e96d-ec50-11e6-90b7-f8d111b51780"
+        }
+      ],
+      "functional_type": "F",
+      "specification": {
+        "resources": {
+          "cpu": 4,
+          "mem": 854.7167492171584,
+          "storage": 2.0417673976867694
+        }
+      }
+    },
+    {
+      "id": "Test-2-SC-0-VNF-0",
+      "name": "Test-2-SC-0-VNF-0",
+      "ports": [
+        {
+          "id": "f1e2e959-ec50-11e6-90b7-f8d111b51780"
+        },
+        {
+          "id": "f1e2e95b-ec50-11e6-90b7-f8d111b51780"
+        }
+      ],
+      "functional_type": "I",
+      "specification": {
+        "resources": {
+          "cpu": 4,
+          "mem": 1347.936357024292,
+          "storage": 2.6945193640736367
+        }
+      }
+    },
+    {
+      "id": "Test-2-SC-0-VNF-1",
+      "name": "Test-2-SC-0-VNF-1",
+      "ports": [
+        {
+          "id": "f1e2e95c-ec50-11e6-90b7-f8d111b51780"
+        },
+        {
+          "id": "f1e2e95e-ec50-11e6-90b7-f8d111b51780"
+        }
+      ],
+      "functional_type": "D",
+      "specification": {
+        "resources": {
+          "cpu": 3,
+          "mem": 441.01459409940344,
+          "storage": 2.4348861255236356
+        }
+      }
+    },
+    {
+      "id": "Test-2-SC-0-VNF-2",
+      "name": "Test-2-SC-0-VNF-2",
+      "ports": [
+        {
+          "id": "f1e2e95f-ec50-11e6-90b7-f8d111b51780"
+        },
+        {
+          "id": "f1e2e961-ec50-11e6-90b7-f8d111b51780"
+        }
+      ],
+      "functional_type": "F",
+      "specification": {
+        "resources": {
+          "cpu": 4,
+          "mem": 927.5120171929694,
+          "storage": 1.3516893198934654
+        }
+      }
+    },
+    {
+      "id": "Test-2-SC-0-VNF-3",
+      "name": "Test-2-SC-0-VNF-3",
+      "ports": [
+        {
+          "id": "f1e2e962-ec50-11e6-90b7-f8d111b51780"
+        },
+        {
+          "id": "f1e2e964-ec50-11e6-90b7-f8d111b51780"
+        }
+      ],
+      "functional_type": "J",
+      "specification": {
+        "resources": {
+          "cpu": 4,
+          "mem": 131.79678111463585,
+          "storage": 1.8383493151221366
+        }
+      }
+    },
+    {
+      "id": "Test-2-SC-0-VNF-4",
+      "name": "Test-2-SC-0-VNF-4",
+      "ports": [
+        {
+          "id": "f1e2e965-ec50-11e6-90b7-f8d111b51780"
+        },
+        {
+          "id": "f1e2e967-ec50-11e6-90b7-f8d111b51780"
+        }
+      ],
+      "functional_type": "I",
+      "specification": {
+        "resources": {
+          "cpu": 1,
+          "mem": 1170.3827532653565,
+          "storage": 0.35140287962555394
+        }
+      }
+    },
+    {
+      "id": "Test-2-SC-0-VNF-5",
+      "name": "Test-2-SC-0-VNF-5",
+      "ports": [
+        {
+          "id": "f1e2e968-ec50-11e6-90b7-f8d111b51780"
+        },
+        {
+          "id": "f1e2e96a-ec50-11e6-90b7-f8d111b51780"
+        }
+      ],
+      "functional_type": "D",
+      "specification": {
+        "resources": {
+          "cpu": 4,
+          "mem": 160.97203234575392,
+          "storage": 0.43907546673691156
+        }
+      }
+    }
+  ],
+  "node_saps": [
+    {
+      "id": "sap2",
+      "name": "sap2",
+      "ports": [
+        {
+          "id": "f1e2e971-ec50-11e6-90b7-f8d111b51780"
+        }
+      ]
+    },
+    {
+      "id": "sap3",
+      "name": "sap3",
+      "ports": [
+        {
+          "id": "f1e2e958-ec50-11e6-90b7-f8d111b51780"
+        }
+      ]
+    }
+  ],
+  "edge_sg_nexthops": [
+    {
+      "id": "f1e2e972-ec50-11e6-90b7-f8d111b51780",
+      "src_node": "Test-2-SC-0-VNF-7",
+      "src_port": "f1e2e970-ec50-11e6-90b7-f8d111b51780",
+      "dst_node": "sap2",
+      "dst_port": "f1e2e971-ec50-11e6-90b7-f8d111b51780",
+      "bandwidth": 0.25474426328040056
+    },
+    {
+      "id": "f1e2e96f-ec50-11e6-90b7-f8d111b51780",
+      "src_node": "Test-2-SC-0-VNF-6",
+      "src_port": "f1e2e96d-ec50-11e6-90b7-f8d111b51780",
+      "dst_node": "Test-2-SC-0-VNF-7",
+      "dst_port": "f1e2e96e-ec50-11e6-90b7-f8d111b51780",
+      "bandwidth": 0.25474426328040056
+    },
+    {
+      "id": "f1e2e95d-ec50-11e6-90b7-f8d111b51780",
+      "src_node": "Test-2-SC-0-VNF-0",
+      "src_port": "f1e2e95b-ec50-11e6-90b7-f8d111b51780",
+      "dst_node": "Test-2-SC-0-VNF-1",
+      "dst_port": "f1e2e95c-ec50-11e6-90b7-f8d111b51780",
+      "bandwidth": 0.25474426328040056
+    },
+    {
+      "id": "f1e2e960-ec50-11e6-90b7-f8d111b51780",
+      "src_node": "Test-2-SC-0-VNF-1",
+      "src_port": "f1e2e95e-ec50-11e6-90b7-f8d111b51780",
+      "dst_node": "Test-2-SC-0-VNF-2",
+      "dst_port": "f1e2e95f-ec50-11e6-90b7-f8d111b51780",
+      "bandwidth": 0.25474426328040056
+    },
+    {
+      "id": "f1e2e963-ec50-11e6-90b7-f8d111b51780",
+      "src_node": "Test-2-SC-0-VNF-2",
+      "src_port": "f1e2e961-ec50-11e6-90b7-f8d111b51780",
+      "dst_node": "Test-2-SC-0-VNF-3",
+      "dst_port": "f1e2e962-ec50-11e6-90b7-f8d111b51780",
+      "bandwidth": 0.25474426328040056
+    },
+    {
+      "id": "f1e2e966-ec50-11e6-90b7-f8d111b51780",
+      "src_node": "Test-2-SC-0-VNF-3",
+      "src_port": "f1e2e964-ec50-11e6-90b7-f8d111b51780",
+      "dst_node": "Test-2-SC-0-VNF-4",
+      "dst_port": "f1e2e965-ec50-11e6-90b7-f8d111b51780",
+      "bandwidth": 0.25474426328040056
+    },
+    {
+      "id": "f1e2e969-ec50-11e6-90b7-f8d111b51780",
+      "src_node": "Test-2-SC-0-VNF-4",
+      "src_port": "f1e2e967-ec50-11e6-90b7-f8d111b51780",
+      "dst_node": "Test-2-SC-0-VNF-5",
+      "dst_port": "f1e2e968-ec50-11e6-90b7-f8d111b51780",
+      "bandwidth": 0.25474426328040056
+    },
+    {
+      "id": "f1e2e96c-ec50-11e6-90b7-f8d111b51780",
+      "src_node": "Test-2-SC-0-VNF-5",
+      "src_port": "f1e2e96a-ec50-11e6-90b7-f8d111b51780",
+      "dst_node": "Test-2-SC-0-VNF-6",
+      "dst_port": "f1e2e96b-ec50-11e6-90b7-f8d111b51780",
+      "bandwidth": 0.25474426328040056
+    },
+    {
+      "id": "f1e2e95a-ec50-11e6-90b7-f8d111b51780",
+      "src_node": "sap3",
+      "src_port": "f1e2e958-ec50-11e6-90b7-f8d111b51780",
+      "dst_node": "Test-2-SC-0-VNF-0",
+      "dst_port": "f1e2e959-ec50-11e6-90b7-f8d111b51780",
+      "bandwidth": 0.25474426328040056
+    }
+  ]
+}
