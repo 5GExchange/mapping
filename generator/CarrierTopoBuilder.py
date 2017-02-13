@@ -429,13 +429,14 @@ def getPicoTopo():
     
   return nffg
 
-def getSNDlib_dfn_gwin(save_to_file = False, gen_sap_names = False, 
-                       abc_nf_type_num = 10):
+def getSNDlib_dfn_gwin(gwin_path = "dfn-gwin.gml", save_to_file=False,
+                       gen_sap_names=False,
+                       abc_nf_type_num=10):
   """
   Topology taken from SNDlib, dfn-gwin.
   """
   random.seed(0)
-  gwin = nx.read_gml("dfn-gwin.gml")
+  gwin = nx.read_gml(gwin_path)
   nffg = NFFG(id="dfn-gwin")
   nf_types = list(string.ascii_uppercase)[:abc_nf_type_num]
   switch = {'cpu': 0, 'mem': 0, 'storage': 0, 'delay': 0.5,

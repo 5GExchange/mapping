@@ -37,5 +37,6 @@ class PicoResourceGetter(AbstractResourceGetter):
 class GwinResourceGetter(AbstractResourceGetter):
 
     def GetNFFG(self):
-        network = CarrierTopoBuilder.getSNDlib_dfn_gwin()
-        return network
+      network = CarrierTopoBuilder.getSNDlib_dfn_gwin(
+        "../generator/dfn-gwin.gml")
+      return network
