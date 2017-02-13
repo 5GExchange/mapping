@@ -21,10 +21,6 @@ by Telecom Italia (UNIFY SVN repo)
 Parameter names are also based on the .ppt file.
 
 """
-
-import os
-import sys
-
 import logging
 import math
 import random
@@ -32,15 +28,7 @@ import string
 
 import networkx as nx
 
-try:
-  # runs when mapping files are called from ESCAPE
-  from escape.nffg_lib.nffg import NFFG, NFFGToolBox
-except ImportError:
-  # runs when mapping repo is cloned individually, and NFFG lib is in a
-  # sibling directory. WARNING: cicular import is not avioded by design.
-  import site
-  site.addsitedir('../..')
-  from nffg_lib.nffg import NFFG, NFFGToolBox
+from generator import NFFG
 
 # Aggregation links (100Gbps) Connecting Distribution nodes to Aggregation Nodes
 aggr_link = {'bandwidth': 1000, 'delay': 0.2}

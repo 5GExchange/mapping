@@ -19,18 +19,9 @@
 Generates requests that which can be used as standard test SG-s to cover 
 most/all functionalities of ESCAPE.
 """
-
-try:
-  # runs when mapping files are called from ESCAPE
-  from escape.nffg_lib.nffg import NFFG, NFFGToolBox
-except ImportError:
-  # runs when mapping repo is cloned individually, and NFFG lib is in a
-  # sibling directory. WARNING: cicular import is not avioded by design.
-  import site
-  site.addsitedir('../..')
-  from nffg_lib.nffg import NFFG, NFFGToolBox
-
+from generator import NFFG
 import random
+
 
 def gen_8loop_tests (saps, vnfs, seed, add_req=True):
   """
