@@ -24,8 +24,6 @@ Parameter names are also based on the .ppt file.
 
 import os
 import sys
-# Needed to run the Algorithm scripts in the parent folder.
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import logging
 import math
@@ -35,12 +33,14 @@ import string
 import networkx as nx
 
 try:
-  from escape.nffg_lib.nffg import NFFG
+  # runs when mapping files are called from ESCAPE
+  from escape.nffg_lib.nffg import NFFG, NFFGToolBox
 except ImportError:
-  import sys, os
-  sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                  "../../escape/escape/nffg_lib/")))
-  from nffg import NFFG
+  # runs when mapping repo is cloned individually, and NFFG lib is in a
+  # sibling directory. WARNING: cicular import is not avioded by design.
+  import site
+  site.addsitedir('../..')
+  from nffg_lib.nffg import NFFG, NFFGToolBox
 
 # Aggregation links (100Gbps) Connecting Distribution nodes to Aggregation Nodes
 aggr_link = {'bandwidth': 1000, 'delay': 0.2}

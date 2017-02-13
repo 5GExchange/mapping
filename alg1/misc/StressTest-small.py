@@ -21,8 +21,6 @@ network topology, reports how well the algorithm performed.
 import os
 import sys
 
-# Needed to run the Algorithm scripts in the parent folder.
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import getopt
 import logging
 import math
@@ -30,20 +28,21 @@ import random
 import traceback
 import string
 
-import CarrierTopoBuilder
-import MappingAlgorithms
-import UnifyExceptionTypes as uet
-
 from collections import OrderedDict
 
 try:
+  # runs when mapping files are called from ESCAPE
   from escape.nffg_lib.nffg import NFFG, NFFGToolBox
 except ImportError:
-  import sys, os
+  # runs when mapping repo is cloned individually, and NFFG lib is in a
+  # sibling directory. WARNING: cicular import is not avioded by design.
+  import site
+  site.addsitedir('../..')
+  from nffg_lib.nffg import NFFG, NFFGToolBox
 
-  sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                               "../escape/escape/nffg_lib/")))
-  from nffg import NFFG, NFFGToolBox
+import CarrierTopoBuilder
+from alg1 import MappingAlgorithms
+import alg1.UnifyExceptionTypes as uet
 
 log = logging.getLogger("StressTest")
 log.setLevel(logging.WARN)

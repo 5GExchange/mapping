@@ -1,8 +1,3 @@
-from ResourceGetter import *
-from RequestGenerator import TestReqGen
-from RequestGenerator import SimpleReqGen
-from RequestGenerator import MultiReqGen
-from OrchestratorAdaptor import *
 import threading
 import datetime
 import time
@@ -41,6 +36,12 @@ except ImportError:
   import site
   site.addsitedir('..')
   from nffg_lib.nffg import NFFG, NFFGToolBox
+
+from ResourceGetter import *
+from RequestGenerator import TestReqGen
+from RequestGenerator import SimpleReqGen
+from RequestGenerator import MultiReqGen
+from OrchestratorAdaptor import *
 
 import alg1.UnifyExceptionTypes as uet
 
