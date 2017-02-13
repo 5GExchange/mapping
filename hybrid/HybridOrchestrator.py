@@ -67,7 +67,9 @@ class HybridOrchestrator():
                 self.__when_to_opt = PeriodicalModelBased()
             elif when_to_opt_strat == "allways":
                 self.__when_to_opt = Allways()
-            else: log.error("Invalid when_to_opt type!")
+            else:
+                raise RuntimeError('Invalid when_to_opt type! Please choose one of the followings: modell_based, fixed_req_count, fixed_time, periodical_model_based, allways')
+                log.error("Invalid when_to_opt type!")
 
             #Resource sharing strategy
             self.__res_sharing_strat = resource_share_strat
@@ -98,13 +100,15 @@ class HybridOrchestrator():
 
             mode = NFFG.MODE_ADD
             #self.__res_offline = offline_mapping.MAP(request, offline_RG)
-            try:
-                self.__res_offline = offline_mapping.convert_mip_solution_to_nffg(request, offline_RG)
+            self.__res_offline = offline_mapping.convert_mip_solution_to_nffg([request], offline_RG)
+            """try:
+                #self.__res_offline = offline_mapping.convert_mip_solution_to_nffg(request, offline_RG)
+                self.__res_offline = offline_mapping.MAP(request, offline_RG)
                 self.offline_status = False
             except:
-                log.error("Unable to mapping offline")
+                log.error("Mapping thread: Offline mapping: Unable to mapping offline!")
                 self.offline_status = False
-
+"""
     def set_resource_graphs(self):
         # Resource sharing strategy
         if self.__res_sharing_strat == "dynamic":
@@ -122,7 +126,7 @@ class HybridOrchestrator():
 
             return mergeRG
 
-    def MAP(self, request):
+    def MAP(self, request, vmi):
 
         #Collect the requests
         self.merge_all_request(self.SUM_req,request)

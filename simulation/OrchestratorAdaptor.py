@@ -86,7 +86,7 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
     def MAP(self, request):
 
         mode = NFFG.MODE_ADD
-        self.concrete_hybrid_orchestrator.MAP(request)
+        self.concrete_hybrid_orchestrator.MAP(request,self.concrete_hybrid_orchestrator)
 
     def del_service(self, request):
         """
