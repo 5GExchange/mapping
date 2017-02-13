@@ -19,12 +19,9 @@
 Generates requests that which can be used as standard test SG-s to cover 
 most/all functionalities of ESCAPE.
 """
-
-import sys, os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                             "../../escape/escape/nffg_lib/")))
-from nffg import NFFG, NFFGToolBox
+from generator import NFFG
 import random
+
 
 def gen_8loop_tests (saps, vnfs, seed, add_req=True):
   """

@@ -18,7 +18,8 @@ except ImportError:
   site.addsitedir('..')
   from nffg_lib.nffg import NFFG, NFFGToolBox
 
-from alg1.misc import CarrierTopoBuilder
+from generator import CarrierTopoBuilder
+
 
 class AbstractResourceGetter:
     __metaclass__ = ABCMeta
@@ -36,5 +37,6 @@ class PicoResourceGetter(AbstractResourceGetter):
 class GwinResourceGetter(AbstractResourceGetter):
 
     def GetNFFG(self):
-        network = CarrierTopoBuilder.getSNDlib_dfn_gwin()
-        return network
+      network = CarrierTopoBuilder.getSNDlib_dfn_gwin(
+        "../generator/dfn-gwin.gml")
+      return network

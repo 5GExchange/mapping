@@ -18,32 +18,20 @@ Generates increasingly bigger/more Service Chain requirements for a
 network topology, reports how well the algorithm performed.
 """
 
-import os
-import sys
-
-# Needed to run the Algorithm scripts in the parent folder.
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import getopt
 import logging
 import math
+import os
 import random
-import traceback
 import string
+import sys
+import traceback
+from collections import OrderedDict
+from generator import NFFG, NFFGToolBox
 
 import CarrierTopoBuilder
-import MappingAlgorithms
-import UnifyExceptionTypes as uet
-
-from collections import OrderedDict
-
-try:
-  from escape.nffg_lib.nffg import NFFG, NFFGToolBox
-except ImportError:
-  import sys, os
-
-  sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                               "../escape/escape/nffg_lib/")))
-  from nffg import NFFG, NFFGToolBox
+from alg1 import MappingAlgorithms
+import alg1.UnifyExceptionTypes as uet
 
 log = logging.getLogger("StressTest")
 log.setLevel(logging.WARN)

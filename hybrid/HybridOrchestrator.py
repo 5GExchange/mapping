@@ -47,6 +47,7 @@ from hybrid.WhatToOptimizeStrategy import *
 from hybrid.WhenToOptimizeStrategy import *
 from hybrid.ResourceSharingStrategy import *
 import milp.milp_solution_in_nffg as offline_mapping
+import alg1.MappingAlgorithms as online_mapping
 
 log = logging.getLogger(" Hybrid Orchestrator")
 log.setLevel(logging.DEBUG)

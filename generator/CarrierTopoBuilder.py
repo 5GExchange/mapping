@@ -21,12 +21,6 @@ by Telecom Italia (UNIFY SVN repo)
 Parameter names are also based on the .ppt file.
 
 """
-
-import os
-import sys
-# Needed to run the Algorithm scripts in the parent folder.
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-
 import logging
 import math
 import random
@@ -34,13 +28,7 @@ import string
 
 import networkx as nx
 
-try:
-  from escape.nffg_lib.nffg import NFFG
-except ImportError:
-  import sys, os
-  sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                  "../../nffg_lib/")))
-  from nffg import NFFG
+from generator import NFFG
 
 # Aggregation links (100Gbps) Connecting Distribution nodes to Aggregation Nodes
 aggr_link = {'bandwidth': 1000, 'delay': 0.2}
@@ -441,13 +429,14 @@ def getPicoTopo():
     
   return nffg
 
-def getSNDlib_dfn_gwin(save_to_file = False, gen_sap_names = False, 
-                       abc_nf_type_num = 10):
+def getSNDlib_dfn_gwin(gwin_path = "dfn-gwin.gml", save_to_file=False,
+                       gen_sap_names=False,
+                       abc_nf_type_num=10):
   """
   Topology taken from SNDlib, dfn-gwin.
   """
   random.seed(0)
-  gwin = nx.read_gml("dfn-gwin.gml")
+  gwin = nx.read_gml(gwin_path)
   nffg = NFFG(id="dfn-gwin")
   nf_types = list(string.ascii_uppercase)[:abc_nf_type_num]
   switch = {'cpu': 0, 'mem': 0, 'storage': 0, 'delay': 0.5,
