@@ -1,34 +1,52 @@
-import threading
 import logging
-from WhatToOptimizeStrategy import *
-from WhenToOptimizeStrategy import *
-from ResourceSharingStrategy import *
+import threading
 
-from ResourceSharingStrategy import AbstractResourceSharingStrategy
+# from WhatToOptimizeStrategy import *
+# from WhenToOptimizeStrategy import *
+# from ResourceSharingStrategy import *
+#
+# from ResourceSharingStrategy import AbstractResourceSharingStrategy
+
+# DERACTED import commands
+# try:
+#     from escape.nffg_lib.nffg import NFFG, NFFGToolBox
+# except ImportError:
+#     import sys, os
+#     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
+#                                                  "../nffg_lib/")))
+#     from nffg import NFFG, NFFGToolBox
+#
+# try:
+#     from escape.mapping.alg1 import MappingAlgorithms as online_mapping
+# except ImportError:
+#     import sys, os
+#     nffg_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../alg1/'))
+#     sys.path.append(nffg_dir)
+#     import MappingAlgorithms as online_mapping
+#
+#
+# try:
+#     from escape.mapping.milp import milp_solution_in_nffg as offline_mapping
+# except ImportError:
+#     import sys, os
+#     nffg_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../milp/'))
+#     sys.path.append(nffg_dir)
+#     import milp_solution_in_nffg as offline_mapping
+
 try:
-    from escape.nffg_lib.nffg import NFFG, NFFGToolBox
+  # runs when mapping files are called from ESCAPE
+  from escape.nffg_lib.nffg import NFFG, NFFGToolBox
 except ImportError:
-    import sys, os
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                 "../nffg_lib/")))
-    from nffg import NFFG, NFFGToolBox
+  # runs when mapping repo is cloned individually, and NFFG lib is in a
+  # sibling directory. WARNING: cicular import is not avioded by design.
+  import site
+  site.addsitedir('..')
+  from nffg_lib.nffg import NFFG, NFFGToolBox
 
-try:
-    from escape.mapping.alg1 import MappingAlgorithms as online_mapping
-except ImportError:
-    import sys, os
-    nffg_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../alg1/'))
-    sys.path.append(nffg_dir)
-    import MappingAlgorithms as online_mapping
-
-
-try:
-    from escape.mapping.milp import milp_solution_in_nffg as offline_mapping
-except ImportError:
-    import sys, os
-    nffg_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../milp/'))
-    sys.path.append(nffg_dir)
-    import milp_solution_in_nffg as offline_mapping
+from hybrid.WhatToOptimizeStrategy import *
+from hybrid.WhenToOptimizeStrategy import *
+from hybrid.ResourceSharingStrategy import *
+import milp.milp_solution_in_nffg as offline_mapping
 
 log = logging.getLogger(" Hybrid Orchestrator")
 log.setLevel(logging.DEBUG)

@@ -23,23 +23,20 @@ TODO Adapt text
 __author__ = 'Matthias Rost (mrost@inet.tu-berlin.de)'
 
 import traceback
-
-try:
-  from escape.nffg_lib.nffg import NFFG, NFFGToolBox
-except ImportError:
-  import sys, os
-
-  sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                               "../escape/escape/nffg_lib/")))
-  from nffg import NFFG, NFFGToolBox
-
-# try:
 import gurobipy
 from gurobipy import GRB, LinExpr
-# except ImportError:
-#    print "couldn't load gurobi!"
 
-import UnifyExceptionTypes as uet
+try:
+  # runs when mapping files are called from ESCAPE
+  from escape.nffg_lib.nffg import NFFG, NFFGToolBox
+except ImportError:
+  # runs when mapping repo is cloned individually, and NFFG lib is in a
+  # sibling directory. WARNING: cicular import is not avioded by design.
+  import site
+  site.addsitedir('..')
+  from nffg_lib.nffg import NFFG, NFFGToolBox
+
+import alg1.UnifyExceptionTypes as uet
 
 # object for the algorithm instance
 alg = None

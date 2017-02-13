@@ -9,28 +9,41 @@ import time
 import logging
 import numpy as N
 
-try:
-    from escape.mapping.nffg_lib import NFFG, NFFGToolBox
-except ImportError:
-    import sys, os
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                 "../nffg_lib/")))
-    from nffg import NFFG, NFFGToolBox
-try:
-    from escape.mapping.hybrid import HybridOrchestrator as hybrid_mapping
-except ImportError:
-    import sys, os
-    nffg_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../hybrid/'))
-    sys.path.append(nffg_dir)
-    import HybridOrchestrator as hybrid_mapping
+# try:
+#     from escape.mapping.nffg_lib import NFFG, NFFGToolBox
+# except ImportError:
+#     import sys, os
+#     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
+#                                                  "../../escape/escape/nffg_lib/")))
+#     from nffg import NFFG, NFFGToolBox
+# try:
+#     from escape.mapping.hybrid import HybridOrchestrator as hybrid_mapping
+# except ImportError:
+#     import sys, os
+#     nffg_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../hybrid/'))
+#     sys.path.append(nffg_dir)
+#     import HybridOrchestrator as hybrid_mapping
+#
+# try:
+#     from escape.mapping.alg1 import UnifyExceptionTypes as uet
+# except ImportError:
+#     import sys, os
+#     nffg_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../alg1/'))
+#     sys.path.append(nffg_dir)
+#     import UnifyExceptionTypes as uet
 
 try:
-    from escape.mapping.alg1 import UnifyExceptionTypes as uet
+  # runs when mapping files are called from ESCAPE
+  from escape.nffg_lib.nffg import NFFG, NFFGToolBox
 except ImportError:
-    import sys, os
-    nffg_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../alg1/'))
-    sys.path.append(nffg_dir)
-    import UnifyExceptionTypes as uet
+  # runs when mapping repo is cloned individually, and NFFG lib is in a
+  # sibling directory. WARNING: cicular import is not avioded by design.
+  import site
+  site.addsitedir('..')
+  from nffg_lib.nffg import NFFG, NFFGToolBox
+
+import alg1.UnifyExceptionTypes as uet
+
 
 log = logging.getLogger(" Simulator")
 log.setLevel(logging.DEBUG)
@@ -79,7 +92,7 @@ class MappingSolutionFramework:
         if orchestrator_type == "online":
             self.__orchestrator_adaptor = OnlineOrchestratorAdaptor(self.__network_topology)
         elif orchestrator_type == "hybrid":
-            self.__orchestrator_adaptor = HybridOrchestratorAdaptor(self.__network_topology,"all_reqs","fixedtime","double_hundred")
+            self.__orchestrator_adaptor = HybridOrchestratorAdaptor(self.__network_topology,"all_reqs","allways","double_hundred")
         else:
             # TODO: create exception
             pass

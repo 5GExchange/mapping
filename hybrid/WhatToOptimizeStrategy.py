@@ -1,5 +1,4 @@
 from abc import ABCMeta, abstractmethod
-from nffg import NFFG, NFFGToolBox
 
 class AbstractWhatToOptimizeStrategy:
     __metaclass__ = ABCMeta

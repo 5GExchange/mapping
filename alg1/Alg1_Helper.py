@@ -22,18 +22,14 @@ from itertools import count
 import UnifyExceptionTypes as uet
 
 try:
+  # runs when mapping files are called from ESCAPE
   from escape.nffg_lib.nffg import NFFG, NFFGToolBox
 except ImportError:
-  import sys, os
-
-  nffg_dir = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                          "../../escape/escape/nffg_lib/"))
-  if os.path.exists(nffg_dir):
-    sys.path.append(nffg_dir)
-  else:
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                                 "../nffg_lib/")))
-  from nffg import NFFG, NFFGToolBox
+  # runs when mapping repo is cloned individually, and NFFG lib is in a
+  # sibling directory. WARNING: cicular import is not avioded by design.
+  import site
+  site.addsitedir('..')
+  from nffg_lib.nffg import NFFG, NFFGToolBox
 
 # Basic logger for mapping
 log = logging.getLogger("mapping")
@@ -496,7 +492,7 @@ def mapConsumerSAPPort (req, net):
             raise uet.MappingException("No provider SAP could be found for "
                                        "consumer SAP of VNF %s of service "
                                        "name %s" % (
-                                       nf.id, p.sap),
+                                         nf.id, p.sap),
                                        backtrack_possible=False)
   sap_alias_links = []
   # the SG is prerocessed with the addition of the SAPProviderVNFs.
@@ -555,8 +551,9 @@ def makeAntiAffinitySymmetric (req, net):
           _addBackwardAntiAffinity(req, nf.id, aaff_pair_id, aaff_id)
         else:
           raise uet.BadInputException("Anti-affinity should refer to a VNF "
-                                      "which is in the request graph or mapped already in the "
+                                      "which is in the request graph or "
+                                      "mapped already in the "
                                       "substrate graph",
                                       "VNF %s not found for anti-affiny from %s"
                                       " to %s" % (
-                                      aaff_pair_id, nf.id, aaff_pair_id))
+                                        aaff_pair_id, nf.id, aaff_pair_id))

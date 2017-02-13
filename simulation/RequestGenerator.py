@@ -5,12 +5,22 @@ import string
 import random
 from collections import OrderedDict
 
+# try:
+#     from escape.escape.escape.nffg_lib.nffg import NFFG
+# except ImportError:
+#     import sys, os
+#     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../nffg_lib/')))
+#     from nffg import NFFG
+
 try:
-    from escape.escape.escape.nffg_lib.nffg import NFFG
+  # runs when mapping files are called from ESCAPE
+  from escape.nffg_lib.nffg import NFFG, NFFGToolBox
 except ImportError:
-    import sys, os
-    sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../nffg_lib/')))
-    from nffg import NFFG
+  # runs when mapping repo is cloned individually, and NFFG lib is in a
+  # sibling directory. WARNING: cicular import is not avioded by design.
+  import site
+  site.addsitedir('..')
+  from nffg_lib.nffg import NFFG, NFFGToolBox
 
 class AbstractRequestGenerator:
     __metaclass__ = ABCMeta

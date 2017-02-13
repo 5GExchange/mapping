@@ -16,22 +16,23 @@
 import copy
 import logging
 import time
-
-import Alg1_Helper as helper
 import networkx as nx
-from Alg1_Core import CoreAlgorithm
 
 try:
+  # runs when mapping files are called from ESCAPE
   from escape.nffg_lib.nffg import NFFG, NFFGToolBox
 except ImportError:
-  import sys, os
+  # runs when mapping repo is cloned individually, and NFFG lib is in a
+  # sibling directory. WARNING: cicular import is not avioded by design.
+  import site
+  site.addsitedir('..')
+  from nffg_lib.nffg import NFFG, NFFGToolBox
 
-  sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                               "../escape/escape/nffg_lib/")))
-  from nffg import NFFG, NFFGToolBox
-
-from MIPBaseline import Scenario, ModelCreator, isFeasibleStatus, \
+from milp.MIPBaseline import Scenario, ModelCreator, isFeasibleStatus, \
   convert_req_to_request, convert_nffg_to_substrate
+from alg1.Alg1_Core import CoreAlgorithm
+import alg1.Alg1_Helper as helper
+
 
 log = logging.getLogger("MIP-NFFG-conv")
 logging.basicConfig(format='%(levelname)s:%(name)s:%(message)s')
