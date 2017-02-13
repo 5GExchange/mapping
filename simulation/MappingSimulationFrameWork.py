@@ -85,6 +85,11 @@ class MappingSolutionFramework:
             self.__orchestrator_adaptor = OnlineOrchestratorAdaptor(self.__network_topology)
         elif orchestrator_type == "hybrid":
 
+            log.info(" ---- Hybrid specific configurations -----")
+            log.info(" | What to optimize: " + str(config['what_to_optimize']))
+            log.info(" | When to optimize: " + str(config['when_to_optimize']))
+            log.info(" | Optimize strategy: " + str(config['optimize_strategy']))
+            log.info(" -----------------------------------------")
             self.__orchestrator_adaptor = HybridOrchestratorAdaptor(self.__network_topology,config['what_to_optimize'], config['when_to_optimize'], config['optimize_strategy'])
         else:
             log.error("Invalid 'orchestrator' in the simulation.cfg file!")
@@ -191,6 +196,11 @@ class MappingSolutionFramework:
 if __name__ == "__main__":
 
     log.info(" Start simulation")
+    log.info(" ------ Simulation configurations -------")
+    log.info(" | Topology: " + str(config['topology']))
+    log.info(" | Request type: " + str(config['request_type']))
+    log.info(" | Orchestrator: " + str(config['orchestrator']))
+    log.info(" ----------------------------------------")
     test = MappingSolutionFramework(False, config['topology'], config['request_type'], config['orchestrator'])
 
     try:
