@@ -16,25 +16,21 @@ from functools import partial
 
 try:
   # runs when mapping files are called from ESCAPE
-  print "3423432"
   from escape.nffg_lib.nffg import NFFG, NFFGToolBox
 except ImportError:
   import os, sys
 
   nffg_path = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "../../escape/escape/nffg_lib/"))
-  print nffg_path
   if os.path.isdir(nffg_path):
     # runs when generator is accessed from test framework, it uses ESCAPE's
     # NFFG lib
     sys.path.append(nffg_path)
-    print "fsafas"
     from nffg import NFFG, NFFGToolBox
   else:
     # runs when mapping repo is cloned individually, and NFFG lib is in a
     # sibling directory. WARNING: cicular import is not avioded by design.
     import site
-    print "sadddadsasdasdsad"
     site.addsitedir('..')
     from nffg_lib.nffg import NFFG, NFFGToolBox
 

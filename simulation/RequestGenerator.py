@@ -5,13 +5,6 @@ import string
 import random
 from collections import OrderedDict
 
-# try:
-#     from escape.escape.escape.nffg_lib.nffg import NFFG
-# except ImportError:
-#     import sys, os
-#     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../nffg_lib/')))
-#     from nffg import NFFG
-
 try:
   # runs when mapping files are called from ESCAPE
   from escape.nffg_lib.nffg import NFFG, NFFGToolBox

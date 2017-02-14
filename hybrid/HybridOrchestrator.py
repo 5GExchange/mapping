@@ -1,37 +1,4 @@
-import logging
 import threading
-
-# from WhatToOptimizeStrategy import *
-# from WhenToOptimizeStrategy import *
-# from ResourceSharingStrategy import *
-#
-# from ResourceSharingStrategy import AbstractResourceSharingStrategy
-
-# DERACTED import commands
-# try:
-#     from escape.nffg_lib.nffg import NFFG, NFFGToolBox
-# except ImportError:
-#     import sys, os
-#     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
-#                                                  "../nffg_lib/")))
-#     from nffg import NFFG, NFFGToolBox
-#
-# try:
-#     from escape.mapping.alg1 import MappingAlgorithms as online_mapping
-# except ImportError:
-#     import sys, os
-#     nffg_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../alg1/'))
-#     sys.path.append(nffg_dir)
-#     import MappingAlgorithms as online_mapping
-#
-#
-# try:
-#     from escape.mapping.milp import milp_solution_in_nffg as offline_mapping
-# except ImportError:
-#     import sys, os
-#     nffg_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../milp/'))
-#     sys.path.append(nffg_dir)
-#     import milp_solution_in_nffg as offline_mapping
 
 try:
   # runs when mapping files are called from ESCAPE

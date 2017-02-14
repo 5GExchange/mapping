@@ -1,12 +1,5 @@
 #Embedded file name: /home/dj/escape/mapping/simulation/ResourceGetter.py
 from abc import ABCMeta, abstractmethod
-# try:
-#     from escape.mapping.alg1.misc import CarrierTopoBuilder
-# except ImportError:
-#     import sys, os
-#     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
-#                                                  "../alg1/misc/")))
-#     import CarrierTopoBuilder
 
 try:
   # runs when mapping files are called from ESCAPE

@@ -5,29 +5,6 @@ import logging
 import numpy as N
 from configobj import ConfigObj
 
-# try:
-#     from escape.mapping.nffg_lib import NFFG, NFFGToolBox
-# except ImportError:
-#     import sys, os
-#     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),
-#                                                  "../../escape/escape/nffg_lib/")))
-#     from nffg import NFFG, NFFGToolBox
-# try:
-#     from escape.mapping.hybrid import HybridOrchestrator as hybrid_mapping
-# except ImportError:
-#     import sys, os
-#     nffg_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../hybrid/'))
-#     sys.path.append(nffg_dir)
-#     import HybridOrchestrator as hybrid_mapping
-#
-# try:
-#     from escape.mapping.alg1 import UnifyExceptionTypes as uet
-# except ImportError:
-#     import sys, os
-#     nffg_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../alg1/'))
-#     sys.path.append(nffg_dir)
-#     import UnifyExceptionTypes as uet
-
 try:
   # runs when mapping files are called from ESCAPE
   from escape.nffg_lib.nffg import NFFG, NFFGToolBox
