@@ -129,6 +129,7 @@ class MappingSolutionFramework:
             self.__clean_expired_requests(datetime.datetime.now())
 
         log.info("End mapping thread")
+        self.__orchestrator_adaptor.dump_mapped_nffg()
 
     def __clean_expired_requests(self,time):
 
@@ -194,7 +195,7 @@ if __name__ == "__main__":
     test = MappingSolutionFramework(False, config['topology'], config['request_type'], config['orchestrator'])
 
     try:
-        req_gen_thread = threading.Thread(None,test.create_request,"request_generator_thread",([50]))
+        req_gen_thread = threading.Thread(None,test.create_request,"request_generator_thread",([15]))
         mapping_thread = threading.Thread(None,test.make_mapping,"mapping_thread")
         req_gen_thread.start()
         mapping_thread.start()

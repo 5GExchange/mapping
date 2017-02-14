@@ -1,4 +1,9 @@
 from abc import ABCMeta, abstractmethod
+import logging
+
+log = logging.getLogger(" Orchestrator ")
+log.setLevel(logging.DEBUG)
+logging.basicConfig(format='%(levelname)s:%(message)s')
 
 try:
   # runs when mapping files are called from ESCAPE
@@ -63,7 +68,16 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
                                         return_dist=False, mode=mode)
 
     def dump_mapped_nffg(self):
-        pass
+        dump_nffg = self.__resource_graph.dump()
+        try:
+            f = open('dump_nffg', 'a')
+            f.write("-------------------------------New test-------------------------------")
+            f.write(dump_nffg)
+            f.close()
+        except:
+            log.error("Dump_mapped_nffg file does not exist ")
+
+
 
 class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 

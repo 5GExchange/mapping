@@ -1,0 +1,1375 @@
+{
+  "parameters": {
+    "id": "SmallExampleTopo", 
+    "version": "1.0"
+  }, 
+  "node_saps": [
+    {
+      "id": "sap0", 
+      "name": "sap0", 
+      "ports": [
+        {
+          "id": "dca3642e-f2bc-11e6-a092-00270e09247e"
+        }
+      ]
+    }, 
+    {
+      "id": "sap1", 
+      "name": "sap1", 
+      "ports": [
+        {
+          "id": "dca3643a-f2bc-11e6-a092-00270e09247e"
+        }
+      ]
+    }, 
+    {
+      "id": "sap2", 
+      "name": "sap2", 
+      "ports": [
+        {
+          "id": "dca36446-f2bc-11e6-a092-00270e09247e"
+        }
+      ]
+    }, 
+    {
+      "id": "sap3", 
+      "name": "sap3", 
+      "ports": [
+        {
+          "id": "dca36452-f2bc-11e6-a092-00270e09247e"
+        }
+      ]
+    }
+  ], 
+  "node_infras": [
+    {
+      "id": "infra0", 
+      "name": "infra0", 
+      "ports": [
+        {
+          "id": "dca36429-f2bc-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "dca3644a-f2bc-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "dca3644e-f2bc-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "dca36451-f2bc-11e6-a092-00270e09247e"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "EE", 
+      "supported": [
+        "A", 
+        "B", 
+        "C", 
+        "D", 
+        "E", 
+        "F", 
+        "G", 
+        "H", 
+        "I", 
+        "J"
+      ], 
+      "resources": {
+        "cpu": 400, 
+        "mem": 320000, 
+        "storage": 1500, 
+        "delay": 1.0, 
+        "bandwidth": 10000
+      }
+    }, 
+    {
+      "id": "infra1", 
+      "name": "infra1", 
+      "ports": [
+        {
+          "id": "dca36426-f2bc-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "dca3642a-f2bc-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "dca3642d-f2bc-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "dca36435-f2bc-11e6-a092-00270e09247e"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "EE", 
+      "supported": [
+        "A", 
+        "B", 
+        "C", 
+        "D", 
+        "E", 
+        "F", 
+        "G", 
+        "H", 
+        "I", 
+        "J"
+      ], 
+      "resources": {
+        "cpu": 400, 
+        "mem": 320000, 
+        "storage": 1500, 
+        "delay": 1.0, 
+        "bandwidth": 10000
+      }
+    }, 
+    {
+      "id": "infra2", 
+      "name": "infra2", 
+      "ports": [
+        {
+          "id": "dca36432-f2bc-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "dca36436-f2bc-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "dca36439-f2bc-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "dca36441-f2bc-11e6-a092-00270e09247e"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "EE", 
+      "supported": [
+        "A", 
+        "B", 
+        "C", 
+        "D", 
+        "E", 
+        "F", 
+        "G", 
+        "H", 
+        "I", 
+        "J"
+      ], 
+      "resources": {
+        "cpu": 400, 
+        "mem": 320000, 
+        "storage": 1500, 
+        "delay": 1.0, 
+        "bandwidth": 10000
+      }
+    }, 
+    {
+      "id": "infra3", 
+      "name": "infra3", 
+      "ports": [
+        {
+          "id": "dca3643e-f2bc-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "dca36442-f2bc-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "dca36445-f2bc-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "dca3644d-f2bc-11e6-a092-00270e09247e"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "EE", 
+      "supported": [
+        "A", 
+        "B", 
+        "C", 
+        "D", 
+        "E", 
+        "F", 
+        "G", 
+        "H", 
+        "I", 
+        "J"
+      ], 
+      "resources": {
+        "cpu": 400, 
+        "mem": 320000, 
+        "storage": 1500, 
+        "delay": 1.0, 
+        "bandwidth": 10000
+      }
+    }, 
+    {
+      "id": "sw0", 
+      "name": "sw0", 
+      "ports": [
+        {
+          "id": "dca36425-f2bc-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "dca36431-f2bc-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "dca3643d-f2bc-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "dca36449-f2bc-11e6-a092-00270e09247e"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "SDN-SWITCH", 
+      "resources": {
+        "cpu": 0, 
+        "mem": 0, 
+        "storage": 0, 
+        "delay": 0.5, 
+        "bandwidth": 1000
+      }
+    }
+  ], 
+  "edge_links": [
+    {
+      "id": "dca3642b-f2bc-11e6-a092-00270e09247e", 
+      "src_node": "infra0", 
+      "src_port": "dca36429-f2bc-11e6-a092-00270e09247e", 
+      "dst_node": "infra1", 
+      "dst_port": "dca3642a-f2bc-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "dca36453-f2bc-11e6-a092-00270e09247e", 
+      "src_node": "infra0", 
+      "src_port": "dca36451-f2bc-11e6-a092-00270e09247e", 
+      "dst_node": "sap3", 
+      "dst_port": "dca36452-f2bc-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "dca36450-f2bc-11e6-a092-00270e09247e", 
+      "src_node": "infra0", 
+      "src_port": "dca3644e-f2bc-11e6-a092-00270e09247e", 
+      "dst_node": "infra3", 
+      "dst_port": "dca3644d-f2bc-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "dca3644c-f2bc-11e6-a092-00270e09247e", 
+      "src_node": "infra0", 
+      "src_port": "dca3644a-f2bc-11e6-a092-00270e09247e", 
+      "dst_node": "sw0", 
+      "dst_port": "dca36449-f2bc-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "dca3642c-f2bc-11e6-a092-00270e09247e", 
+      "src_node": "infra1", 
+      "src_port": "dca3642a-f2bc-11e6-a092-00270e09247e", 
+      "dst_node": "infra0", 
+      "dst_port": "dca36429-f2bc-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "dca36428-f2bc-11e6-a092-00270e09247e", 
+      "src_node": "infra1", 
+      "src_port": "dca36426-f2bc-11e6-a092-00270e09247e", 
+      "dst_node": "sw0", 
+      "dst_port": "dca36425-f2bc-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "dca36437-f2bc-11e6-a092-00270e09247e", 
+      "src_node": "infra1", 
+      "src_port": "dca36435-f2bc-11e6-a092-00270e09247e", 
+      "dst_node": "infra2", 
+      "dst_port": "dca36436-f2bc-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "dca3642f-f2bc-11e6-a092-00270e09247e", 
+      "src_node": "infra1", 
+      "src_port": "dca3642d-f2bc-11e6-a092-00270e09247e", 
+      "dst_node": "sap0", 
+      "dst_port": "dca3642e-f2bc-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "dca36434-f2bc-11e6-a092-00270e09247e", 
+      "src_node": "infra2", 
+      "src_port": "dca36432-f2bc-11e6-a092-00270e09247e", 
+      "dst_node": "sw0", 
+      "dst_port": "dca36431-f2bc-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "dca36443-f2bc-11e6-a092-00270e09247e", 
+      "src_node": "infra2", 
+      "src_port": "dca36441-f2bc-11e6-a092-00270e09247e", 
+      "dst_node": "infra3", 
+      "dst_port": "dca36442-f2bc-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "dca3643b-f2bc-11e6-a092-00270e09247e", 
+      "src_node": "infra2", 
+      "src_port": "dca36439-f2bc-11e6-a092-00270e09247e", 
+      "dst_node": "sap1", 
+      "dst_port": "dca3643a-f2bc-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "dca36438-f2bc-11e6-a092-00270e09247e", 
+      "src_node": "infra2", 
+      "src_port": "dca36436-f2bc-11e6-a092-00270e09247e", 
+      "dst_node": "infra1", 
+      "dst_port": "dca36435-f2bc-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "dca3644f-f2bc-11e6-a092-00270e09247e", 
+      "src_node": "infra3", 
+      "src_port": "dca3644d-f2bc-11e6-a092-00270e09247e", 
+      "dst_node": "infra0", 
+      "dst_port": "dca3644e-f2bc-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "dca36444-f2bc-11e6-a092-00270e09247e", 
+      "src_node": "infra3", 
+      "src_port": "dca36442-f2bc-11e6-a092-00270e09247e", 
+      "dst_node": "infra2", 
+      "dst_port": "dca36441-f2bc-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "dca36440-f2bc-11e6-a092-00270e09247e", 
+      "src_node": "infra3", 
+      "src_port": "dca3643e-f2bc-11e6-a092-00270e09247e", 
+      "dst_node": "sw0", 
+      "dst_port": "dca3643d-f2bc-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "dca36447-f2bc-11e6-a092-00270e09247e", 
+      "src_node": "infra3", 
+      "src_port": "dca36445-f2bc-11e6-a092-00270e09247e", 
+      "dst_node": "sap2", 
+      "dst_port": "dca36446-f2bc-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "dca3644b-f2bc-11e6-a092-00270e09247e", 
+      "src_node": "sw0", 
+      "src_port": "dca36449-f2bc-11e6-a092-00270e09247e", 
+      "dst_node": "infra0", 
+      "dst_port": "dca3644a-f2bc-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "dca36427-f2bc-11e6-a092-00270e09247e", 
+      "src_node": "sw0", 
+      "src_port": "dca36425-f2bc-11e6-a092-00270e09247e", 
+      "dst_node": "infra1", 
+      "dst_port": "dca36426-f2bc-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "dca36433-f2bc-11e6-a092-00270e09247e", 
+      "src_node": "sw0", 
+      "src_port": "dca36431-f2bc-11e6-a092-00270e09247e", 
+      "dst_node": "infra2", 
+      "dst_port": "dca36432-f2bc-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "dca3643f-f2bc-11e6-a092-00270e09247e", 
+      "src_node": "sw0", 
+      "src_port": "dca3643d-f2bc-11e6-a092-00270e09247e", 
+      "dst_node": "infra3", 
+      "dst_port": "dca3643e-f2bc-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "dca36430-f2bc-11e6-a092-00270e09247e", 
+      "src_node": "sap0", 
+      "src_port": "dca3642e-f2bc-11e6-a092-00270e09247e", 
+      "dst_node": "infra1", 
+      "dst_port": "dca3642d-f2bc-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "dca3643c-f2bc-11e6-a092-00270e09247e", 
+      "src_node": "sap1", 
+      "src_port": "dca3643a-f2bc-11e6-a092-00270e09247e", 
+      "dst_node": "infra2", 
+      "dst_port": "dca36439-f2bc-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "dca36448-f2bc-11e6-a092-00270e09247e", 
+      "src_node": "sap2", 
+      "src_port": "dca36446-f2bc-11e6-a092-00270e09247e", 
+      "dst_node": "infra3", 
+      "dst_port": "dca36445-f2bc-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "dca36454-f2bc-11e6-a092-00270e09247e", 
+      "src_node": "sap3", 
+      "src_port": "dca36452-f2bc-11e6-a092-00270e09247e", 
+      "dst_node": "infra0", 
+      "dst_port": "dca36451-f2bc-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }
+  ]
+}-------------------------------New test-------------------------------{
+  "parameters": {
+    "id": "SmallExampleTopo", 
+    "version": "1.0"
+  }, 
+  "node_saps": [
+    {
+      "id": "sap0", 
+      "name": "sap0", 
+      "ports": [
+        {
+          "id": "931ae632-f2bd-11e6-a092-00270e09247e"
+        }
+      ]
+    }, 
+    {
+      "id": "sap1", 
+      "name": "sap1", 
+      "ports": [
+        {
+          "id": "931ae63e-f2bd-11e6-a092-00270e09247e"
+        }
+      ]
+    }, 
+    {
+      "id": "sap2", 
+      "name": "sap2", 
+      "ports": [
+        {
+          "id": "931ae64a-f2bd-11e6-a092-00270e09247e"
+        }
+      ]
+    }, 
+    {
+      "id": "sap3", 
+      "name": "sap3", 
+      "ports": [
+        {
+          "id": "931ae656-f2bd-11e6-a092-00270e09247e"
+        }
+      ]
+    }
+  ], 
+  "node_infras": [
+    {
+      "id": "infra0", 
+      "name": "infra0", 
+      "ports": [
+        {
+          "id": "931ae62d-f2bd-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "931ae64e-f2bd-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "931ae652-f2bd-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "931ae655-f2bd-11e6-a092-00270e09247e"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "EE", 
+      "supported": [
+        "A", 
+        "B", 
+        "C", 
+        "D", 
+        "E", 
+        "F", 
+        "G", 
+        "H", 
+        "I", 
+        "J"
+      ], 
+      "resources": {
+        "cpu": 400, 
+        "mem": 320000, 
+        "storage": 1500, 
+        "delay": 1.0, 
+        "bandwidth": 10000
+      }
+    }, 
+    {
+      "id": "infra1", 
+      "name": "infra1", 
+      "ports": [
+        {
+          "id": "931ae62a-f2bd-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "931ae62e-f2bd-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "931ae631-f2bd-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "931ae639-f2bd-11e6-a092-00270e09247e"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "EE", 
+      "supported": [
+        "A", 
+        "B", 
+        "C", 
+        "D", 
+        "E", 
+        "F", 
+        "G", 
+        "H", 
+        "I", 
+        "J"
+      ], 
+      "resources": {
+        "cpu": 400, 
+        "mem": 320000, 
+        "storage": 1500, 
+        "delay": 1.0, 
+        "bandwidth": 10000
+      }
+    }, 
+    {
+      "id": "infra2", 
+      "name": "infra2", 
+      "ports": [
+        {
+          "id": "931ae636-f2bd-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "931ae63a-f2bd-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "931ae63d-f2bd-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "931ae645-f2bd-11e6-a092-00270e09247e"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "EE", 
+      "supported": [
+        "A", 
+        "B", 
+        "C", 
+        "D", 
+        "E", 
+        "F", 
+        "G", 
+        "H", 
+        "I", 
+        "J"
+      ], 
+      "resources": {
+        "cpu": 400, 
+        "mem": 320000, 
+        "storage": 1500, 
+        "delay": 1.0, 
+        "bandwidth": 10000
+      }
+    }, 
+    {
+      "id": "infra3", 
+      "name": "infra3", 
+      "ports": [
+        {
+          "id": "931ae642-f2bd-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "931ae646-f2bd-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "931ae649-f2bd-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "931ae651-f2bd-11e6-a092-00270e09247e"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "EE", 
+      "supported": [
+        "A", 
+        "B", 
+        "C", 
+        "D", 
+        "E", 
+        "F", 
+        "G", 
+        "H", 
+        "I", 
+        "J"
+      ], 
+      "resources": {
+        "cpu": 400, 
+        "mem": 320000, 
+        "storage": 1500, 
+        "delay": 1.0, 
+        "bandwidth": 10000
+      }
+    }, 
+    {
+      "id": "sw0", 
+      "name": "sw0", 
+      "ports": [
+        {
+          "id": "931ae629-f2bd-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "931ae635-f2bd-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "931ae641-f2bd-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "931ae64d-f2bd-11e6-a092-00270e09247e"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "SDN-SWITCH", 
+      "resources": {
+        "cpu": 0, 
+        "mem": 0, 
+        "storage": 0, 
+        "delay": 0.5, 
+        "bandwidth": 1000
+      }
+    }
+  ], 
+  "edge_links": [
+    {
+      "id": "931ae62f-f2bd-11e6-a092-00270e09247e", 
+      "src_node": "infra0", 
+      "src_port": "931ae62d-f2bd-11e6-a092-00270e09247e", 
+      "dst_node": "infra1", 
+      "dst_port": "931ae62e-f2bd-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "931ae657-f2bd-11e6-a092-00270e09247e", 
+      "src_node": "infra0", 
+      "src_port": "931ae655-f2bd-11e6-a092-00270e09247e", 
+      "dst_node": "sap3", 
+      "dst_port": "931ae656-f2bd-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "931ae654-f2bd-11e6-a092-00270e09247e", 
+      "src_node": "infra0", 
+      "src_port": "931ae652-f2bd-11e6-a092-00270e09247e", 
+      "dst_node": "infra3", 
+      "dst_port": "931ae651-f2bd-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "931ae650-f2bd-11e6-a092-00270e09247e", 
+      "src_node": "infra0", 
+      "src_port": "931ae64e-f2bd-11e6-a092-00270e09247e", 
+      "dst_node": "sw0", 
+      "dst_port": "931ae64d-f2bd-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "931ae630-f2bd-11e6-a092-00270e09247e", 
+      "src_node": "infra1", 
+      "src_port": "931ae62e-f2bd-11e6-a092-00270e09247e", 
+      "dst_node": "infra0", 
+      "dst_port": "931ae62d-f2bd-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "931ae62c-f2bd-11e6-a092-00270e09247e", 
+      "src_node": "infra1", 
+      "src_port": "931ae62a-f2bd-11e6-a092-00270e09247e", 
+      "dst_node": "sw0", 
+      "dst_port": "931ae629-f2bd-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "931ae63b-f2bd-11e6-a092-00270e09247e", 
+      "src_node": "infra1", 
+      "src_port": "931ae639-f2bd-11e6-a092-00270e09247e", 
+      "dst_node": "infra2", 
+      "dst_port": "931ae63a-f2bd-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "931ae633-f2bd-11e6-a092-00270e09247e", 
+      "src_node": "infra1", 
+      "src_port": "931ae631-f2bd-11e6-a092-00270e09247e", 
+      "dst_node": "sap0", 
+      "dst_port": "931ae632-f2bd-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "931ae638-f2bd-11e6-a092-00270e09247e", 
+      "src_node": "infra2", 
+      "src_port": "931ae636-f2bd-11e6-a092-00270e09247e", 
+      "dst_node": "sw0", 
+      "dst_port": "931ae635-f2bd-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "931ae647-f2bd-11e6-a092-00270e09247e", 
+      "src_node": "infra2", 
+      "src_port": "931ae645-f2bd-11e6-a092-00270e09247e", 
+      "dst_node": "infra3", 
+      "dst_port": "931ae646-f2bd-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "931ae63f-f2bd-11e6-a092-00270e09247e", 
+      "src_node": "infra2", 
+      "src_port": "931ae63d-f2bd-11e6-a092-00270e09247e", 
+      "dst_node": "sap1", 
+      "dst_port": "931ae63e-f2bd-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "931ae63c-f2bd-11e6-a092-00270e09247e", 
+      "src_node": "infra2", 
+      "src_port": "931ae63a-f2bd-11e6-a092-00270e09247e", 
+      "dst_node": "infra1", 
+      "dst_port": "931ae639-f2bd-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "931ae653-f2bd-11e6-a092-00270e09247e", 
+      "src_node": "infra3", 
+      "src_port": "931ae651-f2bd-11e6-a092-00270e09247e", 
+      "dst_node": "infra0", 
+      "dst_port": "931ae652-f2bd-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "931ae648-f2bd-11e6-a092-00270e09247e", 
+      "src_node": "infra3", 
+      "src_port": "931ae646-f2bd-11e6-a092-00270e09247e", 
+      "dst_node": "infra2", 
+      "dst_port": "931ae645-f2bd-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "931ae644-f2bd-11e6-a092-00270e09247e", 
+      "src_node": "infra3", 
+      "src_port": "931ae642-f2bd-11e6-a092-00270e09247e", 
+      "dst_node": "sw0", 
+      "dst_port": "931ae641-f2bd-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "931ae64b-f2bd-11e6-a092-00270e09247e", 
+      "src_node": "infra3", 
+      "src_port": "931ae649-f2bd-11e6-a092-00270e09247e", 
+      "dst_node": "sap2", 
+      "dst_port": "931ae64a-f2bd-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "931ae64f-f2bd-11e6-a092-00270e09247e", 
+      "src_node": "sw0", 
+      "src_port": "931ae64d-f2bd-11e6-a092-00270e09247e", 
+      "dst_node": "infra0", 
+      "dst_port": "931ae64e-f2bd-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "931ae62b-f2bd-11e6-a092-00270e09247e", 
+      "src_node": "sw0", 
+      "src_port": "931ae629-f2bd-11e6-a092-00270e09247e", 
+      "dst_node": "infra1", 
+      "dst_port": "931ae62a-f2bd-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "931ae637-f2bd-11e6-a092-00270e09247e", 
+      "src_node": "sw0", 
+      "src_port": "931ae635-f2bd-11e6-a092-00270e09247e", 
+      "dst_node": "infra2", 
+      "dst_port": "931ae636-f2bd-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "931ae643-f2bd-11e6-a092-00270e09247e", 
+      "src_node": "sw0", 
+      "src_port": "931ae641-f2bd-11e6-a092-00270e09247e", 
+      "dst_node": "infra3", 
+      "dst_port": "931ae642-f2bd-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "931ae634-f2bd-11e6-a092-00270e09247e", 
+      "src_node": "sap0", 
+      "src_port": "931ae632-f2bd-11e6-a092-00270e09247e", 
+      "dst_node": "infra1", 
+      "dst_port": "931ae631-f2bd-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "931ae640-f2bd-11e6-a092-00270e09247e", 
+      "src_node": "sap1", 
+      "src_port": "931ae63e-f2bd-11e6-a092-00270e09247e", 
+      "dst_node": "infra2", 
+      "dst_port": "931ae63d-f2bd-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "931ae64c-f2bd-11e6-a092-00270e09247e", 
+      "src_node": "sap2", 
+      "src_port": "931ae64a-f2bd-11e6-a092-00270e09247e", 
+      "dst_node": "infra3", 
+      "dst_port": "931ae649-f2bd-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "931ae658-f2bd-11e6-a092-00270e09247e", 
+      "src_node": "sap3", 
+      "src_port": "931ae656-f2bd-11e6-a092-00270e09247e", 
+      "dst_node": "infra0", 
+      "dst_port": "931ae655-f2bd-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }
+  ]
+}-------------------------------New test-------------------------------{
+  "parameters": {
+    "id": "SmallExampleTopo", 
+    "version": "1.0"
+  }, 
+  "node_saps": [
+    {
+      "id": "sap0", 
+      "name": "sap0", 
+      "ports": [
+        {
+          "id": "d3d25524-f2be-11e6-a092-00270e09247e"
+        }
+      ]
+    }, 
+    {
+      "id": "sap1", 
+      "name": "sap1", 
+      "ports": [
+        {
+          "id": "d3d25530-f2be-11e6-a092-00270e09247e"
+        }
+      ]
+    }, 
+    {
+      "id": "sap2", 
+      "name": "sap2", 
+      "ports": [
+        {
+          "id": "d3d2553c-f2be-11e6-a092-00270e09247e"
+        }
+      ]
+    }, 
+    {
+      "id": "sap3", 
+      "name": "sap3", 
+      "ports": [
+        {
+          "id": "d3d25548-f2be-11e6-a092-00270e09247e"
+        }
+      ]
+    }
+  ], 
+  "node_infras": [
+    {
+      "id": "infra0", 
+      "name": "infra0", 
+      "ports": [
+        {
+          "id": "d3d2551f-f2be-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "d3d25540-f2be-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "d3d25544-f2be-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "d3d25547-f2be-11e6-a092-00270e09247e"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "EE", 
+      "supported": [
+        "A", 
+        "B", 
+        "C", 
+        "D", 
+        "E", 
+        "F", 
+        "G", 
+        "H", 
+        "I", 
+        "J"
+      ], 
+      "resources": {
+        "cpu": 400, 
+        "mem": 320000, 
+        "storage": 1500, 
+        "delay": 1.0, 
+        "bandwidth": 10000
+      }
+    }, 
+    {
+      "id": "infra1", 
+      "name": "infra1", 
+      "ports": [
+        {
+          "id": "d3d2551c-f2be-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "d3d25520-f2be-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "d3d25523-f2be-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "d3d2552b-f2be-11e6-a092-00270e09247e"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "EE", 
+      "supported": [
+        "A", 
+        "B", 
+        "C", 
+        "D", 
+        "E", 
+        "F", 
+        "G", 
+        "H", 
+        "I", 
+        "J"
+      ], 
+      "resources": {
+        "cpu": 400, 
+        "mem": 320000, 
+        "storage": 1500, 
+        "delay": 1.0, 
+        "bandwidth": 10000
+      }
+    }, 
+    {
+      "id": "infra2", 
+      "name": "infra2", 
+      "ports": [
+        {
+          "id": "d3d25528-f2be-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "d3d2552c-f2be-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "d3d2552f-f2be-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "d3d25537-f2be-11e6-a092-00270e09247e"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "EE", 
+      "supported": [
+        "A", 
+        "B", 
+        "C", 
+        "D", 
+        "E", 
+        "F", 
+        "G", 
+        "H", 
+        "I", 
+        "J"
+      ], 
+      "resources": {
+        "cpu": 400, 
+        "mem": 320000, 
+        "storage": 1500, 
+        "delay": 1.0, 
+        "bandwidth": 10000
+      }
+    }, 
+    {
+      "id": "infra3", 
+      "name": "infra3", 
+      "ports": [
+        {
+          "id": "d3d25534-f2be-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "d3d25538-f2be-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "d3d2553b-f2be-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "d3d25543-f2be-11e6-a092-00270e09247e"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "EE", 
+      "supported": [
+        "A", 
+        "B", 
+        "C", 
+        "D", 
+        "E", 
+        "F", 
+        "G", 
+        "H", 
+        "I", 
+        "J"
+      ], 
+      "resources": {
+        "cpu": 400, 
+        "mem": 320000, 
+        "storage": 1500, 
+        "delay": 1.0, 
+        "bandwidth": 10000
+      }
+    }, 
+    {
+      "id": "sw0", 
+      "name": "sw0", 
+      "ports": [
+        {
+          "id": "d3d2551b-f2be-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "d3d25527-f2be-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "d3d25533-f2be-11e6-a092-00270e09247e"
+        }, 
+        {
+          "id": "d3d2553f-f2be-11e6-a092-00270e09247e"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "SDN-SWITCH", 
+      "resources": {
+        "cpu": 0, 
+        "mem": 0, 
+        "storage": 0, 
+        "delay": 0.5, 
+        "bandwidth": 1000
+      }
+    }
+  ], 
+  "edge_links": [
+    {
+      "id": "d3d25521-f2be-11e6-a092-00270e09247e", 
+      "src_node": "infra0", 
+      "src_port": "d3d2551f-f2be-11e6-a092-00270e09247e", 
+      "dst_node": "infra1", 
+      "dst_port": "d3d25520-f2be-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "d3d25549-f2be-11e6-a092-00270e09247e", 
+      "src_node": "infra0", 
+      "src_port": "d3d25547-f2be-11e6-a092-00270e09247e", 
+      "dst_node": "sap3", 
+      "dst_port": "d3d25548-f2be-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "d3d25546-f2be-11e6-a092-00270e09247e", 
+      "src_node": "infra0", 
+      "src_port": "d3d25544-f2be-11e6-a092-00270e09247e", 
+      "dst_node": "infra3", 
+      "dst_port": "d3d25543-f2be-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "d3d25542-f2be-11e6-a092-00270e09247e", 
+      "src_node": "infra0", 
+      "src_port": "d3d25540-f2be-11e6-a092-00270e09247e", 
+      "dst_node": "sw0", 
+      "dst_port": "d3d2553f-f2be-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "d3d25522-f2be-11e6-a092-00270e09247e", 
+      "src_node": "infra1", 
+      "src_port": "d3d25520-f2be-11e6-a092-00270e09247e", 
+      "dst_node": "infra0", 
+      "dst_port": "d3d2551f-f2be-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "d3d2551e-f2be-11e6-a092-00270e09247e", 
+      "src_node": "infra1", 
+      "src_port": "d3d2551c-f2be-11e6-a092-00270e09247e", 
+      "dst_node": "sw0", 
+      "dst_port": "d3d2551b-f2be-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "d3d2552d-f2be-11e6-a092-00270e09247e", 
+      "src_node": "infra1", 
+      "src_port": "d3d2552b-f2be-11e6-a092-00270e09247e", 
+      "dst_node": "infra2", 
+      "dst_port": "d3d2552c-f2be-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "d3d25525-f2be-11e6-a092-00270e09247e", 
+      "src_node": "infra1", 
+      "src_port": "d3d25523-f2be-11e6-a092-00270e09247e", 
+      "dst_node": "sap0", 
+      "dst_port": "d3d25524-f2be-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "d3d2552a-f2be-11e6-a092-00270e09247e", 
+      "src_node": "infra2", 
+      "src_port": "d3d25528-f2be-11e6-a092-00270e09247e", 
+      "dst_node": "sw0", 
+      "dst_port": "d3d25527-f2be-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "d3d25539-f2be-11e6-a092-00270e09247e", 
+      "src_node": "infra2", 
+      "src_port": "d3d25537-f2be-11e6-a092-00270e09247e", 
+      "dst_node": "infra3", 
+      "dst_port": "d3d25538-f2be-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "d3d25531-f2be-11e6-a092-00270e09247e", 
+      "src_node": "infra2", 
+      "src_port": "d3d2552f-f2be-11e6-a092-00270e09247e", 
+      "dst_node": "sap1", 
+      "dst_port": "d3d25530-f2be-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "d3d2552e-f2be-11e6-a092-00270e09247e", 
+      "src_node": "infra2", 
+      "src_port": "d3d2552c-f2be-11e6-a092-00270e09247e", 
+      "dst_node": "infra1", 
+      "dst_port": "d3d2552b-f2be-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "d3d25545-f2be-11e6-a092-00270e09247e", 
+      "src_node": "infra3", 
+      "src_port": "d3d25543-f2be-11e6-a092-00270e09247e", 
+      "dst_node": "infra0", 
+      "dst_port": "d3d25544-f2be-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "d3d2553a-f2be-11e6-a092-00270e09247e", 
+      "src_node": "infra3", 
+      "src_port": "d3d25538-f2be-11e6-a092-00270e09247e", 
+      "dst_node": "infra2", 
+      "dst_port": "d3d25537-f2be-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "d3d25536-f2be-11e6-a092-00270e09247e", 
+      "src_node": "infra3", 
+      "src_port": "d3d25534-f2be-11e6-a092-00270e09247e", 
+      "dst_node": "sw0", 
+      "dst_port": "d3d25533-f2be-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "d3d2553d-f2be-11e6-a092-00270e09247e", 
+      "src_node": "infra3", 
+      "src_port": "d3d2553b-f2be-11e6-a092-00270e09247e", 
+      "dst_node": "sap2", 
+      "dst_port": "d3d2553c-f2be-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "d3d25541-f2be-11e6-a092-00270e09247e", 
+      "src_node": "sw0", 
+      "src_port": "d3d2553f-f2be-11e6-a092-00270e09247e", 
+      "dst_node": "infra0", 
+      "dst_port": "d3d25540-f2be-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "d3d2551d-f2be-11e6-a092-00270e09247e", 
+      "src_node": "sw0", 
+      "src_port": "d3d2551b-f2be-11e6-a092-00270e09247e", 
+      "dst_node": "infra1", 
+      "dst_port": "d3d2551c-f2be-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "d3d25529-f2be-11e6-a092-00270e09247e", 
+      "src_node": "sw0", 
+      "src_port": "d3d25527-f2be-11e6-a092-00270e09247e", 
+      "dst_node": "infra2", 
+      "dst_port": "d3d25528-f2be-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "d3d25535-f2be-11e6-a092-00270e09247e", 
+      "src_node": "sw0", 
+      "src_port": "d3d25533-f2be-11e6-a092-00270e09247e", 
+      "dst_node": "infra3", 
+      "dst_port": "d3d25534-f2be-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "d3d25526-f2be-11e6-a092-00270e09247e", 
+      "src_node": "sap0", 
+      "src_port": "d3d25524-f2be-11e6-a092-00270e09247e", 
+      "dst_node": "infra1", 
+      "dst_port": "d3d25523-f2be-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "d3d25532-f2be-11e6-a092-00270e09247e", 
+      "src_node": "sap1", 
+      "src_port": "d3d25530-f2be-11e6-a092-00270e09247e", 
+      "dst_node": "infra2", 
+      "dst_port": "d3d2552f-f2be-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "d3d2553e-f2be-11e6-a092-00270e09247e", 
+      "src_node": "sap2", 
+      "src_port": "d3d2553c-f2be-11e6-a092-00270e09247e", 
+      "dst_node": "infra3", 
+      "dst_port": "d3d2553b-f2be-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "d3d2554a-f2be-11e6-a092-00270e09247e", 
+      "src_node": "sap3", 
+      "src_port": "d3d25548-f2be-11e6-a092-00270e09247e", 
+      "dst_node": "infra0", 
+      "dst_port": "d3d25547-f2be-11e6-a092-00270e09247e", 
+      "delay": 0.5, 
+      "bandwidth": 1000, 
+      "backward": true
+    }
+  ]
+}
