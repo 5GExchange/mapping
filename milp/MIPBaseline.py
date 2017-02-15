@@ -101,14 +101,14 @@ class Graph(object):
     if not head in self.in_neighbors:
       self.in_neighbors[head] = []
 
-    self.edge_id_to_edge[id] = (tail, tail_port, head_port, head)
+    self.edge_id_to_edge[id] = (tail, tail_port, head_port, head, id)
 
-    self.out_neighbors[tail].append((tail, tail_port, head_port, head))
-    self.in_neighbors[head].append((tail, tail_port, head_port, head))
-    self.edges.add((tail, tail_port, head_port, head))
-    self.edge[(tail, tail_port, head_port, head)] = {}
+    self.out_neighbors[tail].append((tail, tail_port, head_port, head, id))
+    self.in_neighbors[head].append((tail, tail_port, head_port, head, id))
+    self.edges.add((tail, tail_port, head_port, head, id))
+    self.edge[(tail, tail_port, head_port, head, id)] = {}
     for key, value in kwargs.items():
-      self.edge[(tail, tail_port, head_port, head)][key] = value
+      self.edge[(tail, tail_port, head_port, head, id)][key] = value
       # self.edge[(tail,head)] = {}
       # self.edge[(tail,head)][key] = value
 
@@ -645,12 +645,12 @@ def construct_name (name, req_id=None, vnode=None, snode=None, vedge=None,
 
 
 def shorten_edge_representation_if_necessary (edge):
-  etail, etail_p, ehead_p, ehead = edge
+  etail, etail_p, ehead_p, ehead, linkid = edge
   if isinstance(etail_p, basestring) and len(etail_p) > 20:
     etail_p = etail_p[0:7] + "-...-" + etail_p[-7:]
   if isinstance(ehead_p, basestring) and len(ehead_p) > 20:
     ehead_p = ehead_p[0:7] + "-...-" + ehead_p[-7:]
-  return (etail, etail_p, ehead_p, ehead)
+  return (etail, etail_p, ehead_p, ehead, linkid)
 
 
 class ModelCreator(object):
@@ -893,7 +893,7 @@ class ModelCreator(object):
             [(+1.0, self.var_edge_mapping[req][vedge][sedge]) for sedge in
              self.substrate.out_neighbors[snode]])
 
-          vtail, _, _, vhead = vedge
+          vtail, _, _, vhead, vlinkid = vedge
 
           if snode in self.allowed_nodes_copy[req][vtail]:
             expr.addTerms(-1.0, self.var_node_mapping[req][vtail][snode])
@@ -990,10 +990,10 @@ class ModelCreator(object):
                        for sedge in self.substrate.in_neighbors[snode]
                        ] +
                      [
-                       (req.edge[(vtail, vtail_p, vhead_p, vhead)]['bandwidth'],
+                       (req.edge[(vtail, vtail_p, vhead_p, vhead, vlinkid)]['bandwidth'],
                         self.var_node_mapping[req][vtail][snode])
                        for req in self.requests
-                       for (vtail, vtail_p, vhead_p, vhead) in req.edges
+                       for (vtail, vtail_p, vhead_p, vhead, vlinkid) in req.edges
                        if snode in self.allowed_nodes_copy[req][vtail]
                        ]
                      )
@@ -1038,15 +1038,15 @@ class ModelCreator(object):
            tuple_path), delay_bound in req.get_path_requirements().iteritems():
         expr = LinExpr()
         for vedge in tuple_path:
-          vtail, vtail_p, vhead_p, vhead = vedge
+          vtail, vtail_p, vhead_p, vhead, vlinkid = vedge
 
           sub_expr = LinExpr([
                                (self.substrate.edge[
-                                  (stail, stail_p, shead_p, shead)]['delay']
+                                  (stail, stail_p, shead_p, shead, slinkid)]['delay']
                                 + self.substrate.node[shead]['delay'],
                                 self.var_edge_mapping[req][vedge][
-                                  (stail, stail_p, shead_p, shead)])
-                               for (stail, stail_p, shead_p, shead) in
+                                  (stail, stail_p, shead_p, shead, slinkid)])
+                               for (stail, stail_p, shead_p, shead, slinkid) in
                                self.substrate.edges
                                ] +
                              [
@@ -1151,7 +1151,7 @@ class ModelCreator(object):
 
           parent = {}
 
-          vstart, vstart_p, vend_p, vend = vedge
+          vstart, vstart_p, vend_p, vend, vlinkid = vedge
 
           start_node = mapping.vnode_to_snode[vstart]
           end_node = mapping.vnode_to_snode[vend]
@@ -1170,10 +1170,10 @@ class ModelCreator(object):
               if current_node == end_node:
                 break
               for (stail, stail_p, shead_p,
-                   shead) in self.substrate.get_out_neighbors(current_node):
+                   shead, slinkid) in self.substrate.get_out_neighbors(current_node):
                 if not shead in parent and self.var_edge_mapping[req][vedge][
-                  (stail, stail_p, shead_p, shead)].X > 0.5:
-                  parent[shead] = (stail, stail_p, shead_p, shead)
+                  (stail, stail_p, shead_p, shead, slinkid)].X > 0.5:
+                  parent[shead] = (stail, stail_p, shead_p, shead, slinkid)
                   queue.append(shead)
 
             # perform backtracking
@@ -1183,7 +1183,7 @@ class ModelCreator(object):
             substrate_edge_path = []
             current_node = end_node
             while True:
-              pred, _, _, _ = parent[current_node]
+              pred, _, _, _, _ = parent[current_node]
               substrate_edge_path.append(parent[current_node])
               current_node = pred
               if current_node == start_node:
@@ -1196,7 +1196,7 @@ class ModelCreator(object):
             edge_counter = 0
             for sedge in self.substrate.edges:
               if self.var_edge_mapping[req][vedge][
-                (stail, stail_p, shead_p, shead)].X > 0.5:
+                (stail, stail_p, shead_p, shead, slinkid)].X > 0.5:
                 edge_counter += 1
 
             print edge_counter, len(substrate_edge_path)
@@ -1286,10 +1286,10 @@ class Mapping(object):
           "Substrate edge {} does not belong to the substrate {}".format(sedge,
                                                                          self.substrate.id))
 
-    vtail, vtail_p, vhead_p, vhead = vedge
+    vtail, vtail_p, vhead_p, vhead, vlinkid = vedge
 
     last_snode = None
-    for index, (stail, stail_p, shead_p, shead) in enumerate(
+    for index, (stail, stail_p, shead_p, shead, slinkid) in enumerate(
        substrate_edge_path):
       if index == 0:
         if vtail not in self.vnode_to_snode:
@@ -1335,7 +1335,7 @@ class Mapping(object):
       # set mapping of substrate nodes to vedges
       for index, sedge in enumerate(substrate_edge_path):
 
-        stail, stail_p, shead_p, shead = sedge
+        stail, stail_p, shead_p, shead, slinkid = sedge
 
         if index == 0:
           if not stail in self.snode_to_incident_vedges:
@@ -1681,7 +1681,7 @@ class ScenarioSolution(object):
             cumulative_delay += delay_of_vedge
 
           for vedge in vedge_path:
-            vtail, vtail_p, vhead_p, vhead = vedge
+            vtail, vtail_p, vhead_p, vhead, vlinkid = vedge
             for index, (stail, stail_p, shead_p, shead) in enumerate(
                mapping.vedge_to_spath[vedge]):
               if index == 0:
@@ -1691,7 +1691,7 @@ class ScenarioSolution(object):
                         "embedding {}".format(
                     delay_of_tail,
                     stail,
-                    (vtail, vtail_p, vhead_p, vhead))
+                    (vtail, vtail_p, vhead_p, vhead, vlinkid))
                 cumulative_delay += delay_of_tail
 
               delay_of_head = self.substrate.node[shead]['delay']
@@ -1700,7 +1700,7 @@ class ScenarioSolution(object):
                       "embedding {}".format(
                   delay_of_head,
                   shead,
-                  (vtail, vtail_p, vhead_p, vhead))
+                  (vtail, vtail_p, vhead_p, vhead, vlinkid))
               cumulative_delay += delay_of_head
 
           if cumulative_delay > delay:

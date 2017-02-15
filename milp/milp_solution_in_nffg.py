@@ -65,22 +65,6 @@ def get_MIP_solution (reqnffgs, netnffg, migration_handler):
     return solution.mapping_of_request.values()[0]
 
 
-def get_edge_id (g, srcid, srcpid, dstpid, dstid):
-  """
-  Retrieves the edge ID from NFFG of an arbitrary link between two ports.
-  (There should only be one link.)
-  """
-  """Retrieve objects.
-  src = nffg.network.node[src]
-  dst = nffg.network.node[dst]
-  srcp = src.ports[srcpid]
-  dstp = dst.ports[dstpid]
-  """
-  for i, j, k, d in g.edges_iter(data=True, keys=True):
-    if i == srcid and j == dstid and d.src.id == srcpid and d.dst.id == dstpid:
-      return k
-
-
 def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
                                   mode=NFFG.MODE_REMAP, migration_handler=None):
   """
@@ -180,14 +164,13 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
     for trans_sghop in trans_link_mapping:
       vnf1 = trans_sghop[0]
       vnf2 = trans_sghop[3]
-      reqlid = get_edge_id(alg.req, vnf1, trans_sghop[1],
-                           trans_sghop[2], vnf2)
+      reqlid = trans_sghop[4]
       mapped_path = []
       path_link_ids = []
       for trans_link in trans_link_mapping[trans_sghop]:
         n1 = trans_link[0]
         n2 = trans_link[3]
-        lid = get_edge_id(alg.net, n1, trans_link[1], trans_link[2], n2)
+        lid = trans_link[4]
         mapped_path.append(n1)
         path_link_ids.append(lid)
       if len(trans_link_mapping[trans_sghop]) == 0:
