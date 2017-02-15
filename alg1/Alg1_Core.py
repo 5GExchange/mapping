@@ -34,7 +34,8 @@ class CoreAlgorithm(object):
   def __init__ (self, net0, req0, chains0, mode, cache_shortest_path,
                 overall_highest_delay,
                 bw_factor=1, res_factor=1, lat_factor=1, shortest_paths=None,
-                dry_init=False, propagate_e2e_reqs=True):
+                dry_init=False, propagate_e2e_reqs=True,
+                keep_e2e_reqs_in_output=False):
     self.log = helper.log.getChild(self.__class__.__name__)
     self.log.setLevel(helper.log.getEffectiveLevel())
 
@@ -57,6 +58,12 @@ class CoreAlgorithm(object):
     # intensive step, could be used to change the mapping structure and
     # construct an output NFFG based on a custom mapping structure
     self.dry_init = dry_init
+    if keep_e2e_reqs_in_output and propagate_e2e_reqs:
+      raise uet.BadInputException(
+        "Cannot propagate and keep E2E requirements in the output NFFG",
+        "Both 'keep_e2e_reqs_in_output' and 'propagate_e2e_reqs' are set to "
+        "True!")
+    self.keep_e2e_reqs_in_output = keep_e2e_reqs_in_output
     self.propagate_e2e_reqs = propagate_e2e_reqs
 
     self._preproc(net0, req0, chains0, shortest_paths, overall_highest_delay)
@@ -310,7 +317,7 @@ class CoreAlgorithm(object):
             if self.net.node[
               host_of_aff_pair].infra_type == infra.TYPE_BISBIS and \
                self.net.node[host_of_aff_pair].mapping_features.get(
-                  'antiaffinity', False):
+                 'antiaffinity', False):
               # it there are multiple Infras, where this can be delegated, the 
               # last visited is chosen. It could be done more sophisticatedly, 
               # now it is just a random selection among the feasible ones.
@@ -1272,6 +1279,15 @@ class CoreAlgorithm(object):
     if self.propagate_e2e_reqs:
       # Add EdgeReqs to propagate E2E latency reqs.
       self._divideEndToEndRequirements(nffg)
+
+    if self.keep_e2e_reqs_in_output:
+      # Add the exact same E2E requirements to the output. Maybe needed if a
+      # reoptimization is possible, in this case the requirements must be
+      # preserved!
+      for _, _, req in self.req.edges_iter(data=True):
+        if req.type == NFFG.TYPE_LINK_REQUIREMENT:
+          # All SAPs are already checked in the substrate graph
+          nffg.add_req(req.src, req.dst, req=req)
 
     return nffg
 

@@ -16,6 +16,7 @@
 import copy
 import logging
 import time
+
 import networkx as nx
 
 try:
@@ -25,6 +26,7 @@ except ImportError:
   # runs when mapping repo is cloned individually, and NFFG lib is in a
   # sibling directory. WARNING: cicular import is not avioded by design.
   import site
+
   site.addsitedir('..')
   from nffg_lib.nffg import NFFG, NFFGToolBox
 
@@ -32,7 +34,6 @@ from milp.MIPBaseline import Scenario, ModelCreator, isFeasibleStatus, \
   convert_req_to_request, convert_nffg_to_substrate
 from alg1.Alg1_Core import CoreAlgorithm
 import alg1.Alg1_Helper as helper
-
 
 log = logging.getLogger("MIP-NFFG-conv")
 logging.basicConfig(format='%(levelname)s:%(name)s:%(message)s')
@@ -147,7 +148,7 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
   # fill the mapping struct with the one found by MIP
   alg = CoreAlgorithm(net, request, chainlist, mode, False,
                       overall_highest_delay, dry_init=True,
-                      propagate_e2e_reqs=False)
+                      propagate_e2e_reqs=False, keep_e2e_reqs_in_output=True)
 
   # move 'availres' and 'availbandwidth' values of the network to maxres, 
   # because the MIP solution takes them as available resource.
@@ -227,38 +228,63 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
   :param migration_handler_kwargs:
   :return:
   """
+  migration_handler = None
   if optimize_already_mapped_nfs:
-    # We only have to deal with migration in this case.
-    if migration_handler_name is not None and type(migration_handler_name) is str:
+    # This is a full reoptimization, add VNFs and everything from resource to
+    # request for reoptimization!
+    req_nf_ids = [nf.id for nf in request.nfs]
+    for vnf in resource.nfs:
+      if vnf.id not in req_nf_ids:
+        request.add_nf(vnf)
+
+    NFFGToolBox.recreate_all_sghops(resource)
+    print "RECREATED SGHOP: \n", filter(lambda x: x[3].type == 'SG', resource.network.edges(data=True, keys=True))
+
+    for sg in resource.sg_hops:
+      if sg.dst.node.type == 'SAP' and sg.dst.node.id not in request.network:
+        request.add_sap(sap_obj=sg.dst.node)
+      if sg.src.node.type == 'SAP' and sg.src.node.id not in request.network:
+        request.add_sap(sap_obj=sg.src.node)
+      request.add_sglink(sg.src, sg.dst, hop=sg)
+
+    print "RECREATED SGHOP: \n", filter(lambda x: x[3].type == 'SG',
+                                        request.network.edges(data=True,
+                                                               keys=True))
+
+    # reqs in the substrate (requirements satisfied by earlier mapping) needs
+    #  to be respected by the reoptimization, and mogration can only be done
+    # if it is not violated!
+    for req in resource.reqs:
+      # all possible SAPs are added already!
+      request.add_req(req.src, req.dst, req=req)
+
+    # We have to deal with migration in this case only.
+    if migration_handler_name is not None and type(
+       migration_handler_name) is str:
       migration_cls = eval("migration_costs." + migration_handler_name)
 
       # This resource NFFG needs to include all VNFs, which may play any role in
       # migration or mapping. Migration need to know about all of them for
       # setting zero cost for not yet mapped VNFs
-      nffg_with_all_nfs = resource
-      tmp_vnfs_added = []
-      mapped_nf_ids = [nf.id for nf in resource.nfs]
-      for vnf in request.nfs:
-        if vnf.id not in mapped_nf_ids:
-          nffg_with_all_nfs.add_nf(nf=vnf)
-          tmp_vnfs_added.append(vnf)
-
-      migration_handler = migration_cls(nffg_with_all_nfs,
-                                        migration_handler_kwargs)
-
-      for vnf in tmp_vnfs_added:
-        resource.del_node(vnf)
-    else:
-      migration_handler = None
-    #TODO: add VNFs everything from resource to request for reoptimization!
+      migration_handler = migration_cls(request, migration_handler_kwargs)
   else:
-    #TODO: what here?
+    # No migration can happen! We just map the given request and resource
+    # with MILP.
     pass
   return convert_mip_solution_to_nffg([request], resource,
                                       migration_handler=migration_handler)
 
 
 if __name__ == '__main__':
-  convert_mip_solution_to_nffg(['../../examples/escape-mn-req.nffg'],
-                               '../../examples/escape-mn-topo-duplicatedlinks.nffg',
-                               file_inputs=True)
+  req, net = None, None
+  with open('../alg1/nffgs/escape-mn-req-extra.nffg') as f:
+    req = NFFG.parse(f.read())
+  with open('../alg1/nffgs/escape-mn-double-mapped.nffg', "r") as f:
+    net = NFFG.parse(f.read())
+
+  print "Simple MILP: \n", MAP(req, net, optimize_already_mapped_nfs=False)
+  print "Optimize everything MILP: \n", MAP(req, net,
+                                            optimize_already_mapped_nfs=True)
+  print "Optimize everything with migration cost MILP", \
+    MAP(req, net, optimize_already_mapped_nfs=True,
+        migration_handler_name="ConstantMigrationCost", const_cost = 5.0)

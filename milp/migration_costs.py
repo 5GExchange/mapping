@@ -84,6 +84,7 @@ class ConstantMigrationCost(AbstractMigrationCostHandler):
         if v not in self.initial_nffg.running_nfs(i):
           self.migration_cost[i][v] = self.const_cost
 
+    print "Calculated Constant Migration Cost: \n", self.migration_cost
     # the total possible cost is when all VNFs are moved.
     for _ in self.initial_nffg.vnfs:
       self.maximal_cost += self.const_cost
