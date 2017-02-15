@@ -29,7 +29,7 @@ class AbstractMigrationCostHandler(object):
     self.migration_cost = {}
     for i in self.initial_nffg.infras:
       self.migration_cost[i] = {}
-      for v in self.initial_nffg.vnfs:
+      for v in self.initial_nffg.nfs:
         # meaning migrating VNF v to Infra node i.
         self.migration_cost[i][v] = 0.0
 
@@ -80,13 +80,13 @@ class ConstantMigrationCost(AbstractMigrationCostHandler):
 
   def _create_migration_costs (self):
     for i in self.initial_nffg.infras:
-      for v in self.initial_nffg.vnfs:
+      for v in self.initial_nffg.nfs:
         if v not in self.initial_nffg.running_nfs(i):
           self.migration_cost[i][v] = self.const_cost
 
     print "Calculated Constant Migration Cost: \n", self.migration_cost
     # the total possible cost is when all VNFs are moved.
-    for _ in self.initial_nffg.vnfs:
+    for _ in self.initial_nffg.nfs:
       self.maximal_cost += self.const_cost
 
   def get_maximal_cost(self):

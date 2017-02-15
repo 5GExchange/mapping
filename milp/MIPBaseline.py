@@ -1101,15 +1101,14 @@ class ModelCreator(object):
     max_migr_cost = self.migration_cost_handler.get_maximal_cost()
     migr_costs = self.migration_cost_handler.objective_migration_component()
     # there should be only one request
-    req = next(self.requests)
-    try:
-      next(self.requests)
+    req = self.requests[0]
+    if len(self.requests) > 1:
       raise Exception("There are more than one requests given to MILP!")
-    except StopIteration:
-      pass
+
+    # TODO: it shouldn't iterate on SAPS!!!
     cost = LinExpr(
       [(migr_costs[snode][vnode], self.var_node_mapping[req][vnode][snode]) for
-       snode in self.allowed_nodes_copy for vnode in req.nodes])
+       snode in self.substrate.nodes for vnode in req.nodes])
 
     max_edge_cost = 0.0
     for sedge in self.substrate.edges:

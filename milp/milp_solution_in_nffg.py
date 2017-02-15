@@ -34,6 +34,8 @@ from milp.MIPBaseline import Scenario, ModelCreator, isFeasibleStatus, \
   convert_req_to_request, convert_nffg_to_substrate
 from alg1.Alg1_Core import CoreAlgorithm
 import alg1.Alg1_Helper as helper
+# This is used by eval("migration_costs." + migration_handler_name)
+import migration_costs
 
 log = logging.getLogger("MIP-NFFG-conv")
 logging.basicConfig(format='%(levelname)s:%(name)s:%(message)s')
@@ -109,12 +111,6 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
       "deepcopies takes too much time), although the MILP formulation can "
       "handle multiple request NFFGs and embed only a part of them")
     request = NFFGToolBox.merge_nffgs(request, r)
-
-  # TEST to make heuristic and MILP even in number of large object deepcopies
-  # This would also be required for correct behaviour (Maybe the mapping
-  # shouldn't change the input NFFG)
-  request = copy.deepcopy(request)
-  net = copy.deepcopy(net)
 
   # Rebind EdgeReqs to SAP-to-SAP paths, instead of BiSBiS ports
   # So EdgeReqs should either go between SAP-s, or InfraPorts which are
@@ -202,7 +198,7 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
          **migration_handler_kwargs):
   """
   Starts an offline optimization of the 'resource', which may contain NFs for
-  considering migration if optimize_already_mapped_nfs is set
+  considering migration if optimize_already_mapped_nfs is set.
 
   :param optimize_already_mapped_nfs:
   :param request:
@@ -211,6 +207,12 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
   :param migration_handler_kwargs:
   :return:
   """
+  # Make heuristic and MILP even in number of large object deepcopies
+  # This would also be required for correct behaviour (Maybe the mapping
+  # shouldn't change the input NFFG)
+  request = copy.deepcopy(request)
+  resource = copy.deepcopy(resource)
+
   migration_handler = None
   if optimize_already_mapped_nfs:
     # This is a full reoptimization, add VNFs and everything from resource to
@@ -224,11 +226,12 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
     print "RECREATED SGHOP: \n", filter(lambda x: x[3].type == 'SG', resource.network.edges(data=True, keys=True))
 
     for sg in resource.sg_hops:
-      if sg.dst.node.type == 'SAP' and sg.dst.node.id not in request.network:
-        request.add_sap(sap_obj=sg.dst.node)
-      if sg.src.node.type == 'SAP' and sg.src.node.id not in request.network:
-        request.add_sap(sap_obj=sg.src.node)
-      request.add_sglink(sg.src, sg.dst, hop=sg)
+      if not request.network.has_edge(sg.src.node.id, sg.dst.node.id, key=sg.id):
+        if sg.dst.node.type == 'SAP' and sg.dst.node.id not in request.network:
+          request.add_sap(sap_obj=sg.dst.node)
+        if sg.src.node.type == 'SAP' and sg.src.node.id not in request.network:
+          request.add_sap(sap_obj=sg.src.node)
+        request.add_sglink(sg.src, sg.dst, hop=sg)
 
     print "RECREATED SGHOP: \n", filter(lambda x: x[3].type == 'SG',
                                         request.network.edges(data=True,
@@ -249,7 +252,7 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
       # This resource NFFG needs to include all VNFs, which may play any role in
       # migration or mapping. Migration need to know about all of them for
       # setting zero cost for not yet mapped VNFs
-      migration_handler = migration_cls(request, migration_handler_kwargs)
+      migration_handler = migration_cls(request, **migration_handler_kwargs)
   else:
     # No migration can happen! We just map the given request and resource
     # with MILP.
