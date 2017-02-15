@@ -146,7 +146,8 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
   # HACK: We only want to use the algorithm class to generate an NFFG, we will 
   # fill the mapping struct with the one found by MIP
   alg = CoreAlgorithm(net, request, chainlist, mode, False,
-                      overall_highest_delay, dry_init=True)
+                      overall_highest_delay, dry_init=True,
+                      propagate_e2e_reqs=False)
 
   # move 'availres' and 'availbandwidth' values of the network to maxres, 
   # because the MIP solution takes them as available resource.
