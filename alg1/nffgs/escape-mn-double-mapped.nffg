@@ -130,13 +130,13 @@
           "id": 1,
           "flowrules": [
             {
-              "id": 140014970424080,
+              "id": 1,
               "match": "in_port=1;TAG=SAP1|comp|1",
               "action": "output=EE1|comp|1;UNTAG",
               "bandwidth": 4
             },
             {
-              "id": 139744535359824,
+              "id": 6,
               "match": "in_port=1;TAG=SAP1|comp-additional|6",
               "action": "output=EE1|comp-additional|1;UNTAG",
               "bandwidth": 4
@@ -147,7 +147,7 @@
           "id": "EE1|comp|1",
           "flowrules": [
             {
-              "id": 140014970423312,
+              "id": 1,
               "match": "in_port=EE1|comp|1",
               "action": "output=EE1|decomp|1",
               "bandwidth": 4
@@ -158,7 +158,7 @@
           "id": "EE1|decomp|1",
           "flowrules": [
             {
-              "id": 140014970423760,
+              "id": 3,
               "match": "in_port=EE1|decomp|1",
               "action": "output=1;TAG=decomp|SAP2|3",
               "bandwidth": 4
@@ -169,7 +169,7 @@
           "id": "EE1|comp-additional|1",
           "flowrules": [
             {
-              "id": 139744535359696,
+              "id": 7,
               "match": "in_port=EE1|comp-additional|1",
               "action": "output=EE1|decomp-additional|1",
               "bandwidth": 4
@@ -180,7 +180,7 @@
           "id": "EE1|decomp-additional|1",
           "flowrules": [
             {
-              "id": 139744535318480,
+              "id": 8,
               "match": "in_port=EE1|decomp-additional|1",
               "action": "output=1;TAG=decomp-additional|SAP2|8",
               "bandwidth": 4
@@ -211,13 +211,13 @@
           "id": 1,
           "flowrules": [
             {
-              "id": 140014970424400,
+              "id": 4,
               "match": "in_port=1;TAG=SAP2|fwd|4",
               "action": "output=EE2|fwd|1;UNTAG",
               "bandwidth": 4
             },
             {
-              "id": 139744535360144,
+              "id": 9,
               "match": "in_port=1;TAG=SAP2|fwd|9",
               "action": "output=EE2|fwd|1;UNTAG",
               "bandwidth": 4
@@ -228,13 +228,13 @@
           "id": "EE2|fwd|1",
           "flowrules": [
             {
-              "id": 140014970423248,
+              "id": 5,
               "match": "in_port=EE2|fwd|1",
               "action": "output=1;TAG=fwd|SAP1|5",
               "bandwidth": 4
             },
             {
-              "id": 139744535318416,
+              "id": 10,
               "match": "in_port=EE2|fwd|1",
               "action": "output=1;TAG=fwd|SAP1|10",
               "bandwidth": 4
@@ -265,13 +265,13 @@
           "id": 1,
           "flowrules": [
             {
-              "id": 140014970423504,
+              "id": 3,
               "match": "in_port=1;TAG=decomp|SAP2|3",
               "action": "output=2",
               "bandwidth": 4
             },
             {
-              "id": 139744535359568,
+              "id": 8,
               "match": "in_port=1;TAG=decomp-additional|SAP2|8",
               "action": "output=2",
               "bandwidth": 4
@@ -282,13 +282,13 @@
           "id": 2,
           "flowrules": [
             {
-              "id": 140014970423184,
+              "id": 5,
               "match": "in_port=2;TAG=fwd|SAP1|5",
               "action": "output=3;UNTAG",
               "bandwidth": 4
             },
             {
-              "id": 139744535318352,
+              "id": 10,
               "match": "in_port=2;TAG=fwd|SAP1|10",
               "action": "output=3;UNTAG",
               "bandwidth": 4
@@ -299,13 +299,13 @@
           "id": 3,
           "flowrules": [
             {
-              "id": 140014970423952,
+              "id": 1,
               "match": "in_port=3",
               "action": "output=1;TAG=SAP1|comp|1",
               "bandwidth": 4
             },
             {
-              "id": 139744535359888,
+              "id": 6,
               "match": "in_port=3",
               "action": "output=1;TAG=SAP1|comp-additional|6",
               "bandwidth": 4
@@ -328,13 +328,13 @@
           "id": 1,
           "flowrules": [
             {
-              "id": 140014970423056,
+              "id": 5,
               "match": "in_port=1;TAG=fwd|SAP1|5",
               "action": "output=2",
               "bandwidth": 4
             },
             {
-              "id": 139744535318224,
+              "id": 10,
               "match": "in_port=1;TAG=fwd|SAP1|10",
               "action": "output=2",
               "bandwidth": 4
@@ -345,13 +345,13 @@
           "id": 2,
           "flowrules": [
             {
-              "id": 140014970423632,
+              "id": 3,
               "match": "in_port=2;TAG=decomp|SAP2|3",
               "action": "output=3;UNTAG",
               "bandwidth": 4
             },
             {
-              "id": 139744535359632,
+              "id": 8,
               "match": "in_port=2;TAG=decomp-additional|SAP2|8",
               "action": "output=3;UNTAG",
               "bandwidth": 4
@@ -362,13 +362,13 @@
           "id": 3,
           "flowrules": [
             {
-              "id": 140014970424272,
+              "id": 4,
               "match": "in_port=3",
               "action": "output=1;TAG=SAP2|fwd|4",
               "bandwidth": 4
             },
             {
-              "id": 139744535360016,
+              "id": 9,
               "match": "in_port=3",
               "action": "output=1;TAG=SAP2|fwd|9",
               "bandwidth": 4

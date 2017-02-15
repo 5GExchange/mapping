@@ -15,4 +15,5 @@ old.*
 *.a
 *.out
 *shortest_paths.txt
-nffgs/*
+*gurobi.log
+*lala.lp
