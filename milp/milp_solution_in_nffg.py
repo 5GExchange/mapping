@@ -34,6 +34,7 @@ from milp.MIPBaseline import Scenario, ModelCreator, isFeasibleStatus, \
   convert_req_to_request, convert_nffg_to_substrate
 from alg1.Alg1_Core import CoreAlgorithm
 import alg1.Alg1_Helper as helper
+
 # This is used by eval("migration_costs." + migration_handler_name)
 import migration_costs
 
@@ -106,10 +107,11 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
 
   # batch together all nffgs
   for r in request_seq[1:]:
-    log.critical(
-      "MILP shouldn't receive multiple request NFFGs (correct merge with "
-      "deepcopies takes too much time), although the MILP formulation can "
-      "handle multiple request NFFGs and embed only a part of them")
+    raise Exception("MILP shouldn't receive multiple request NFFGs (correct "
+                    "merge with "
+                    "deepcopies takes too much time), although the MILP "
+                    "formulation can "
+                    "handle multiple request NFFGs and embed only a part of them")
     request = NFFGToolBox.merge_nffgs(request, r)
 
   # Rebind EdgeReqs to SAP-to-SAP paths, instead of BiSBiS ports
@@ -223,19 +225,15 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
         request.add_nf(vnf)
 
     NFFGToolBox.recreate_all_sghops(resource)
-    print "RECREATED SGHOP: \n", filter(lambda x: x[3].type == 'SG', resource.network.edges(data=True, keys=True))
 
     for sg in resource.sg_hops:
-      if not request.network.has_edge(sg.src.node.id, sg.dst.node.id, key=sg.id):
+      if not request.network.has_edge(sg.src.node.id, sg.dst.node.id,
+                                      key=sg.id):
         if sg.dst.node.type == 'SAP' and sg.dst.node.id not in request.network:
           request.add_sap(sap_obj=sg.dst.node)
         if sg.src.node.type == 'SAP' and sg.src.node.id not in request.network:
           request.add_sap(sap_obj=sg.src.node)
         request.add_sglink(sg.src, sg.dst, hop=sg)
-
-    print "RECREATED SGHOP: \n", filter(lambda x: x[3].type == 'SG',
-                                        request.network.edges(data=True,
-                                                               keys=True))
 
     # reqs in the substrate (requirements satisfied by earlier mapping) needs
     #  to be respected by the reoptimization, and mogration can only be done
@@ -252,7 +250,8 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
       # This resource NFFG needs to include all VNFs, which may play any role in
       # migration or mapping. Migration need to know about all of them for
       # setting zero cost for not yet mapped VNFs
-      migration_handler = migration_cls(request, **migration_handler_kwargs)
+      migration_handler = migration_cls(request, resource,
+                                        **migration_handler_kwargs)
   else:
     # No migration can happen! We just map the given request and resource
     # with MILP.
@@ -268,9 +267,9 @@ if __name__ == '__main__':
   with open('../alg1/nffgs/escape-mn-double-mapped.nffg', "r") as f:
     net = NFFG.parse(f.read())
 
-  print "Simple MILP: \n", MAP(req, net, optimize_already_mapped_nfs=False)
-  print "Optimize everything MILP: \n", MAP(req, net,
+  print "\nMIGRATION-TEST: Simple MILP: \n", MAP(req, net, optimize_already_mapped_nfs=False)
+  print "\nMIGRATION-TEST: Optimize everything MILP: \n", MAP(req, net,
                                             optimize_already_mapped_nfs=True)
-  print "Optimize everything with migration cost MILP", \
+  print "\nMIGRATION-TEST: Optimize everything with migration cost MILP", \
     MAP(req, net, optimize_already_mapped_nfs=True,
-        migration_handler_name="ConstantMigrationCost", const_cost = 5.0)
+        migration_handler_name="ConstantMigrationCost", const_cost=5.0)

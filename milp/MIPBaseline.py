@@ -23,6 +23,7 @@ TODO Adapt text
 __author__ = 'Matthias Rost (mrost@inet.tu-berlin.de)'
 
 import traceback
+
 import gurobipy
 from gurobipy import GRB, LinExpr
 
@@ -1098,31 +1099,33 @@ class ModelCreator(object):
 
   def plugin_objective_minimize_edge_and_migration_cost (self):
 
-    max_migr_cost = self.migration_cost_handler.get_maximal_cost()
-    migr_costs = self.migration_cost_handler.objective_migration_component()
     # there should be only one request
     req = self.requests[0]
     if len(self.requests) > 1:
       raise Exception("There are more than one requests given to MILP!")
 
-    # TODO: it shouldn't iterate on SAPS!!!
-    cost = LinExpr(
-      [(migr_costs[snode][vnode], self.var_node_mapping[req][vnode][snode]) for
-       snode in self.substrate.nodes for vnode in req.nodes])
+    migr_costs = self.migration_cost_handler.objective_migration_component()
+    max_migr_cost = self.migration_cost_handler.get_maximal_cost()
+    migr_cost_exp = LinExpr(
+      [(-1.0 * migr_costs[vnode][snode], self.var_node_mapping[req][vnode][snode]) for
+       vnode in migr_costs.iterkeys() for snode in migr_costs[vnode].iterkeys()])
 
     max_edge_cost = 0.0
     for sedge in self.substrate.edges:
       max_edge_cost += self.substrate.edge[sedge]['cost'] * \
                        self.substrate.edge[sedge]['bandwidth']
-    edge_cost = LinExpr(
-      [(self.substrate.edge[sedge]['cost'], self.var_edge_load[sedge])
+    edge_cost_exp = LinExpr(
+      [(-1.0 * self.substrate.edge[sedge]['cost'], self.var_edge_load[sedge])
        for sedge in self.substrate.edges])
 
     # should the expressions be scaled into 0-1 interval? wouldn't edge_cost
     # component be way too small?
-    cost.add(edge_cost)
+    total_profit = migr_cost_exp
+    total_profit.addConstant(max_migr_cost)
+    total_profit.add(edge_cost_exp)
+    total_profit.addConstant(max_edge_cost)
 
-    self.model.setObjective(cost, GRB.MINIMIZE)
+    self.model.setObjective(total_profit, GRB.MAXIMIZE)
 
   def _obtain_solution (self):
     if not isFeasibleStatus(self.status):
