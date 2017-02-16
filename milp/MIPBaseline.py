@@ -1121,9 +1121,11 @@ class ModelCreator(object):
     # should the expressions be scaled into 0-1 interval? wouldn't edge_cost
     # component be way too small?
     total_profit = migr_cost_exp
-    total_profit.addConstant(max_migr_cost)
+    total_profit.add(
+      LinExpr([(max_migr_cost, self.var_embedding_decision[req])]))
     total_profit.add(edge_cost_exp)
-    total_profit.addConstant(max_edge_cost)
+    total_profit.add(
+      LinExpr([(max_edge_cost, self.var_embedding_decision[req])]))
 
     self.model.setObjective(total_profit, GRB.MAXIMIZE)
 
