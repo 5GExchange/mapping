@@ -23,11 +23,15 @@ from OrchestratorAdaptor import *
 
 import alg1.UnifyExceptionTypes as uet
 
-
-log = logging.getLogger(" Simulator")
-log.setLevel(logging.DEBUG)
-logging.basicConfig(format='%(levelname)s:%(message)s')
 config = ConfigObj("simulation.cfg")
+log = logging.getLogger(" Simulator")
+logging.basicConfig(format='%(levelname)s:%(message)s')
+logging.basicConfig(filename='log_file.log', filemode='w', level=logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s |   Simulator   | %(levelname)s | \t%(message)s')
+hdlr = logging.FileHandler('../log_file.log')
+hdlr.setFormatter(formatter)
+log.addHandler(hdlr)
+log.setLevel(logging.DEBUG)
 
 #Global variables
 resource_graph = None
@@ -93,19 +97,19 @@ class MappingSolutionFramework:
             # Adding successfully mapped request to the remaining_request_lifetimes
             service_life_element = {"dead_time": time + life_time, "SG": service_graph, "req_num": sim_iter}
             self.__remaining_request_lifetimes.append(service_life_element)
-            log.info(" Mapping thread: Mapping service_request_" + str(sim_iter) + " successfull")
+            log.info("Mapping thread: Mapping service_request_" + str(sim_iter) + " successfull")
 
         except uet.MappingException:
-            log.info(" Mapping thread: Mapping service_request_" + str(sim_iter) + " unsuccessfull")
+            log.info("Mapping thread: Mapping service_request_" + str(sim_iter) + " unsuccessfull")
 
     def __del_service(self,service,sim_iter):
 
         try:
             self.__orchestrator_adaptor.del_service(service['SG'])
-            log.info(" Mapping thread: Deleting service_request_" + str(sim_iter) + " successfull")
+            log.info("Mapping thread: Deleting service_request_" + str(sim_iter) + " successfull")
             self.__remaining_request_lifetimes.remove(service)
         except uet.MappingException:
-            log.error(" Mapping thread: Deleting service_request_" + str(sim_iter) + " unsuccessfull")
+            log.error("Mapping thread: Deleting service_request_" + str(sim_iter) + " unsuccessfull")
 
     def make_mapping(self):
 
@@ -136,7 +140,7 @@ class MappingSolutionFramework:
         # Delete expired SCs
         for service in self.__remaining_request_lifetimes:
             if service['dead_time'] < time:
-               self.__del_service(service,service['req_num'])
+               self.__del_service(service, service['req_num'])
 
 
     def create_request(self,sim_end):
@@ -167,8 +171,8 @@ class MappingSolutionFramework:
 
             # Not discrete working
             else:
-                log.info(" Request Generator thread: Add request " + str(sim_iter))
-                request_list_element = {"request": service_graph, "life_time": life_time,"req_num":sim_iter}
+                log.info("Request Generator thread: Add request " + str(sim_iter))
+                request_list_element = {"request": service_graph, "life_time": life_time, "req_num":sim_iter}
                 request_list.append(request_list_element)
 
                 scale_radius = 2
@@ -195,8 +199,8 @@ if __name__ == "__main__":
     test = MappingSolutionFramework(False, config['topology'], config['request_type'], config['orchestrator'])
 
     try:
-        req_gen_thread = threading.Thread(None,test.create_request,"request_generator_thread",([15]))
-        mapping_thread = threading.Thread(None,test.make_mapping,"mapping_thread")
+        req_gen_thread = threading.Thread(None, test.create_request, "request_generator_thread", ([15]))
+        mapping_thread = threading.Thread(None, test.make_mapping, "mapping_thread")
         req_gen_thread.start()
         mapping_thread.start()
 

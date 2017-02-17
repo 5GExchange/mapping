@@ -14,6 +14,12 @@ import logging
 log = logging.getLogger(" Resource sharing")
 log.setLevel(logging.DEBUG)
 logging.basicConfig(format='%(levelname)s:%(message)s')
+logging.basicConfig(filename='log_file.log', filemode='w', level=logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s |  Res sharing  | %(levelname)s | \t%(message)s')
+hdlr = logging.FileHandler('../log_file.log')
+hdlr.setFormatter(formatter)
+log.addHandler(hdlr)
+log.setLevel(logging.DEBUG)
 
 class AbstractResourceSharingStrategy:
     __metaclass__ = ABCMeta

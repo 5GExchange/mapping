@@ -19,6 +19,12 @@ import alg1.MappingAlgorithms as online_mapping
 log = logging.getLogger(" Hybrid Orchestrator")
 log.setLevel(logging.DEBUG)
 logging.basicConfig(format='%(levelname)s:%(message)s')
+logging.basicConfig(filename='log_file.log', filemode='w', level=logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s | Hybrid Orches | %(levelname)s | \t%(message)s')
+hdlr = logging.FileHandler('../log_file.log')
+hdlr.setFormatter(formatter)
+log.addHandler(hdlr)
+log.setLevel(logging.DEBUG)
 
 
 class HybridOrchestrator():
@@ -86,15 +92,16 @@ class HybridOrchestrator():
 
             mode = NFFG.MODE_ADD
             #self.__res_offline = offline_mapping.MAP(request, offline_RG)
-            self.__res_offline = offline_mapping.convert_mip_solution_to_nffg([request], offline_RG)
-            """try:
-                #self.__res_offline = offline_mapping.convert_mip_solution_to_nffg(request, offline_RG)
-                self.__res_offline = offline_mapping.MAP(request, offline_RG)
+            #self.__res_offline = offline_mapping.convert_mip_solution_to_nffg([request], offline_RG)
+            try:
                 self.offline_status = False
+                self.__res_offline = offline_mapping.convert_mip_solution_to_nffg([request], offline_RG)
+                #self.__res_offline = offline_mapping.MAP(request, offline_RG)
+
             except:
                 log.error("Mapping thread: Offline mapping: Unable to mapping offline!")
                 self.offline_status = False
-"""
+
     def set_resource_graphs(self):
         # Resource sharing strategy
         if self.__res_sharing_strat == "dynamic":
@@ -104,6 +111,7 @@ class HybridOrchestrator():
             self.__res_online, self.__res_offline = DoubleHundred().\
                 share_resource(self.resource_graph,self.__res_online,self.__res_offline)
         else: log.error("Invalid res_share type!")
+
 
     def merge_online_offline(self, onlineRG, offlineRG):
             mergeRG= onlineRG.copy()

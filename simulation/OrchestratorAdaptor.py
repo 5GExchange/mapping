@@ -4,7 +4,12 @@ import logging
 log = logging.getLogger(" Orchestrator ")
 log.setLevel(logging.DEBUG)
 logging.basicConfig(format='%(levelname)s:%(message)s')
-
+logging.basicConfig(filename='log_file.log', filemode='w', level=logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s | Orchestrator | %(levelname)s |  \t%(message)s')
+hdlr = logging.FileHandler('../log_file.log')
+hdlr.setFormatter(formatter)
+log.addHandler(hdlr)
+log.setLevel(logging.DEBUG)
 try:
   # runs when mapping files are called from ESCAPE
   from escape.nffg_lib.nffg import NFFG, NFFGToolBox
@@ -76,6 +81,7 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
             f.close()
         except:
             log.error("Dump_mapped_nffg file does not exist ")
+
 
 
 

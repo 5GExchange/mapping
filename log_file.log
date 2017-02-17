@@ -1,0 +1,165 @@
+2017-02-17 15:24:48,654 |   Simulator   | INFO | 	 Start simulation
+2017-02-17 15:24:48,655 |   Simulator   | INFO | 	 ------ Simulation configurations -------
+2017-02-17 15:24:48,655 |   Simulator   | INFO | 	 | Topology: pico
+2017-02-17 15:24:48,655 |   Simulator   | INFO | 	 | Request type: simple
+2017-02-17 15:24:48,655 |   Simulator   | INFO | 	 | Orchestrator: hybrid
+2017-02-17 15:24:48,655 |   Simulator   | INFO | 	 ----------------------------------------
+2017-02-17 15:24:48,659 |   Simulator   | INFO | 	 ---- Hybrid specific configurations -----
+2017-02-17 15:24:48,659 |   Simulator   | INFO | 	 | What to optimize: all_reqs
+2017-02-17 15:24:48,659 |   Simulator   | INFO | 	 | When to optimize: allways
+2017-02-17 15:24:48,659 |   Simulator   | INFO | 	 | Optimize strategy: double_hundred
+2017-02-17 15:24:48,659 |   Simulator   | INFO | 	 -----------------------------------------
+2017-02-17 15:24:48,659 |   Simulator   | INFO | 	Start request generator thread
+2017-02-17 15:24:48,660 |   Simulator   | INFO | 	Start mapping thread
+2017-02-17 15:24:48,661 |   Simulator   | INFO | 	 Request Generator thread: Add request 0
+2017-02-17 15:24:48,696 |   Simulator   | INFO | 	 Request Generator thread: Add request 1
+2017-02-17 15:24:48,734 |   Simulator   | INFO | 	 Request Generator thread: Add request 2
+2017-02-17 15:24:48,737 |   Simulator   | INFO | 	 Request Generator thread: Add request 3
+2017-02-17 15:24:48,740 |   Simulator   | INFO | 	 Request Generator thread: Add request 4
+2017-02-17 15:24:48,750 |   Simulator   | INFO | 	 Request Generator thread: Add request 5
+2017-02-17 15:24:48,759 |   Simulator   | INFO | 	 Request Generator thread: Add request 6
+2017-02-17 15:24:48,763 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_0 successfull
+2017-02-17 15:24:48,764 |   Simulator   | INFO | 	 Request Generator thread: Add request 7
+2017-02-17 15:24:48,816 |   Simulator   | INFO | 	 Request Generator thread: Add request 8
+2017-02-17 15:24:48,816 | Hybrid Orches | ERROR | 	Mapping thread: Offline mapping: Unable to mapping offline!
+2017-02-17 15:24:48,818 |   Simulator   | INFO | 	 Request Generator thread: Add request 9
+2017-02-17 15:24:48,823 |   Simulator   | INFO | 	 Request Generator thread: Add request 10
+2017-02-17 15:24:48,857 |   Simulator   | INFO | 	 Request Generator thread: Add request 11
+2017-02-17 15:24:48,857 | Hybrid Orches | INFO | 	No need to optimize!
+2017-02-17 15:24:48,857 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_1 successfull
+2017-02-17 15:24:48,893 |   Simulator   | INFO | 	 Request Generator thread: Add request 12
+2017-02-17 15:24:48,949 |  Res sharing  | WARNING | 	Link merge FAILED 
+2017-02-17 15:24:48,950 |   Simulator   | INFO | 	 Request Generator thread: Add request 13
+2017-02-17 15:24:48,963 |   Simulator   | INFO | 	 Request Generator thread: Add request 14
+2017-02-17 15:24:49,037 |   Simulator   | INFO | 	 Request Generator thread: Add request 15
+2017-02-17 15:24:49,039 |   Simulator   | INFO | 	Stop request generator thread
+2017-02-17 15:24:49,074 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_2 successfull
+2017-02-17 15:24:49,178 | Hybrid Orches | INFO | 	No need to optimize!
+2017-02-17 15:24:49,178 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_3 successfull
+2017-02-17 15:24:49,248 | Hybrid Orches | ERROR | 	Mapping thread: Offline mapping: Unable to mapping offline!
+2017-02-17 15:24:49,259 | Hybrid Orches | INFO | 	No need to optimize!
+2017-02-17 15:24:49,260 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_4 successfull
+2017-02-17 15:24:49,376 |  Res sharing  | WARNING | 	Link merge FAILED 
+2017-02-17 15:24:49,483 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_5 successfull
+2017-02-17 15:24:49,514 | Hybrid Orches | INFO | 	No need to optimize!
+2017-02-17 15:24:49,514 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_6 successfull
+2017-02-17 15:24:49,585 | Hybrid Orches | INFO | 	No need to optimize!
+2017-02-17 15:24:49,585 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_7 successfull
+2017-02-17 15:24:49,691 | Hybrid Orches | INFO | 	No need to optimize!
+2017-02-17 15:24:49,691 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_8 successfull
+2017-02-17 15:24:49,698 | Hybrid Orches | ERROR | 	Mapping thread: Offline mapping: Unable to mapping offline!
+2017-02-17 15:24:49,783 |  Res sharing  | WARNING | 	Link merge FAILED 
+2017-02-17 15:24:49,930 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_9 successfull
+2017-02-17 15:24:49,998 | Hybrid Orches | ERROR | 	Mapping thread: Offline mapping: Unable to mapping offline!
+2017-02-17 15:24:49,998 | Hybrid Orches | INFO | 	No need to optimize!
+2017-02-17 15:24:49,998 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_10 successfull
+2017-02-17 15:24:50,061 |  Res sharing  | WARNING | 	Link merge FAILED 
+2017-02-17 15:24:50,201 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_11 successfull
+2017-02-17 15:24:50,297 | Hybrid Orches | INFO | 	No need to optimize!
+2017-02-17 15:24:50,297 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_12 successfull
+2017-02-17 15:24:50,373 | Hybrid Orches | INFO | 	No need to optimize!
+2017-02-17 15:24:50,373 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_13 successfull
+2017-02-17 15:24:50,466 | Hybrid Orches | INFO | 	No need to optimize!
+2017-02-17 15:24:50,466 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_14 successfull
+2017-02-17 15:24:50,542 | Hybrid Orches | ERROR | 	Mapping thread: Offline mapping: Unable to mapping offline!
+2017-02-17 15:24:50,563 | Hybrid Orches | INFO | 	No need to optimize!
+2017-02-17 15:24:50,563 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_15 successfull
+2017-02-17 15:24:58,858 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_2 successfull
+2017-02-17 15:25:03,374 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_14 successfull
+2017-02-17 15:25:06,514 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_7 successfull
+2017-02-17 15:25:07,586 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_8 successfull
+2017-02-17 15:25:10,074 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_3 successfull
+2017-02-17 15:25:14,298 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_13 successfull
+2017-02-17 15:25:14,931 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_10 successfull
+2017-02-17 15:25:18,999 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_11 successfull
+2017-02-17 15:25:19,692 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_9 successfull
+2017-02-17 15:25:20,484 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_6 successfull
+2017-02-17 15:25:24,764 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_1 successfull
+2017-02-17 15:25:25,466 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_15 successfull
+2017-02-17 15:25:27,662 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_0 successfull
+2017-02-17 15:25:32,179 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_4 successfull
+2017-02-17 15:25:39,202 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_12 successfull
+2017-02-17 15:25:39,260 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_5 successfull
+2017-02-17 15:25:39,260 |   Simulator   | INFO | 	End mapping thread
+2017-02-17 15:26:16,846 |   Simulator   | INFO | 	 Start simulation
+2017-02-17 15:26:16,847 |   Simulator   | INFO | 	 ------ Simulation configurations -------
+2017-02-17 15:26:16,847 |   Simulator   | INFO | 	 | Topology: pico
+2017-02-17 15:26:16,847 |   Simulator   | INFO | 	 | Request type: simple
+2017-02-17 15:26:16,847 |   Simulator   | INFO | 	 | Orchestrator: hybrid
+2017-02-17 15:26:16,847 |   Simulator   | INFO | 	 ----------------------------------------
+2017-02-17 15:26:16,850 |   Simulator   | INFO | 	 ---- Hybrid specific configurations -----
+2017-02-17 15:26:16,851 |   Simulator   | INFO | 	 | What to optimize: all_reqs
+2017-02-17 15:26:16,851 |   Simulator   | INFO | 	 | When to optimize: allways
+2017-02-17 15:26:16,851 |   Simulator   | INFO | 	 | Optimize strategy: double_hundred
+2017-02-17 15:26:16,851 |   Simulator   | INFO | 	 -----------------------------------------
+2017-02-17 15:26:16,851 |   Simulator   | INFO | 	Start request generator thread
+2017-02-17 15:26:16,851 |   Simulator   | INFO | 	Start mapping thread
+2017-02-17 15:26:16,853 |   Simulator   | INFO | 	Request Generator thread: Add request 0
+2017-02-17 15:26:16,890 |   Simulator   | INFO | 	Request Generator thread: Add request 1
+2017-02-17 15:26:16,934 |   Simulator   | INFO | 	Request Generator thread: Add request 2
+2017-02-17 15:26:16,941 |   Simulator   | INFO | 	Request Generator thread: Add request 3
+2017-02-17 15:26:16,943 |   Simulator   | INFO | 	Request Generator thread: Add request 4
+2017-02-17 15:26:16,945 |   Simulator   | INFO | 	Request Generator thread: Add request 5
+2017-02-17 15:26:16,956 |   Simulator   | INFO | 	Request Generator thread: Add request 6
+2017-02-17 15:26:16,965 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_0 successfull
+2017-02-17 15:26:16,967 |   Simulator   | INFO | 	Request Generator thread: Add request 7
+2017-02-17 15:26:17,021 | Hybrid Orches | ERROR | 	Mapping thread: Offline mapping: Unable to mapping offline!
+2017-02-17 15:26:17,024 |   Simulator   | INFO | 	Request Generator thread: Add request 8
+2017-02-17 15:26:17,026 |   Simulator   | INFO | 	Request Generator thread: Add request 9
+2017-02-17 15:26:17,050 |   Simulator   | INFO | 	Request Generator thread: Add request 10
+2017-02-17 15:26:17,065 | Hybrid Orches | INFO | 	No need to optimize!
+2017-02-17 15:26:17,065 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_1 successfull
+2017-02-17 15:26:17,068 |   Simulator   | INFO | 	Request Generator thread: Add request 11
+2017-02-17 15:26:17,161 |  Res sharing  | WARNING | 	Link merge FAILED 
+2017-02-17 15:26:17,173 |   Simulator   | INFO | 	Request Generator thread: Add request 12
+2017-02-17 15:26:17,252 |   Simulator   | INFO | 	Request Generator thread: Add request 13
+2017-02-17 15:26:17,254 |   Simulator   | INFO | 	Request Generator thread: Add request 14
+2017-02-17 15:26:17,296 |   Simulator   | INFO | 	Request Generator thread: Add request 15
+2017-02-17 15:26:17,297 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_2 successfull
+2017-02-17 15:26:17,302 |   Simulator   | INFO | 	Stop request generator thread
+2017-02-17 15:26:17,325 | Hybrid Orches | ERROR | 	Mapping thread: Offline mapping: Unable to mapping offline!
+2017-02-17 15:26:17,438 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_3 successfull
+2017-02-17 15:26:17,521 | Hybrid Orches | ERROR | 	Mapping thread: Offline mapping: Unable to mapping offline!
+2017-02-17 15:26:17,521 | Hybrid Orches | INFO | 	No need to optimize!
+2017-02-17 15:26:17,521 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_4 successfull
+2017-02-17 15:26:17,637 |  Res sharing  | WARNING | 	Link merge FAILED 
+2017-02-17 15:26:17,769 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_5 successfull
+2017-02-17 15:26:17,807 | Hybrid Orches | INFO | 	No need to optimize!
+2017-02-17 15:26:17,807 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_6 successfull
+2017-02-17 15:26:17,876 | Hybrid Orches | INFO | 	No need to optimize!
+2017-02-17 15:26:17,876 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_7 successfull
+2017-02-17 15:26:17,978 | Hybrid Orches | INFO | 	No need to optimize!
+2017-02-17 15:26:17,978 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_8 successfull
+2017-02-17 15:26:17,991 | Hybrid Orches | ERROR | 	Mapping thread: Offline mapping: Unable to mapping offline!
+2017-02-17 15:26:18,044 | Hybrid Orches | INFO | 	No need to optimize!
+2017-02-17 15:26:18,044 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_9 successfull
+2017-02-17 15:26:18,134 |  Res sharing  | WARNING | 	Link merge FAILED 
+2017-02-17 15:26:18,300 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_10 successfull
+2017-02-17 15:26:18,382 | Hybrid Orches | INFO | 	No need to optimize!
+2017-02-17 15:26:18,382 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_11 successfull
+2017-02-17 15:26:18,487 | Hybrid Orches | INFO | 	No need to optimize!
+2017-02-17 15:26:18,487 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_12 successfull
+2017-02-17 15:26:18,589 | Hybrid Orches | INFO | 	No need to optimize!
+2017-02-17 15:26:18,589 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_13 successfull
+2017-02-17 15:26:18,669 | Hybrid Orches | ERROR | 	Mapping thread: Offline mapping: Unable to mapping offline!
+2017-02-17 15:26:18,686 | Hybrid Orches | INFO | 	No need to optimize!
+2017-02-17 15:26:18,687 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_14 successfull
+2017-02-17 15:26:18,800 |  Res sharing  | WARNING | 	Link merge FAILED 
+2017-02-17 15:26:18,979 |   Simulator   | INFO | 	Mapping thread: Mapping service_request_15 successfull
+2017-02-17 15:26:27,069 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_2 successfull
+2017-02-17 15:26:31,589 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_14 successfull
+2017-02-17 15:26:34,807 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_7 successfull
+2017-02-17 15:26:35,877 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_8 successfull
+2017-02-17 15:26:38,297 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_3 successfull
+2017-02-17 15:26:42,488 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_13 successfull
+2017-02-17 15:26:43,045 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_10 successfull
+2017-02-17 15:26:47,300 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_11 successfull
+2017-02-17 15:26:47,978 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_9 successfull
+2017-02-17 15:26:48,770 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_6 successfull
+2017-02-17 15:26:52,968 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_1 successfull
+2017-02-17 15:26:53,687 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_15 successfull
+2017-02-17 15:26:55,853 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_0 successfull
+2017-02-17 15:27:00,438 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_4 successfull
+2017-02-17 15:27:07,382 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_12 successfull
+2017-02-17 15:27:07,522 |   Simulator   | INFO | 	Mapping thread: Deleting service_request_5 successfull
+2017-02-17 15:27:07,522 |   Simulator   | INFO | 	End mapping thread
