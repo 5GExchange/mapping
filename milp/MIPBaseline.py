@@ -642,7 +642,10 @@ def construct_name (name, req_id=None, vnode=None, snode=None, vedge=None,
     name += "_vedge[{}]".format(shorten_edge_representation_if_necessary(vedge))
   if sedge is not None:
     name += "_sedge[{}]".format(shorten_edge_representation_if_necessary(sedge))
-  return name.replace(" ", "")
+  name = name.replace(" ", "")
+  if len(name) > 250:
+    print "ERROR: too long name:%s"%name
+  return name
 
 
 def shorten_edge_representation_if_necessary (edge):
@@ -651,7 +654,7 @@ def shorten_edge_representation_if_necessary (edge):
     etail_p = etail_p[0:7] + "-...-" + etail_p[-7:]
   if isinstance(ehead_p, basestring) and len(ehead_p) > 20:
     ehead_p = ehead_p[0:7] + "-...-" + ehead_p[-7:]
-  return (etail, etail_p, ehead_p, ehead, linkid)
+  return (etail, etail_p, linkid)
 
 
 class ModelCreator(object):
