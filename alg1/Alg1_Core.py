@@ -59,47 +59,44 @@ class CoreAlgorithm(object):
     self.dry_init = dry_init
     self.propagate_e2e_reqs = propagate_e2e_reqs
 
-    if mode != NFFG.MODE_DEL:
-      self._preproc(net0, req0, chains0, shortest_paths, overall_highest_delay)
+    self._preproc(net0, req0, chains0, shortest_paths, overall_highest_delay)
 
-      # must be sorted in alphabetic order of keys: cpu, mem, storage
-      self.resource_priorities = [0.333, 0.333, 0.333]
+    # must be sorted in alphabetic order of keys: cpu, mem, storage
+    self.resource_priorities = [0.333, 0.333, 0.333]
 
-      # which should count more in the objective function
-      self.bw_factor = bw_factor
-      self.res_factor = res_factor
-      self.lat_factor = lat_factor
+    # which should count more in the objective function
+    self.bw_factor = bw_factor
+    self.res_factor = res_factor
+    self.lat_factor = lat_factor
 
-      # The new preference parameters are f(x) == 0 if x<c and f(1) == e,
-      # exponential in between.
-      # The bandwidth parameter refers to the average link utilization
-      # on the paths to the nodes (and also collocated request links).
-      # If  the even the agv is high it is much worse!
-      self.pref_params = dict(cpu=dict(c=0.4, e=2.5), mem=dict(c=0.4, e=2.5),
-                              storage=dict(c=0.4, e=2.5),
-                              bandwidth=dict(c=0.1, e=10.0))
+    # The new preference parameters are f(x) == 0 if x<c and f(1) == e,
+    # exponential in between.
+    # The bandwidth parameter refers to the average link utilization
+    # on the paths to the nodes (and also collocated request links).
+    # If  the even the agv is high it is much worse!
+    self.pref_params = dict(cpu=dict(c=0.4, e=2.5), mem=dict(c=0.4, e=2.5),
+                            storage=dict(c=0.4, e=2.5),
+                            bandwidth=dict(c=0.1, e=10.0))
 
-      # Functions to give the prefence values of a given ratio of resource
-      # utilization. All fucntions should map every number between [0,1] to [
-      # 0,1]
-      # real intervals and should be monotonic!
-      self.pref_funcs = dict(cpu=self._pref_noderes, mem=self._pref_noderes,
-                             storage=self._pref_noderes,
-                             bandwidth=self._pref_bw)
+    # Functions to give the prefence values of a given ratio of resource
+    # utilization. All fucntions should map every number between [0,1] to [0,1]
+    # real intervals and should be monotonic!
+    self.pref_funcs = dict(cpu=self._pref_noderes, mem=self._pref_noderes,
+                           storage=self._pref_noderes, bandwidth=self._pref_bw)
 
-      # we need to store the original preprocessed NFFG too. with remove VNF-s
-      # and not STATIC links
-      self.bare_infrastucture_nffg = self.net
+    # we need to store the original preprocessed NFFG too. with remove VNF-s 
+    # and not STATIC links
+    self.bare_infrastucture_nffg = self.net
 
-      # peak number of VNFs that were mapped to resource at the same time
-      self.peak_mapped_vnf_count = 0
-      self.sap_count = len([i for i in self.req.saps])
+    # peak number of VNFs that were mapped to resource at the same time
+    self.peak_mapped_vnf_count = 0
+    self.sap_count = len([i for i in self.req.saps])
 
-      # The networkx graphs from the NFFG should be enough for the core
-      # unwrap them, to save one indirection after the preprocessor has
-      # finished.
-      self.net = self.net.network
-      self.req = self.req.network
+    # The networkx graphs from the NFFG should be enough for the core
+    # unwrap them, to save one indirection after the preprocessor has
+    # finished.
+    self.net = self.net.network
+    self.req = self.req.network
 
   def _preproc (self, net0, req0, chains0, shortest_paths,
                 overall_highest_delay):
@@ -313,7 +310,7 @@ class CoreAlgorithm(object):
             if self.net.node[
               host_of_aff_pair].infra_type == infra.TYPE_BISBIS and \
                self.net.node[host_of_aff_pair].mapping_features.get(
-                 'antiaffinity', False):
+                  'antiaffinity', False):
               # it there are multiple Infras, where this can be delegated, the 
               # last visited is chosen. It could be done more sophisticatedly, 
               # now it is just a random selection among the feasible ones.
@@ -610,7 +607,7 @@ class CoreAlgorithm(object):
       potential_hosts_sumlat.append((host, self._sumLatencyOnPath(paths[host],
                                                                   linkids[
                                                                     host])))
-    hosts_with_lat_prefvalues = self.manager.calcDelayPrefValues(
+    hosts_with_lat_prefvalues = self.manager.calcDelayPrefValues( \
       potential_hosts_sumlat, prev_vnf_id, vnf_id,
       reqlinkid, cid, subgraph, start)
     self.log.debug("Hosts with lat pref values from VNF %s: \n %s" % (vnf_id,
@@ -1193,9 +1190,6 @@ class CoreAlgorithm(object):
           # We need to use try catch to test inclusion for port ID
           try:
             out_infra_port = nffg.network.node[host].ports[infra_port_id]
-            if len(filter(lambda l: l.type == l.DYNAMIC,
-                          nffg.network[host][vnf].itervalues())) == 0:
-              raise KeyError()
             self.log.debug("Port %s found in Infra %s leading to port %s of NF"
                            " %s." % (infra_port_id, host, d.src.id, vnf))
           except KeyError:
@@ -1228,9 +1222,6 @@ class CoreAlgorithm(object):
           infra_port_id = "|".join((str(host), str(vnf), str(d.dst.id)))
           try:
             in_infra_port = nffg.network.node[host].ports[infra_port_id]
-            if len(filter(lambda l: l.type == l.DYNAMIC,
-                          nffg.network[host][vnf].itervalues())) == 0:
-              raise KeyError()
             self.log.debug("Port %s found in Infra %s leading to port %s of NF"
                            " %s." % (infra_port_id, host, d.dst.id, vnf))
           except KeyError:
@@ -1289,45 +1280,67 @@ class CoreAlgorithm(object):
     Constructs an output NFFG, which can be used by the lower layered NFFG-s 
     for deletion. SG elements are matched exclusively by their ID-s.
     """
-    self.log.debug(
-      "Deleting elements from output NFFG based on delete request...")
+    self.log.debug("Constructing output delete NFFG...")
     nffg = self.net0
+    # we need the original copy not to spoil the struct during deletion.
+    original_nffg = copy.deepcopy(self.net0)
     # there should be only VNFs, SAPs, SGHops in the request graph. And all
     # of them should be in the substrate NFFG, otherwise they were removed.
 
-    # recreate SGHops in case they were not added before giving the substrate
+    # recreate SGHops in case they were not added before giving the substrate 
     # NFFG to the mapping
-    nffg = NFFGToolBox.recreate_all_sghops(nffg)
+    original_nffg = NFFGToolBox.recreate_all_sghops(original_nffg)
+    for vnf, d in self.req.nodes_iter(data=True):
+      # make the union of out and inbound edges.
+      if d.type != 'NF':
+        continue
+      all_connected_sghops = None
+      cnt = [0, 0]
+      for graph, idx in ((original_nffg.network, 0), (self.req, 1)):
+        all_connected_sghops = set([(i, j, k) for i, j, k in \
+                                    graph.out_edges_iter([vnf],
+                                                         keys=True) if
+                                    graph[i][j][k].type == 'SG']) | \
+                               set([(i, j, k) for i, j, k in \
+                                    graph.in_edges_iter([vnf],
+                                                        keys=True) if
+                                    graph[i][j][k].type == 'SG'])
+        # 0th is network, 1st is the request
+        cnt[idx] = len(all_connected_sghops)
+      if cnt[0] > cnt[1]:
+        # it is maybe used by some other request.
+        self.log.debug("Skipping deletion of VNF %s, it has not speficied edges"
+                       " connected in the substrate graph!" % vnf)
+      elif cnt[0] < cnt[1]:
+        # by this time this shouldn't happen, cuz those edges were removed.
+        raise uet.InternalAlgorithmException(
+          "After delete request preprocessing"
+          ", VNF %s has more edges than in the substrate graph! Are "
+          "there any SGHops in the resource graph?" % vnf)
+      else:
+        self.log.debug("Deleting VNF %s and all of its connected SGHops from "
+                       "output NFFG" % vnf)
+        hosting_infra = next(nffg.infra_neighbors(vnf))
+        for dyn_link in nffg.network[vnf][hosting_infra.id].itervalues():
+          hosting_infra.del_port(dyn_link.dst.id)
+        nffg.del_node(vnf)
 
-    for i, j, k, d in self.req0.network.edges_iter(data=True, keys=True):
+    for i, j, k, d in self.req.edges_iter(data=True, keys=True):
       nffg.del_flowrules_of_SGHop(k)
       nffg.del_edge(d.src, d.dst, d.id)
-      self.log.debug("SGHop %s with its flowrules are deleted from output NFFG."
+      self.log.debug("SGHop %s with its flowrules are deleted from output NFFG"
                      % d.id)
       # Maybe the VNF ports should be deleted too?
-
-    # Delete everything which is in the DEL NFFG, will all the collateral
-    # edge deletion that it takes
-    for n, d in self.req0.network.nodes_iter(data=True):
-      self.log.debug(
-        "Deleting node %s and all of its connected edges and their flowrules."
-        % n)
-      for edge_func in (nffg.network.out_edges,
-                        nffg.network.in_edges):
-        for _, _, k in edge_func([n], data=True):
-          nffg.del_flowrules_of_SGHop(k)
-      nffg.del_node(d)
 
     return nffg
 
   def start (self):
-    if self.mode == NFFG.MODE_DEL:
-      return self.constructDelOutputNFFG()
-
     if self.dry_init:
       raise uet.BadInputException(
         "With dry_init set True, mapping execution cannot proceed",
         "Initialization was in dry_init mode!")
+    if self.mode == NFFG.MODE_DEL:
+      return self.constructDelOutputNFFG()
 
     # breaking when there are no more BacktrackLevels forward, meaning the 
     # mapping is full. Or exception is thrown, when mapping can't be finished.
@@ -1430,11 +1443,6 @@ class CoreAlgorithm(object):
     for backtracking purpose. bt_branching_factor determines how many possible 
     host-path pairs should be remembered at most for one VNF.
     """
-    if self.mode == NFFG.MODE_DEL:
-      self.log.warn(
-        "Setting backtrack parameters doesn't have any effect in DEL mapping "
-        "mode.")
-      return
     if bt_branching_factor < 1 or "." in str(bt_branching_factor) or \
           bt_limit < 1 or "." in str(bt_limit):
       raise uet.BadInputException("Branching factor and backtrack limit should "
