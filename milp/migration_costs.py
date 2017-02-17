@@ -67,6 +67,19 @@ class AbstractMigrationCostHandler(object):
     return self.migration_cost
 
 
+class ZeroMigrationCost(AbstractMigrationCostHandler):
+
+  def __init__(self, request, resource):
+    super(ZeroMigrationCost, self).__init__(request, resource)
+    self._create_migration_costs()
+
+  def _create_migration_costs(self):
+    pass
+
+  def get_maximal_cost(self):
+    return self.maximal_cost
+
+
 class ConstantMigrationCost(AbstractMigrationCostHandler):
 
   def __init__ (self, request, resource, const_cost=1.0):
@@ -82,13 +95,14 @@ class ConstantMigrationCost(AbstractMigrationCostHandler):
     self._create_migration_costs()
 
   def _create_migration_costs (self):
-    for vid in self.migration_cost.iterkeys():
-      for iid in self.migration_cost[vid].iterkeys():
-        if vid not in self.resource.running_nfs(iid):
-          self.migration_cost[vid][iid] = self.const_cost
+    # migration cost should stay zero for unmapped NFs
+    for nf in self.resource.nfs:
+      for iid in self.migration_cost[nf.id].iterkeys():
+        if nf not in self.resource.running_nfs(iid):
+          self.migration_cost[nf.id][iid] = self.const_cost
 
     # the total possible cost is when all mapped VNFs are moved.
-    for _ in self.migration_cost.iterkeys():
+    for _ in self.resource.nfs:
       self.maximal_cost += self.const_cost
 
   def get_maximal_cost(self):

@@ -267,9 +267,20 @@ if __name__ == '__main__':
   with open('../alg1/nffgs/escape-mn-double-mapped.nffg', "r") as f:
     net = NFFG.parse(f.read())
 
-  print "\nMIGRATION-TEST: Simple MILP: \n", MAP(req, net, optimize_already_mapped_nfs=False)
-  print "\nMIGRATION-TEST: Optimize everything MILP: \n", MAP(req, net,
-                                            optimize_already_mapped_nfs=True)
-  print "\nMIGRATION-TEST: Optimize everything with migration cost MILP", \
-    MAP(req, net, optimize_already_mapped_nfs=True,
-        migration_handler_name="ConstantMigrationCost", const_cost=5.0)
+  print "\nMIGRATION-TEST: Simple MILP: \n"
+  with open("simple-milp.nffg", "w") as f:
+    f.write(MAP(req, net, optimize_already_mapped_nfs=False).dump())
+
+  print "\nMIGRATION-TEST: Optimize everything MILP: \n"
+  with open("reopt-milp.nffg", "w") as f:
+    f.write(MAP(req, net, optimize_already_mapped_nfs=True).dump())
+
+  print "\nMIGRATION-TEST: Optimize everything with migration cost MILP"
+  with open("reopt-milp-migr.nffg", "w") as f:
+    f.write(MAP(req, net, optimize_already_mapped_nfs=True,
+        migration_handler_name="ConstantMigrationCost", const_cost=24.0).dump())
+
+  print "\nMIGRATION-TEST: Optimize everything with ZERO migration cost MILP"
+  with open("reopt-milp-0migr.nffg", "w") as f:
+    f.write(MAP(req, net, optimize_already_mapped_nfs=True,
+                migration_handler_name="ZeroMigrationCost").dump())
