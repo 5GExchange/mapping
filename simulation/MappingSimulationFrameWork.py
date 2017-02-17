@@ -38,6 +38,23 @@ resource_graph = None
 request_list = list()
 mapping_thread_flag = True
 
+
+def count_mapping_calls(fn):
+    def _counting(*args, **kwargs):
+        _counting.calls += 1
+        return fn(*args, **kwargs)
+
+    _counting.calls = 0
+    return _counting
+
+def count_del_calls(fn):
+    def _counting(*args, **kwargs):
+        _counting.calls += 1
+        return fn(*args, **kwargs)
+
+    _counting.calls = 0
+    return _counting
+
 class MappingSolutionFramework:
 
     __discrete_simulation = None
@@ -90,6 +107,9 @@ class MappingSolutionFramework:
             raise RuntimeError(
                 "Invalid 'orchestrator' in the simulation.cfg file! Please choose one of the followings: test, simple, multi")
 
+
+
+    @count_mapping_calls
     def __mapping(self, service_graph, life_time, orchestrator_adaptor, time, sim_iter):
         # Synchronous MAP call
         try:
@@ -99,15 +119,26 @@ class MappingSolutionFramework:
             self.__remaining_request_lifetimes.append(service_life_element)
             log.info("Mapping thread: Mapping service_request_" + str(sim_iter) + " successfull")
 
+            if not self.__mapping.calls % 5:
+                log.info("Dump NFFG to file after the " + str(self.__mapping.calls) + ". mapping")
+                self.__orchestrator_adaptor.dump_mapped_nffg(self.__mapping.calls, "mapping")
+
+
         except uet.MappingException:
             log.info("Mapping thread: Mapping service_request_" + str(sim_iter) + " unsuccessfull")
 
-    def __del_service(self,service,sim_iter):
+    @count_del_calls
+    def __del_service(self, service, sim_iter):
 
         try:
             self.__orchestrator_adaptor.del_service(service['SG'])
             log.info("Mapping thread: Deleting service_request_" + str(sim_iter) + " successfull")
             self.__remaining_request_lifetimes.remove(service)
+
+            if not self.__del_service.calls % 5:
+                log.info("Dump NFFG to file after the " + str(self.__del_service.calls) + ". deletion")
+                self.__orchestrator_adaptor.dump_mapped_nffg(self.__del_service.calls, "deletion")
+
         except uet.MappingException:
             log.error("Mapping thread: Deleting service_request_" + str(sim_iter) + " unsuccessfull")
 
@@ -122,7 +153,7 @@ class MappingSolutionFramework:
                 request = request_list_element['request']
                 life_time = request_list_element['life_time']
                 req_num = request_list_element['req_num']
-                self.__mapping(request,datetime.timedelta(0,life_time),self.__orchestrator_adaptor,datetime.datetime.now(),req_num)
+                self.__mapping(request, datetime.timedelta(0, life_time), self.__orchestrator_adaptor, datetime.datetime.now(), req_num)
 
                 # Remove expired service graph requests
                 self.__clean_expired_requests(datetime.datetime.now())
@@ -133,7 +164,7 @@ class MappingSolutionFramework:
             self.__clean_expired_requests(datetime.datetime.now())
 
         log.info("End mapping thread")
-        self.__orchestrator_adaptor.dump_mapped_nffg()
+
 
     def __clean_expired_requests(self,time):
 
@@ -157,7 +188,7 @@ class MappingSolutionFramework:
         while sim_running:
 
             #Get request
-            service_graph, life_time  = self.__request_generator.get_request(topology,sim_iter)
+            service_graph, life_time = self.__request_generator.get_request(topology, sim_iter)
 
             #Discrete working
             if self.__discrete_simulation:
@@ -188,6 +219,7 @@ class MappingSolutionFramework:
                 mapping_thread_flag = False
                 log.info("Stop request generator thread")
 
+
 if __name__ == "__main__":
 
     log.info(" Start simulation")
@@ -198,6 +230,7 @@ if __name__ == "__main__":
     log.info(" ----------------------------------------")
     test = MappingSolutionFramework(False, config['topology'], config['request_type'], config['orchestrator'])
 
+
     try:
         req_gen_thread = threading.Thread(None, test.create_request, "request_generator_thread", ([15]))
         mapping_thread = threading.Thread(None, test.make_mapping, "mapping_thread")
@@ -206,6 +239,7 @@ if __name__ == "__main__":
 
     except:
         log.error(" Unable to start threads")
+
 
     #test.simulate("pico","simple","online",300,True)
     req_gen_thread.join()

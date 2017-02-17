@@ -37,7 +37,7 @@ class AbstractOrchestratorAdaptor:
         return
 
     @abstractmethod
-    def dump_mapped_nffg(self):
+    def dump_mapped_nffg(self, calls, type):
         return
 
 class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
@@ -72,11 +72,13 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
                                         shortest_paths=None,
                                         return_dist=False, mode=mode)
 
-    def dump_mapped_nffg(self):
+    def dump_mapped_nffg(self, calls, type):
         dump_nffg = self.__resource_graph.dump()
         try:
             f = open('dump_nffg', 'a')
-            f.write("-------------------------------New test-------------------------------")
+            f.write("\n#######################################################################################\n"
+                "-------------------------------Dump after the " + str(calls) + ". " + type + "-------------------------------\n"
+                    "#######################################################################################\n" )
             f.write(dump_nffg)
             f.close()
         except:
@@ -95,7 +97,7 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
     def MAP(self, request):
 
         mode = NFFG.MODE_ADD
-        self.concrete_hybrid_orchestrator.MAP(request,self.concrete_hybrid_orchestrator)
+        self.concrete_hybrid_orchestrator.MAP(request, self.concrete_hybrid_orchestrator)
 
     def del_service(self, request):
         """
@@ -104,5 +106,5 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
         """
         pass
 
-    def dump_mapped_nffg(self):
+    def dump_mapped_nffg(self, calls, type):
         pass
