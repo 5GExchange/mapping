@@ -1287,9 +1287,6 @@ class CoreAlgorithm(object):
     # there should be only VNFs, SAPs, SGHops in the request graph. And all
     # of them should be in the substrate NFFG, otherwise they were removed.
 
-    # recreate SGHops in case they were not added before giving the substrate 
-    # NFFG to the mapping
-    original_nffg = NFFGToolBox.recreate_all_sghops(original_nffg)
     for vnf, d in self.req.nodes_iter(data=True):
       # make the union of out and inbound edges.
       # IF type == NF and operation == delete:

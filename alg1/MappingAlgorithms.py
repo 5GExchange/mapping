@@ -38,6 +38,7 @@ from Alg1_Helper import NFFG, NFFGToolBox
 # object for the algorithm instance
 alg = None
 
+
 def MAP (request, network, enable_shortest_path_cache=False,
          bw_factor=1, res_factor=1, lat_factor=1,
          shortest_paths=None, return_dist=False, propagate_e2e_reqs=True,
@@ -77,6 +78,10 @@ def MAP (request, network, enable_shortest_path_cache=False,
       sg_hops_retrieved = True
     except StopIteration:
       sg_hops_retrieved = False
+
+  # recreate SGHops in case they were not added before giving the substrate
+  # NFFG to the mapping
+  network = NFFGToolBox.recreate_all_sghops(network)
 
   sap_alias_links = []
   if not mode == NFFG.MODE_DEL:
