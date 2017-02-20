@@ -123,7 +123,7 @@ class HybridOrchestrator():
     def MAP(self, request, vmi):
 
         #Collect the requests
-        self.merge_all_request(self.SUM_req,request)
+        self.merge_all_request(self.SUM_req, request)
 
         if not self.offline_status:
             self.set_resource_graphs()
@@ -131,7 +131,7 @@ class HybridOrchestrator():
 
         #Start online mapping thread
         online_mapping_thread = threading.Thread(None, self.do_online_mapping,
-                                                 "Online mapping thread", (request, self.__res_online))
+                        "Online mapping thread", (request, self.__res_online))
         try:
             online_mapping_thread.start()
         except:

@@ -5,6 +5,7 @@ import logging
 import numpy as N
 from configobj import ConfigObj
 
+
 try:
   # runs when mapping files are called from ESCAPE
   from escape.nffg_lib.nffg import NFFG, NFFGToolBox
@@ -232,7 +233,7 @@ if __name__ == "__main__":
 
 
     try:
-        req_gen_thread = threading.Thread(None, test.create_request, "request_generator_thread", ([15]))
+        req_gen_thread = threading.Thread(None, test.create_request, "request_generator_thread", ([20]))
         mapping_thread = threading.Thread(None, test.make_mapping, "mapping_thread")
         req_gen_thread.start()
         mapping_thread.start()
