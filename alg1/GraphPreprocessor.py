@@ -527,8 +527,10 @@ class GraphPreprocessorClass(object):
                       "the request graph..." % d.id)
         self.req_graph.del_node(d)
 
-    for d in self.req_graph.reqs:
-      if d not in self.net.reqs:
+    for d in self.req_graph.sg_hops:
+      if (
+      d.src.node.id, d.dst.node.id, d.id) not in self.net.network.edges_iter(
+         keys=True):
         self.log.warn("SGHop %s to be deleted couldn't be found in substrate"
                       " network! Skipping..." % d.id)
         self.req_graph.del_edge(d.src, d.dst, d.id)

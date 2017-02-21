@@ -74,6 +74,10 @@ def MAP (request, network, enable_shortest_path_cache=False,
     except StopIteration:
       sg_hops_retrieved = False
 
+  # recreate SGHops in case they were not added before giving the substrate
+  # NFFG to the mapping
+  network = NFFGToolBox.recreate_all_sghops(network)
+
   sap_alias_links = []
   if not mode == NFFG.MODE_DEL:
     helper.makeAntiAffinitySymmetric(request, network)

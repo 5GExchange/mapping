@@ -316,7 +316,7 @@ class CoreAlgorithm(object):
             if self.net.node[
               host_of_aff_pair].infra_type == infra.TYPE_BISBIS and \
                self.net.node[host_of_aff_pair].mapping_features.get(
-                 'antiaffinity', False):
+                  'antiaffinity', False):
               # it there are multiple Infras, where this can be delegated, the 
               # last visited is chosen. It could be done more sophisticatedly, 
               # now it is just a random selection among the feasible ones.
@@ -1302,43 +1302,40 @@ class CoreAlgorithm(object):
     # there should be only VNFs, SAPs, SGHops in the request graph. And all
     # of them should be in the substrate NFFG, otherwise they were removed.
 
-    # recreate SGHops in case they were not added before giving the substrate 
-    # NFFG to the mapping
-    original_nffg = NFFGToolBox.recreate_all_sghops(original_nffg)
     for vnf, d in self.req.nodes_iter(data=True):
       # make the union of out and inbound edges.
-      if d.type != 'NF':
-        continue
-      all_connected_sghops = None
-      cnt = [0, 0]
-      for graph, idx in ((original_nffg.network, 0), (self.req, 1)):
-        all_connected_sghops = set([(i, j, k) for i, j, k in \
-                                    graph.out_edges_iter([vnf],
-                                                         keys=True) if
-                                    graph[i][j][k].type == 'SG']) | \
-                               set([(i, j, k) for i, j, k in \
-                                    graph.in_edges_iter([vnf],
-                                                        keys=True) if
-                                    graph[i][j][k].type == 'SG'])
-        # 0th is network, 1st is the request
-        cnt[idx] = len(all_connected_sghops)
-      if cnt[0] > cnt[1]:
-        # it is maybe used by some other request.
-        self.log.debug("Skipping deletion of VNF %s, it has not speficied edges"
-                       " connected in the substrate graph!" % vnf)
-      elif cnt[0] < cnt[1]:
-        # by this time this shouldn't happen, cuz those edges were removed.
-        raise uet.InternalAlgorithmException(
-          "After delete request preprocessing"
-          ", VNF %s has more edges than in the substrate graph! Are "
-          "there any SGHops in the resource graph?" % vnf)
-      else:
-        self.log.debug("Deleting VNF %s and all of its connected SGHops from "
-                       "output NFFG" % vnf)
-        hosting_infra = next(nffg.infra_neighbors(vnf))
-        for dyn_link in nffg.network[vnf][hosting_infra.id].itervalues():
-          hosting_infra.del_port(dyn_link.dst.id)
-        nffg.del_node(vnf)
+      # IF type == NF and operation == delete:
+      if d.type == 'NF' and d.operation == NFFG.OP_DELETE:
+        self.log.debug("NF with delete operation found in DELETE NFFG: %s."%vnf)
+        cnt = [0, 0]
+        for graph, idx in ((original_nffg.network, 0), (self.req, 1)):
+          all_connected_sghops = set([(i, j, k) for i, j, k in \
+                                      graph.out_edges_iter([vnf],
+                                                           keys=True) if
+                                      graph[i][j][k].type == 'SG']) | \
+                                 set([(i, j, k) for i, j, k in \
+                                      graph.in_edges_iter([vnf],
+                                                          keys=True) if
+                                      graph[i][j][k].type == 'SG'])
+          # 0th is network, 1st is the request
+          cnt[idx] = len(all_connected_sghops)
+        if cnt[0] > cnt[1]:
+          # it is maybe used by some other request.
+          self.log.debug("Skipping deletion of VNF %s, it has not speficied edges"
+                         " connected in the substrate graph!" % vnf)
+        elif cnt[0] < cnt[1]:
+          # by this time this shouldn't happen, cuz those edges were removed.
+          raise uet.InternalAlgorithmException(
+            "After delete request preprocessing"
+            ", VNF %s has more edges than in the substrate graph! Are "
+            "there any SGHops in the resource graph?" % vnf)
+        else:
+          self.log.debug("Deleting VNF %s and all of its connected SGHops from "
+                         "output NFFG" % vnf)
+          hosting_infra = next(nffg.infra_neighbors(vnf))
+          for dyn_link in nffg.network[vnf][hosting_infra.id].itervalues():
+            hosting_infra.del_port(dyn_link.dst.id)
+          nffg.del_node(vnf)
 
     for i, j, k, d in self.req.edges_iter(data=True, keys=True):
       nffg.del_flowrules_of_SGHop(k)
