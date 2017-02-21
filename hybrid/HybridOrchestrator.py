@@ -32,7 +32,7 @@ class HybridOrchestrator():
     __what_to_opt = None
     __when_to_opt = None
     __res_offline = None
-    __res_online = None
+    res_online = None
     __res_sharing_strat = None
     offline_status = False
     resource_graph = None
@@ -77,16 +77,14 @@ class HybridOrchestrator():
     def do_online_mapping(self, request, online_RG):
 
             mode = NFFG.MODE_ADD
-            self.__res_online = online_mapping.MAP(request, online_RG,
-                                                          enable_shortest_path_cache=True,
-                                                          bw_factor=1,
-                                                          res_factor=1,
-                                                          lat_factor=1,
-                                                          shortest_paths=None,
-                                                          return_dist=False,
-                                                          mode=mode,
-                                                          bt_limit=6,
-                                                          bt_branching_factor=3)
+            self.res_online = online_mapping.MAP(request, online_RG,
+                                            enable_shortest_path_cache=True,
+                                            bw_factor=1, res_factor=1,
+                                            lat_factor=1,
+                                            shortest_paths=None,
+                                            return_dist=False, mode=mode,
+                                            bt_limit=6,
+                                            bt_branching_factor=3)
 
     def do_offline_mapping(self, request, offline_RG):
 
@@ -95,23 +93,30 @@ class HybridOrchestrator():
             #self.__res_offline = offline_mapping.convert_mip_solution_to_nffg([request], offline_RG)
             try:
                 self.offline_status = False
-                self.__res_offline = offline_mapping.convert_mip_solution_to_nffg([request], offline_RG)
-                #self.__res_offline = offline_mapping.MAP(request, offline_RG)
+                #self.__res_offline = offline_mapping.convert_mip_solution_to_nffg([request], offline_RG)
+                self.__res_offline = offline_mapping.MAP(request, offline_RG, True, "ConstantMigrationCost")
+                try:
+                    log.info("Merge online and offline")
+                    self.merge_online_offline(self.res_online,
+                                              self.__res_offline)
+                except:
+                    log.warning("Unable to merge online and offline")
 
             except:
-                log.error("Mapping thread: Offline mapping: Unable to mapping offline!")
+                log.error(
+                    "Mapping thread: Offline mapping: Unable to mapping offline!")
                 self.offline_status = False
+
 
     def set_resource_graphs(self):
         # Resource sharing strategy
         if self.__res_sharing_strat == "dynamic":
-            self.__res_online, self.__res_offline = DynamicMaxOnlineToAll().\
+            self.res_online, self.__res_offline = DynamicMaxOnlineToAll().\
                 share_resource(self.resource_graph)
         elif self.__res_sharing_strat == "double_hundred":
-            self.__res_online, self.__res_offline = DoubleHundred().\
-                share_resource(self.resource_graph,self.__res_online,self.__res_offline)
+            self.res_online, self.__res_offline = DoubleHundred().\
+                share_resource(self.resource_graph, self.res_online, self.__res_offline)
         else: log.error("Invalid res_share type!")
-
 
     def merge_online_offline(self, onlineRG, offlineRG):
             mergeRG= onlineRG.copy()
@@ -125,33 +130,32 @@ class HybridOrchestrator():
         #Collect the requests
         self.merge_all_request(self.SUM_req, request)
 
+
         if not self.offline_status:
             self.set_resource_graphs()
 
 
         #Start online mapping thread
         online_mapping_thread = threading.Thread(None, self.do_online_mapping,
-                        "Online mapping thread", (request, self.__res_online))
+                        "Online mapping thread", (request, self.res_online))
         try:
             online_mapping_thread.start()
         except:
             log.error("Failed to start online thread")
 
         # Start offline mapping thread
-
         if self.__when_to_opt.need_to_optimize(self.offline_status, 3):
             #if self.offline_status:
 
             requestToOpt = self.__what_to_opt.reqs_to_optimize(self.SUM_req)
             try:
                 self.offline_mapping_thread = threading.Thread(None, self.do_offline_mapping,
-                                    "Offline mapping thread", (requestToOpt, self.__res_offline))
+                                "Offline mapping thread", (requestToOpt, self.__res_offline))
+                log.info("Start offline optimalization!")
                 self.offline_mapping_thread.start()
                 self.offline_status = True
             except:
                 log.error("Failed to start offline thread")
-
-
 
             online_mapping_thread.join()
 

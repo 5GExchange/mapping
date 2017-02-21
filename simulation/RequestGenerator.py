@@ -134,7 +134,7 @@ class SimpleReqGen(AbstractRequestGenerator):
 
     nf_types = list(string.ascii_uppercase)[:10]
 
-    def get_request(self,resource_graph, test_lvl):
+    def get_request(self, resource_graph, test_lvl):
         all_saps_ending = [s.id for s in resource_graph.saps]
         all_saps_beginning = [s.id for s in resource_graph.saps]
         running_nfs = OrderedDict()
@@ -203,9 +203,10 @@ class SimpleReqGen(AbstractRequestGenerator):
                 return nffg, life_time
 
 class MultiReqGen(AbstractRequestGenerator):
+
     nf_types = list(string.ascii_uppercase)[:10]
 
-    def get_request(self,resource_graph, test_lvl):
+    def get_request(self, resource_graph, test_lvl):
         all_saps_ending = [s.id for s in resource_graph.saps]
         all_saps_beginning = [s.id for s in resource_graph.saps]
         running_nfs = OrderedDict()

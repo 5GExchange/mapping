@@ -120,7 +120,7 @@ class MappingSolutionFramework:
             log.info(" | When to optimize: " + str(config['when_to_optimize']))
             log.info(" | Optimize strategy: " + str(config['optimize_strategy']))
             log.info(" -----------------------------------------")
-            self.__orchestrator_adaptor = HybridOrchestratorAdaptor(self.__network_topology,config['what_to_optimize'], config['when_to_optimize'], config['optimize_strategy'])
+            self.__orchestrator_adaptor = HybridOrchestratorAdaptor(self.__network_topology, config['what_to_optimize'], config['when_to_optimize'], config['optimize_strategy'])
         else:
             log.error("Invalid 'orchestrator' in the simulation.cfg file!")
             raise RuntimeError(
@@ -142,9 +142,9 @@ class MappingSolutionFramework:
                 log.info("Dump NFFG to file after the " + str(self.__mapping.calls) + ". mapping")
                 self.__orchestrator_adaptor.dump_mapped_nffg(self.__mapping.calls, "mapping")
 
-
         except uet.MappingException:
             log.info("Mapping thread: Mapping service_request_" + str(sim_iter) + " unsuccessfull")
+
 
     @count_del_calls
     def __del_service(self, service, sim_iter):
@@ -228,7 +228,7 @@ class MappingSolutionFramework:
                 scale_radius = 2
                 n = 1000
                 exp_time = N.random.exponential(scale_radius, (1, 1))
-                #time.sleep(exp_time)
+                time.sleep(exp_time)
 
             #Increase simulation iteration
             if (sim_iter < sim_end):
@@ -251,7 +251,7 @@ if __name__ == "__main__":
 
 
     try:
-        req_gen_thread = threading.Thread(None, test.create_request, "request_generator_thread", ([20]))
+        req_gen_thread = threading.Thread(None, test.create_request, "request_generator_thread", ([50]))
         mapping_thread = threading.Thread(None, test.make_mapping, "mapping_thread")
         req_gen_thread.start()
         mapping_thread.start()

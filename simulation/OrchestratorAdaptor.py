@@ -58,13 +58,13 @@ class AbstractOrchestratorAdaptor:
 
 class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
-    def __init__(self,resource):
+    def __init__(self, resource):
         self.__resource_graph = resource
 
     def MAP(self, request):
 
         mode = NFFG.MODE_ADD
-        self.__resource_graph, shortest_paths = online_mapping.MAP(request,self.__resource_graph,
+        self.__resource_graph, shortest_paths = online_mapping.MAP(request, self.__resource_graph,
                                                         enable_shortest_path_cache=True,
                                                         bw_factor=1, res_factor=1,
                                                         lat_factor=1,
@@ -125,14 +125,14 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
         if not os.path.exists('test' + str(i) + "_online"):
             os.mkdir('test' + str(i) + "_online")
             path = os.path.abspath('test' + str(i) + "_online")
-            print path
+            #print path
             full_path = os.path.join(path, 'dump_nffg_' + str(calls) + "_" + type +
                                 "_" + str(time.ctime()) + "_online")
             with io.FileIO(full_path, "w") as file:
                 file.write(dump_nffg)
         else:
             path = os.path.abspath('test' + str(i) + "_online")
-            print path
+            #print path
             full_path = os.path.join(path,
                                      'dump_nffg_' + str(calls) + "_" + type +
                                      "_" + str(time.ctime()) + "_online")
@@ -144,8 +144,9 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
     concrete_hybrid_orchestrator = None
 
-    def __init__(self, resource,what_to_opt_strat, when_to_opt_strat, resource_share_strat):
+    def __init__(self, resource, what_to_opt_strat, when_to_opt_strat, resource_share_strat):
         self.concrete_hybrid_orchestrator = hybrid_mapping.HybridOrchestrator(resource, what_to_opt_strat, when_to_opt_strat, resource_share_strat)
+        self.__resource_graph = resource
 
     def MAP(self, request):
 
@@ -153,7 +154,41 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
         self.concrete_hybrid_orchestrator.MAP(request, self.concrete_hybrid_orchestrator)
 
     def del_service(self, request):
-        pass
+
+        #TODO: bw_factor, res_factor es lat_factor bekotese
+        #TODO: fullremap parameter bekotese
+        #TODO: bt_limit bekotese
+        #TODO: bt_br_factor
+
+        mode = NFFG.MODE_DEL
+        self.__resource_graph = online_mapping.MAP(request, self.__resource_graph,
+                                        enable_shortest_path_cache=False,
+                                        bw_factor=1, res_factor=1,
+                                        lat_factor=1,
+                                        shortest_paths=None,
+                                        return_dist=False, mode=mode)
 
     def dump_mapped_nffg(self, calls, type):
-        pass
+
+        dump_nffg = self.concrete_hybrid_orchestrator.res_online.dump()
+
+        #
+        i = 1
+
+
+        if not os.path.exists('test' + str(i) + "_hybrid"):
+            os.mkdir('test' + str(i) + "_hybrid")
+            path = os.path.abspath('test' + str(i) + "_hybrid")
+            #print path
+            full_path = os.path.join(path, 'dump_nffg_' + str(calls) + "_" + type +
+                                "_" + str(time.ctime()) + "_hybrid")
+            with io.FileIO(full_path, "w") as file:
+                file.write(dump_nffg)
+        else:
+            path = os.path.abspath('test' + str(i) + "_hybrid")
+            #print path
+            full_path = os.path.join(path,
+                                     'dump_nffg_' + str(calls) + "_" + type +
+                                     "_" + str(time.ctime()) + "_hybrid")
+            with io.FileIO(full_path, "w") as file:
+                file.write(dump_nffg)
