@@ -13,6 +13,9 @@
 # limitations under the License.
 from abc import ABCMeta, abstractmethod
 import logging
+import os
+import io
+import time
 
 log = logging.getLogger(" Orchestrator ")
 log.setLevel(logging.DEBUG)
@@ -85,9 +88,23 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
                                         shortest_paths=None,
                                         return_dist=False, mode=mode)
 
-    def dump_mapped_nffg(self, calls, type):
+    def dump_mapped_nffg2(self, calls, type):
         dump_nffg = self.__resource_graph.dump()
-        try:
+
+        path = os.path.abspath('.')
+        """"
+        #ez vmiert nem akar mukodni :( igazabol sehova mashova nem enged irni csak a simulation mappaba
+        full_path = os.path.join(path, '/results/dump_nffg_' + str(calls) + "_" + type +
+                                 "_" + str(time.ctime()) + "online")
+        """
+
+        full_path = os.path.join(path, 'dump_nffg_' + str(calls) + "_" + type +
+                                 "_" + str(time.ctime()) + "_online")
+
+        with io.FileIO(full_path, "w") as file:
+            file.write(dump_nffg)
+
+        """try:
             f = open('dump_nffg', 'a')
             f.write("\n#######################################################################################\n"
                 "-------------------------------Dump after the " + str(calls) + ". " + type + "-------------------------------\n"
@@ -96,8 +113,31 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
             f.close()
         except:
             log.error("Dump_mapped_nffg file does not exist ")
+        """
+
+    def dump_mapped_nffg(self, calls, type):
+        dump_nffg = self.__resource_graph.dump()
+
+        #
+        i = 1
 
 
+        if not os.path.exists('test' + str(i) + "_online"):
+            os.mkdir('test' + str(i) + "_online")
+            path = os.path.abspath('test' + str(i) + "_online")
+            print path
+            full_path = os.path.join(path, 'dump_nffg_' + str(calls) + "_" + type +
+                                "_" + str(time.ctime()) + "_online")
+            with io.FileIO(full_path, "w") as file:
+                file.write(dump_nffg)
+        else:
+            path = os.path.abspath('test' + str(i) + "_online")
+            print path
+            full_path = os.path.join(path,
+                                     'dump_nffg_' + str(calls) + "_" + type +
+                                     "_" + str(time.ctime()) + "_online")
+            with io.FileIO(full_path, "w") as file:
+                file.write(dump_nffg)
 
 
 class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
@@ -113,10 +153,6 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
         self.concrete_hybrid_orchestrator.MAP(request, self.concrete_hybrid_orchestrator)
 
     def del_service(self, request):
-        """
-        mode = NFFG.MODE_DEL
-        self.__resource_graph = hybrid_mapping.MAP(request)
-        """
         pass
 
     def dump_mapped_nffg(self, calls, type):

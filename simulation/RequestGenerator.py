@@ -13,6 +13,7 @@
 # limitations under the License.
 from abc import ABCMeta, abstractmethod
 import math
+import time
 import random as rnd
 import string
 import random
@@ -75,7 +76,6 @@ class TestReqGen(AbstractRequestGenerator):
         vnf_cnt = 4
         sc_count = 1
 
-
         while len(all_saps_ending) > sc_count and len(all_saps_beginning) > sc_count:
             nffg = NFFG(id='Benchmark-Req-' + str(test_lvl) + '-Piece')
             current_nfs = []
@@ -127,7 +127,7 @@ class TestReqGen(AbstractRequestGenerator):
                 for tmp in xrange(0, scid + 1):
                     current_nfs.extend(new_nfs)
 
-                life_time = random.randint(10, 50)
+                life_time = random.randint(5, 15)
                 return nffg, life_time
 
 class SimpleReqGen(AbstractRequestGenerator):
@@ -146,6 +146,8 @@ class SimpleReqGen(AbstractRequestGenerator):
         vnf_sharing_same_sg = 0.0
         sc_count = 1
         max_bw = 7.0
+
+        #time.sleep(1)
 
         while len(all_saps_ending) > sc_count and len(all_saps_beginning) > sc_count:
             nffg = NFFG(id='Benchmark-Req-' + str(test_lvl) + '-Piece')
