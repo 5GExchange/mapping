@@ -87,12 +87,7 @@ class HybridOrchestrator():
                                             bt_branching_factor=3)
 
     def do_offline_mapping(self, request, offline_RG):
-
-            mode = NFFG.MODE_ADD
-            #self.__res_offline = offline_mapping.MAP(request, offline_RG)
-            #self.__res_offline = offline_mapping.convert_mip_solution_to_nffg([request], offline_RG)
             try:
-                self.offline_status = False
                 #self.__res_offline = offline_mapping.convert_mip_solution_to_nffg([request], offline_RG)
                 self.__res_offline = offline_mapping.MAP(request, offline_RG, True, "ConstantMigrationCost")
                 try:
@@ -101,10 +96,10 @@ class HybridOrchestrator():
                                               self.__res_offline)
                 except:
                     log.warning("Unable to merge online and offline")
-
             except:
                 log.error(
-                    "Mapping thread: Offline mapping: Unable to mapping offline!")
+                "Mapping thread: Offline mapping: Unable to mapping offline!")
+            finally:
                 self.offline_status = False
 
 
@@ -119,21 +114,20 @@ class HybridOrchestrator():
         else: log.error("Invalid res_share type!")
 
     def merge_online_offline(self, onlineRG, offlineRG):
-            mergeRG= onlineRG.copy()
+            mergeRG= onlineRG.deepcopy()
 
             NFFGToolBox().merge_nffgs(mergeRG, offlineRG)
 
-            return mergeRG
+            self.res_online = mergeRG
+
 
     def MAP(self, request, vmi):
 
         #Collect the requests
         self.merge_all_request(self.SUM_req, request)
 
-
         if not self.offline_status:
             self.set_resource_graphs()
-
 
         #Start online mapping thread
         online_mapping_thread = threading.Thread(None, self.do_online_mapping,
@@ -153,7 +147,7 @@ class HybridOrchestrator():
                                 "Offline mapping thread", (requestToOpt, self.__res_offline))
                 log.info("Start offline optimalization!")
                 self.offline_mapping_thread.start()
-                self.offline_status = True
+                #self.offline_status = True
             except:
                 log.error("Failed to start offline thread")
 

@@ -173,7 +173,7 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
         dump_nffg = self.concrete_hybrid_orchestrator.res_online.dump()
 
         #
-        i = 1
+        i = 6
 
 
         if not os.path.exists('test' + str(i) + "_hybrid"):

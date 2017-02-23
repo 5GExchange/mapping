@@ -226,7 +226,6 @@ class MappingSolutionFramework:
                 request_list.append(request_list_element)
 
                 scale_radius = 2
-                n = 1000
                 exp_time = N.random.exponential(scale_radius, (1, 1))
                 time.sleep(exp_time)
 
@@ -251,7 +250,7 @@ if __name__ == "__main__":
 
 
     try:
-        req_gen_thread = threading.Thread(None, test.create_request, "request_generator_thread", ([50]))
+        req_gen_thread = threading.Thread(None, test.create_request, "request_generator_thread", ([100]))
         mapping_thread = threading.Thread(None, test.make_mapping, "mapping_thread")
         req_gen_thread.start()
         mapping_thread.start()
