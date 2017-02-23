@@ -119,7 +119,7 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
         dump_nffg = self.__resource_graph.dump()
 
         #
-        i = 1
+        i = 6
 
 
         if not os.path.exists('test' + str(i) + "_online"):

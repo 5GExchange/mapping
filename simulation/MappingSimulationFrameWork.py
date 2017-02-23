@@ -222,7 +222,8 @@ class MappingSolutionFramework:
             # Not discrete working
             else:
                 log.info("Request Generator thread: Add request " + str(sim_iter))
-                request_list_element = {"request": service_graph, "life_time": life_time, "req_num":sim_iter}
+                request_list_element = {"request": service_graph,
+                                    "life_time": life_time, "req_num": sim_iter}
                 request_list.append(request_list_element)
 
                 scale_radius = 2
@@ -246,12 +247,16 @@ if __name__ == "__main__":
     log.info(" | Request type: " + str(config['request_type']))
     log.info(" | Orchestrator: " + str(config['orchestrator']))
     log.info(" ----------------------------------------")
-    test = MappingSolutionFramework(False, config['topology'], config['request_type'], config['orchestrator'])
+    test = MappingSolutionFramework(False, config['topology'],
+                                            config['request_type'],
+                                            config['orchestrator'])
 
 
     try:
-        req_gen_thread = threading.Thread(None, test.create_request, "request_generator_thread", ([100]))
-        mapping_thread = threading.Thread(None, test.make_mapping, "mapping_thread")
+        req_gen_thread = threading.Thread(None, test.create_request,
+                                          "request_generator_thread", ([100]))
+        mapping_thread = threading.Thread(None, test.make_mapping,
+                                          "mapping_thread")
         req_gen_thread.start()
         mapping_thread.start()
 

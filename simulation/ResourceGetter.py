@@ -25,8 +25,12 @@ except ImportError:
   site.addsitedir('../nffg_lib')
   from nffg import NFFG, NFFGToolBox
 
-from generator import CarrierTopoBuilder
-
+try:
+    from generator import CarrierTopoBuilder
+except ImportError:
+    import site
+    site.addsitedir('../generator')
+    import CarrierTopoBuilder
 
 class AbstractResourceGetter:
     __metaclass__ = ABCMeta
