@@ -69,9 +69,8 @@ class HybridOrchestrator():
             #Mapped RG
             self.resource_graph = RG
 
-
-    def merge_all_request(self, sum,request):
-        NFFGToolBox.merge_nffgs(sum, request)
+    def merge_all_request(self, sum, request):
+        sum = NFFGToolBox.merge_nffgs(sum, request)
         return sum
 
     def do_online_mapping(self, request, online_RG):
@@ -91,15 +90,16 @@ class HybridOrchestrator():
                 #self.__res_offline = offline_mapping.convert_mip_solution_to_nffg([request], offline_RG)
                 self.__res_offline = offline_mapping.MAP(request, offline_RG, True, "ConstantMigrationCost")
                 try:
+                    self.offline_status = False
                     log.info("Merge online and offline")
-                    self.merge_online_offline(self.res_online,
+                    self.res_online = self.merge_online_offline(self.res_online,
                                               self.__res_offline)
+
                 except:
                     log.warning("Unable to merge online and offline")
             except:
                 log.error(
                 "Mapping thread: Offline mapping: Unable to mapping offline!")
-            finally:
                 self.offline_status = False
 
 
@@ -114,12 +114,9 @@ class HybridOrchestrator():
         else: log.error("Invalid res_share type!")
 
     def merge_online_offline(self, onlineRG, offlineRG):
-            mergeRG= onlineRG.deepcopy()
-
-            NFFGToolBox().merge_nffgs(mergeRG, offlineRG)
-
-            self.res_online = mergeRG
-
+            mergeRG= onlineRG.copy()
+            mergeRG = NFFGToolBox().merge_nffgs(mergeRG, offlineRG)
+            return mergeRG
 
     def MAP(self, request, vmi):
 
