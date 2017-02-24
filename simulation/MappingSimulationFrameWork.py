@@ -58,35 +58,17 @@ request_list = list()
 mapping_thread_flag = True
 
 
-def count_mapping_calls(fn):
-    def _counting(*args, **kwargs):
-        _counting.calls += 1
-        return fn(*args, **kwargs)
-
-    _counting.calls = 0
-    return _counting
-
-def count_del_calls(fn):
-    def _counting(*args, **kwargs):
-        _counting.calls += 1
-        return fn(*args, **kwargs)
-
-    _counting.calls = 0
-    return _counting
-
 class MappingSolutionFramework:
 
-    __discrete_simulation = None
-    __resource_getter = None
-    __network_topology = None
-    __request_generator = None
-    __orchestrator_adaptor = None
-    __remaining_request_lifetimes = list()
-
-    def __init__(self, simulation_type, resource_type, request_type, orchestrator_type):
-        self.__discrete_simulation = simulation_type
+    def __init__(self, config_file_path):
+        config = ConfigObj(config_file_path)
+        self.__discrete_simulation = bool(config['discrete_simulation'])
+        self.dump_interval = int(config['dump_interval'])
+        self.max_number_of_iterations = int(config['max_number_of_iterations'])
+        # TODO: process other params
 
         #Resoure
+        resource_type = config['topology']
         if resource_type == "pico":
             self.__resource_getter = PicoResourceGetter()
         elif resource_type == "gwin":
@@ -99,6 +81,7 @@ class MappingSolutionFramework:
         self.__network_topology = self.__resource_getter.GetNFFG()
 
         #Request
+        request_type = config['request_type']
         if request_type == "test":
             self.__request_generator = TestReqGen()
         elif request_type == "simple":
@@ -110,25 +93,41 @@ class MappingSolutionFramework:
             raise RuntimeError(
                 "Invalid 'request_type' in the simulation.cfg file! Please choose one of the followings: test, simple, multi")
 
+        self.__remaining_request_lifetimes = list()
+        # This stores the request waiting to be mapped
+        self.__request_list = list()
 
-        #Orchestrator
+        # Orchestrator
+        orchestrator_type = config['orchestrator']
         if orchestrator_type == "online":
-            self.__orchestrator_adaptor = OnlineOrchestratorAdaptor(self.__network_topology)
+            self.__orchestrator_adaptor = OnlineOrchestratorAdaptor(
+                self.__network_topology)
         elif orchestrator_type == "hybrid":
             log.info(" ---- Hybrid specific configurations -----")
             log.info(" | What to optimize: " + str(config['what_to_optimize']))
             log.info(" | When to optimize: " + str(config['when_to_optimize']))
-            log.info(" | Optimize strategy: " + str(config['optimize_strategy']))
+            log.info(
+                " | Optimize strategy: " + str(config['optimize_strategy']))
             log.info(" -----------------------------------------")
-            self.__orchestrator_adaptor = HybridOrchestratorAdaptor(self.__network_topology, config['what_to_optimize'], config['when_to_optimize'], config['optimize_strategy'])
+            self.__orchestrator_adaptor = HybridOrchestratorAdaptor(
+                self.__network_topology, config['what_to_optimize'],
+                config['when_to_optimize'], config['optimize_strategy'])
+        elif orchestrator_type == "offline":
+            log.info(" ---- Offline specific configurations -----")
+            log.info(" | Optimize already mapped nfs " + config[
+                'optimize_already_mapped_nfs'])
+            log.info(" | Migration cost handler given: " + config[
+                'migration_handler_name'] if 'migration_handler_name' in config else "None")
+            self.__orchestrator_adaptor = OfflineOrchestratorAdaptor(
+                self.__network_topology,
+                bool(config['optimize_already_mapped_nfs']),
+                config['migration_handler_name'],
+                **config['migration_handler_kwargs'])
         else:
             log.error("Invalid 'orchestrator' in the simulation.cfg file!")
             raise RuntimeError(
-                "Invalid 'orchestrator' in the simulation.cfg file! Please choose one of the followings: test, simple, multi")
+                "Invalid 'orchestrator' in the simulation.cfg file! Please choose one of the followings: online, hybrid, offline")
 
-
-
-    @count_mapping_calls
     def __mapping(self, service_graph, life_time, orchestrator_adaptor, time, sim_iter):
         # Synchronous MAP call
         try:
@@ -146,7 +145,6 @@ class MappingSolutionFramework:
             log.info("Mapping thread: Mapping service_request_" + str(sim_iter) + " unsuccessfull")
 
 
-    @count_del_calls
     def __del_service(self, service, sim_iter):
 
         try:
@@ -162,8 +160,6 @@ class MappingSolutionFramework:
             log.error("Mapping thread: Deleting service_request_" + str(sim_iter) + " unsuccessfull")
 
     def make_mapping(self):
-
-        global request_list
 
         log.info("Start mapping thread")
         while mapping_thread_flag:

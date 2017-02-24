@@ -1,4 +1,5 @@
 import threading
+from configobj import ConfigObj
 
 try:
   # runs when mapping files are called from ESCAPE
@@ -29,26 +30,23 @@ log.setLevel(logging.DEBUG)
 
 class HybridOrchestrator():
 
-    __what_to_opt = None
-    __when_to_opt = None
-    __res_offline = None
-    res_online = None
-    __res_sharing_strat = None
-    offline_status = False
-    resource_graph = None
-    SUM_req = NFFG()
-    offline_mapping_thread = None
+    #def __init__(self, RG, what_to_opt_strat, when_to_opt_strat, resource_share_strat):
+    def __init__(self, RG, config_file_path):
+            config = ConfigObj(config_file_path)
 
-    def __init__(self, RG, what_to_opt_strat, when_to_opt_strat, resource_share_strat):
-
-            #What to optimize strategy
+            # What to optimize strategy
+            what_to_opt_strat = config['what_to_opt_strat']
             if what_to_opt_strat == "reqs_since_last":
                 self.__what_to_opt = ReqsSinceLastOpt()
             elif what_to_opt_strat == "all_reqs":
                 self.__what_to_opt = AllReqsOpt()
-            else: log.error("Invalid what_to_opt type!")
+            else:
+                raise RuntimeError(
+                    'Invalid what_to_opt_strat type! Please choose one of the '
+                    'followings: all_reqs, reqs_since_last')
 
             # When to optimize strategy
+            when_to_opt_strat = config['when_to_opt_strat']
             if when_to_opt_strat == "modell_based":
                 self.__when_to_opt = ModelBased()
             elif when_to_opt_strat == "fixed_req_count":
@@ -60,12 +58,23 @@ class HybridOrchestrator():
             elif when_to_opt_strat == "allways":
                 self.__when_to_opt = Allways()
             else:
-                raise RuntimeError('Invalid when_to_opt type! Please choose one of the followings: modell_based, fixed_req_count, fixed_time, periodical_model_based, allways')
-                log.error("Invalid when_to_opt type!")
+                raise RuntimeError(
+                    'Invalid when_to_opt type! Please choose '
+                                   'one of the followings: modell_based, '
+                                   'fixed_req_count, fixed_time, '
+                                   'periodical_model_based, allways')
 
-            #Resource sharing strategy
-            self.__res_sharing_strat = resource_share_strat
-
+            # Resource sharing strategy
+            resource_share_strat = config['resource_share_strat']
+            if resource_share_strat == "double_hundred":
+                self.__res_sharing_strat = DoubleHundred()
+            elif resource_share_strat == "dynamic":
+                self.__res_sharing_strat = DynamicMaxOnlineToAll()
+            else:
+                raise RuntimeError(
+                    'Invalid resource_share_strat type! Please choose '
+                                   'one of the followings: double_hundred, '
+                                   'dynamic')
             #Mapped RG
             self.resource_graph = RG
 
