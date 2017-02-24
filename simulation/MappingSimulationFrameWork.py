@@ -53,18 +53,22 @@ log.addHandler(hdlr)
 log.setLevel(logging.DEBUG)
 
 #Global variables
-resource_graph = None
-request_list = list()
-mapping_thread_flag = True
+#resource_graph = None
+#request_list = list()
+#mapping_thread_flag = True
 
 
 class MappingSolutionFramework:
 
-    def __init__(self, config_file_path):
+    def __init__(self, config_file_path, queue):
         config = ConfigObj(config_file_path)
         self.__discrete_simulation = bool(config['discrete_simulation'])
         self.dump_interval = int(config['dump_interval'])
         self.max_number_of_iterations = int(config['max_number_of_iterations'])
+
+        threading.Thread.__init__()
+        self.queue = queue
+
         # TODO: process other params
 
         #Resoure
@@ -76,7 +80,8 @@ class MappingSolutionFramework:
         else:
             log.error("Invalid 'topology' in the simulation.cfg file!")
             raise RuntimeError(
-                "Invalid 'topology' in the simulation.cfg file! Please choose one of the followings: pico, gwin")
+                "Invalid 'topology' in the simulation.cfg file! "
+                "Please choose one of the followings: pico, gwin")
 
         self.__network_topology = self.__resource_getter.GetNFFG()
 
@@ -91,7 +96,8 @@ class MappingSolutionFramework:
         else:
             log.error("Invalid 'request_type' in the simulation.cfg file!")
             raise RuntimeError(
-                "Invalid 'request_type' in the simulation.cfg file! Please choose one of the followings: test, simple, multi")
+                "Invalid 'request_type' in the simulation.cfg file! "
+                "Please choose one of the followings: test, simple, multi")
 
         self.__remaining_request_lifetimes = list()
         # This stores the request waiting to be mapped
@@ -110,8 +116,7 @@ class MappingSolutionFramework:
                 " | Optimize strategy: " + str(config['optimize_strategy']))
             log.info(" -----------------------------------------")
             self.__orchestrator_adaptor = HybridOrchestratorAdaptor(
-                self.__network_topology, config['what_to_optimize'],
-                config['when_to_optimize'], config['optimize_strategy'])
+                self.__network_topology)
         elif orchestrator_type == "offline":
             log.info(" ---- Offline specific configurations -----")
             log.info(" | Optimize already mapped nfs " + config[
@@ -126,7 +131,8 @@ class MappingSolutionFramework:
         else:
             log.error("Invalid 'orchestrator' in the simulation.cfg file!")
             raise RuntimeError(
-                "Invalid 'orchestrator' in the simulation.cfg file! Please choose one of the followings: online, hybrid, offline")
+                "Invalid 'orchestrator' in the simulation.cfg file! "
+                "Please choose one of the followings: online, hybrid, offline")
 
     def __mapping(self, service_graph, life_time, orchestrator_adaptor, time, sim_iter):
         # Synchronous MAP call
@@ -163,8 +169,9 @@ class MappingSolutionFramework:
 
         log.info("Start mapping thread")
         while mapping_thread_flag:
-            while len(request_list) > 0:
-                request_list_element = request_list.pop(0)
+            #while len(request_list) > 0:
+            while 1:
+                request_list_element = self.queue.get()
                 request = request_list_element['request']
                 life_time = request_list_element['life_time']
                 req_num = request_list_element['req_num']
@@ -189,6 +196,7 @@ class MappingSolutionFramework:
                self.__del_service(service, service['req_num'])
 
 
+
     def create_request(self,sim_end):
 
         global mapping_thread_flag
@@ -202,25 +210,22 @@ class MappingSolutionFramework:
         sim_iter = 0
         while sim_running:
 
-            #Get request
-            service_graph, life_time = self.__request_generator.get_request(topology, sim_iter)
+            # Get request
+            service_graph, life_time = \
+                self.__request_generator.get_request(topology, sim_iter)
 
-            #Discrete working
+            # Discrete working
             if self.__discrete_simulation:
                 pass
-                """
-                virtual_time += 1
-                resource_graph = self.__mapping(resource_graph, service_graph, life_time, orchestrator_adaptor, virtual_time, sim_iter)
-                #Remove expired service graph requests
-                resource_graph = self.__clean_expired_requests(time,resource_graph)
-                """
 
             # Not discrete working
             else:
                 log.info("Request Generator thread: Add request " + str(sim_iter))
                 request_list_element = {"request": service_graph,
                                     "life_time": life_time, "req_num": sim_iter}
-                request_list.append(request_list_element)
+                self.queue.put(request_list_element)
+
+                #request_list.append(request_list_element)
 
                 scale_radius = 2
                 exp_time = N.random.exponential(scale_radius, (1, 1))
@@ -243,23 +248,20 @@ if __name__ == "__main__":
     log.info(" | Request type: " + str(config['request_type']))
     log.info(" | Orchestrator: " + str(config['orchestrator']))
     log.info(" ----------------------------------------")
-    test = MappingSolutionFramework(False, config['topology'],
-                                            config['request_type'],
-                                            config['orchestrator'])
-
+    test = MappingSolutionFramework('simulation.cfg')
 
     try:
         req_gen_thread = threading.Thread(None, test.create_request,
-                                          "request_generator_thread", ([100]))
+                                        "request_generator_thread_T1",
+                                        ([config['max_number_of_iterations']]))
+
         mapping_thread = threading.Thread(None, test.make_mapping,
-                                          "mapping_thread")
+                                          "mapping_thread_T2")
         req_gen_thread.start()
         mapping_thread.start()
-
     except:
         log.error(" Unable to start threads")
 
-
     #test.simulate("pico","simple","online",300,True)
-    req_gen_thread.join()
-    mapping_thread.join()
+    #req_gen_thread.join()
+    #mapping_thread.join()
