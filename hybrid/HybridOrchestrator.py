@@ -34,7 +34,8 @@ class HybridOrchestrator():
     def __init__(self, RG, config_file_path):
             config = ConfigObj(config_file_path)
             self.lock = threading.Lock()
-
+            self.res_online = NFFG()
+            self.__res_offline = NFFG()
             # All request in one NFFG
             self.SUM_req = NFFG()
 
@@ -152,6 +153,8 @@ class HybridOrchestrator():
 
         else:
             log.error("Invalid res_share type!")
+
+
 
     def merge_online_offline(self, onlineRG, offlineRG):
             mergeRG= onlineRG.copy()
