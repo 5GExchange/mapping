@@ -87,8 +87,8 @@ class AbstractOrchestratorAdaptor(object):
 class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
     def __init__(self, resource):
-      super(OnlineOrchestratorAdaptor, self).__init__(resource)
-      self.dump_suffix = "online"
+        super(OnlineOrchestratorAdaptor, self).__init__(resource)
+        self.dump_suffix = "online"
 
     def MAP(self, request):
         mode = NFFG.MODE_ADD
@@ -110,7 +110,7 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
     def __init__(self, resource):
         super(HybridOrchestratorAdaptor, self).__init__(resource)
         self.concrete_hybrid_orchestrator = \
-            hybrid_mapping.HybridOrchestrator(resource)
+            hybrid_mapping.HybridOrchestrator(resource, "./simulation.cfg")
         self.dump_suffix = "hybrid"
 
     def MAP(self, request):

@@ -31,7 +31,7 @@ class AbstractResourceSharingStrategy:
 
 
 class DynamicMaxOnlineToAll(AbstractResourceSharingStrategy):
-    def share_resource(self, resource_graph):
+    def share_resource(self, resource_graph, res_online, res_offline):
         #TODO: dinamikus RG gen
         #return toOffline, toOnline
         pass
@@ -52,14 +52,12 @@ class DoubleHundred(AbstractResourceSharingStrategy):
                                                           mode=mode)
 
     def share_resource(self, resource_graph, res_online, res_offline):
-
-
-        print res_online
-        print resource_graph
         #For first resourve sharing
         if res_online is None:
             to_online = resource_graph.copy()
             to_offline = resource_graph.copy()
+
+            return to_online, to_offline
 
         else:
             #Create NFFG without mapped requests by offline
@@ -82,4 +80,4 @@ class DoubleHundred(AbstractResourceSharingStrategy):
                 to_online = res_online
                 to_offline = resource_graph.copy()
 
-        return to_offline, to_online
+        return to_online, to_offline

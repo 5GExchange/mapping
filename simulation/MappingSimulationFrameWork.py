@@ -17,6 +17,7 @@ from RequestGenerator import SimpleReqGen
 from RequestGenerator import MultiReqGen
 from OrchestratorAdaptor import *
 import threading
+import Queue
 import datetime
 import time
 import logging
@@ -58,20 +59,24 @@ log.setLevel(logging.DEBUG)
 #mapping_thread_flag = True
 
 
-class MappingSolutionFramework:
+class MappingSolutionFramework(threading.Thread):
 
-    def __init__(self, config_file_path, queue):
+    def __init__(self, config_file_path, request_list):
         config = ConfigObj(config_file_path)
+
         self.__discrete_simulation = bool(config['discrete_simulation'])
+        # Ha a discrete_simulation utan van vmi akkor True-ra ertekelodik ki
+
         self.dump_interval = int(config['dump_interval'])
         self.max_number_of_iterations = int(config['max_number_of_iterations'])
 
-        threading.Thread.__init__()
-        self.queue = queue
+        # This stores the request waiting to be mapped
+        threading.Thread.__init__(self)
+        self.__request_list = request_list
 
         # TODO: process other params
 
-        #Resoure
+        # Resource
         resource_type = config['topology']
         if resource_type == "pico":
             self.__resource_getter = PicoResourceGetter()
@@ -85,7 +90,7 @@ class MappingSolutionFramework:
 
         self.__network_topology = self.__resource_getter.GetNFFG()
 
-        #Request
+        # Request
         request_type = config['request_type']
         if request_type == "test":
             self.__request_generator = TestReqGen()
@@ -100,8 +105,7 @@ class MappingSolutionFramework:
                 "Please choose one of the followings: test, simple, multi")
 
         self.__remaining_request_lifetimes = list()
-        # This stores the request waiting to be mapped
-        self.__request_list = list()
+
 
         # Orchestrator
         orchestrator_type = config['orchestrator']
@@ -113,7 +117,7 @@ class MappingSolutionFramework:
             log.info(" | What to optimize: " + str(config['what_to_optimize']))
             log.info(" | When to optimize: " + str(config['when_to_optimize']))
             log.info(
-                " | Optimize strategy: " + str(config['optimize_strategy']))
+                " | Optimize strategy: " + str(config['orchestrator']))
             log.info(" -----------------------------------------")
             self.__orchestrator_adaptor = HybridOrchestratorAdaptor(
                 self.__network_topology)
@@ -134,48 +138,56 @@ class MappingSolutionFramework:
                 "Invalid 'orchestrator' in the simulation.cfg file! "
                 "Please choose one of the followings: online, hybrid, offline")
 
+
     def __mapping(self, service_graph, life_time, orchestrator_adaptor, time, sim_iter):
-        # Synchronous MAP call
         try:
             orchestrator_adaptor.MAP(service_graph)
             # Adding successfully mapped request to the remaining_request_lifetimes
-            service_life_element = {"dead_time": time + life_time, "SG": service_graph, "req_num": sim_iter}
+            service_life_element = {"dead_time": time +
+                            life_time, "SG": service_graph, "req_num": sim_iter}
             self.__remaining_request_lifetimes.append(service_life_element)
-            log.info("Mapping thread: Mapping service_request_" + str(sim_iter) + " successfull")
-
-            if not self.__mapping.calls % 5:
-                log.info("Dump NFFG to file after the " + str(self.__mapping.calls) + ". mapping")
-                self.__orchestrator_adaptor.dump_mapped_nffg(self.__mapping.calls, "mapping")
-
+            log.info("Mapping thread: Mapping service_request_"
+                     + str(sim_iter) + " successful")
+            if not sim_iter % 5:
+                log.info("Dump NFFG to file after the " + str(sim_iter) + ". mapping")
+                self.__orchestrator_adaptor.dump_mapped_nffg(sim_iter, "mapping")
         except uet.MappingException:
-            log.info("Mapping thread: Mapping service_request_" + str(sim_iter) + " unsuccessfull")
+            log.info("Mapping thread: Mapping service_request_" +
+                     str(sim_iter) + " unsuccessful")
 
 
     def __del_service(self, service, sim_iter):
-
         try:
             self.__orchestrator_adaptor.del_service(service['SG'])
-            log.info("Mapping thread: Deleting service_request_" + str(sim_iter) + " successfull")
+            log.info("Mapping thread: Deleting service_request_" +
+                     str(sim_iter) + " successful")
             self.__remaining_request_lifetimes.remove(service)
 
-            if not self.__del_service.calls % 5:
-                log.info("Dump NFFG to file after the " + str(self.__del_service.calls) + ". deletion")
-                self.__orchestrator_adaptor.dump_mapped_nffg(self.__del_service.calls, "deletion")
+            if not sim_iter % 5:
+                log.info("Dump NFFG to file after the " +
+                         str(sim_iter) + ". deletion")
+                self.__orchestrator_adaptor.\
+                    dump_mapped_nffg(sim_iter, "deletion")
 
         except uet.MappingException:
-            log.error("Mapping thread: Deleting service_request_" + str(sim_iter) + " unsuccessfull")
+            log.error("Mapping thread: Deleting service_request_" +
+                      str(sim_iter) + " unsuccessful")
+
 
     def make_mapping(self):
-
         log.info("Start mapping thread")
-        while mapping_thread_flag:
-            #while len(request_list) > 0:
-            while 1:
-                request_list_element = self.queue.get()
+        while mapping_thread.is_alive:
+            while not self.__request_list.empty():
+
+                request_list_element = self.__request_list.get()
                 request = request_list_element['request']
                 life_time = request_list_element['life_time']
                 req_num = request_list_element['req_num']
-                self.__mapping(request, datetime.timedelta(0, life_time), self.__orchestrator_adaptor, datetime.datetime.now(), req_num)
+                self.__request_list.task_done()
+                self.__mapping(request, datetime.timedelta(0, life_time),
+                               self.__orchestrator_adaptor,
+                               datetime.datetime.now(),
+                               req_num)
 
                 # Remove expired service graph requests
                 self.__clean_expired_requests(datetime.datetime.now())
@@ -189,23 +201,17 @@ class MappingSolutionFramework:
 
 
     def __clean_expired_requests(self,time):
-
         # Delete expired SCs
         for service in self.__remaining_request_lifetimes:
             if service['dead_time'] < time:
                self.__del_service(service, service['req_num'])
 
 
-
-    def create_request(self,sim_end):
-
-        global mapping_thread_flag
-        virtual_time = 0
-
+    def create_request(self, sim_end):
         log.info("Start request generator thread")
         topology = self.__network_topology
 
-        #Simulation cycle
+        # Simulation cycle
         sim_running = True
         sim_iter = 0
         while sim_running:
@@ -223,7 +229,7 @@ class MappingSolutionFramework:
                 log.info("Request Generator thread: Add request " + str(sim_iter))
                 request_list_element = {"request": service_graph,
                                     "life_time": life_time, "req_num": sim_iter}
-                self.queue.put(request_list_element)
+                self.__request_list.put(request_list_element)
 
                 #request_list.append(request_list_element)
 
@@ -231,7 +237,7 @@ class MappingSolutionFramework:
                 exp_time = N.random.exponential(scale_radius, (1, 1))
                 time.sleep(exp_time)
 
-            #Increase simulation iteration
+            # Increase simulation iteration
             if (sim_iter < sim_end):
                 sim_iter += 1
             else:
@@ -248,7 +254,9 @@ if __name__ == "__main__":
     log.info(" | Request type: " + str(config['request_type']))
     log.info(" | Orchestrator: " + str(config['orchestrator']))
     log.info(" ----------------------------------------")
-    test = MappingSolutionFramework('simulation.cfg')
+
+    request_list = Queue.Queue()
+    test = MappingSolutionFramework('simulation.cfg', request_list)
 
     try:
         req_gen_thread = threading.Thread(None, test.create_request,

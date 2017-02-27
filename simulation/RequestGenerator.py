@@ -13,6 +13,7 @@
 # limitations under the License.
 from abc import ABCMeta, abstractmethod
 import math
+import threading
 import time
 import random as rnd
 import string
@@ -62,7 +63,9 @@ class AbstractRequestGenerator:
 
 class TestReqGen(AbstractRequestGenerator):
 
-    nf_types = ['A']
+    def __init__(self):
+        super(TestReqGen, self).__init__()
+        self.nf_types = ['A']
 
     def get_request(self, resource_graph, test_lvl):
         all_saps_ending = [s.id for s in resource_graph.saps]
@@ -132,7 +135,9 @@ class TestReqGen(AbstractRequestGenerator):
 
 class SimpleReqGen(AbstractRequestGenerator):
 
-    nf_types = list(string.ascii_uppercase)[:10]
+    def __init__(self):
+        super(SimpleReqGen, self).__init__()
+        self.nf_types = list(string.ascii_uppercase)[:10]
 
     def get_request(self, resource_graph, test_lvl):
         all_saps_ending = [s.id for s in resource_graph.saps]
@@ -204,7 +209,9 @@ class SimpleReqGen(AbstractRequestGenerator):
 
 class MultiReqGen(AbstractRequestGenerator):
 
-    nf_types = list(string.ascii_uppercase)[:10]
+    def __init__(self):
+        super(MultiReqGen, self).__init__()
+        self.nf_types = list(string.ascii_uppercase)[:10]
 
     def get_request(self, resource_graph, test_lvl):
         all_saps_ending = [s.id for s in resource_graph.saps]
