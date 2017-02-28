@@ -145,6 +145,7 @@ class MappingSolutionFramework(threading.Thread):
             # Adding successfully mapped request to the remaining_request_lifetimes
             service_life_element = {"dead_time": time +
                             life_time, "SG": service_graph, "req_num": sim_iter}
+
             self.__remaining_request_lifetimes.append(service_life_element)
             log.info("Mapping thread: Mapping service_request_"
                      + str(sim_iter) + " successful")
@@ -178,7 +179,6 @@ class MappingSolutionFramework(threading.Thread):
         log.info("Start mapping thread")
         while mapping_thread.is_alive:
             while not self.__request_list.empty():
-
                 request_list_element = self.__request_list.get()
                 request = request_list_element['request']
                 life_time = request_list_element['life_time']
@@ -192,7 +192,7 @@ class MappingSolutionFramework(threading.Thread):
                 # Remove expired service graph requests
                 self.__clean_expired_requests(datetime.datetime.now())
 
-        #Wait for all request to expire
+        # Wait for all request to expire
         while len(self.__remaining_request_lifetimes) > 0:
             # Remove expired service graph requests
             self.__clean_expired_requests(datetime.datetime.now())

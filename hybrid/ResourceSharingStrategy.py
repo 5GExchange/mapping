@@ -53,7 +53,8 @@ class DoubleHundred(AbstractResourceSharingStrategy):
 
     def share_resource(self, resource_graph, res_online, res_offline):
         #For first resourve sharing
-        if res_online is None:
+        empty_nffg = NFFG()
+        if res_online == None:
             to_online = resource_graph.copy()
             to_offline = resource_graph.copy()
 
@@ -66,12 +67,15 @@ class DoubleHundred(AbstractResourceSharingStrategy):
             #tempNetwork = NFFGToolBox().remove_required_services(tempNetwork, res_offline)
             #tempNetwork = self.del_service(res_offline,tempNetwork)
             #Try to merge online and offline results
-            NFFGToolBox().merge_nffgs(tempNetwork, res_offline)
+            #NFFGToolBox().merge_nffgs(tempNetwork, res_offline)
             #TODO: Kell ide a tempNetwork_copy? Letezik meg a calculate_link_res BUG?
             tempNetwork_copy = tempNetwork.copy()
             try:
                 tempNetwork_copy.calculate_available_node_res()
-                tempNetwork_copy.calculate_available_link_res()
+
+                # a link_res mindig except-re ugrik
+                #tempNetwork_copy.calculate_available_link_res()
+
                 to_online = tempNetwork.copy()
                 to_offline = resource_graph.copy()
 

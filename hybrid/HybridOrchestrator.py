@@ -34,7 +34,8 @@ class HybridOrchestrator():
     def __init__(self, RG, config_file_path):
             config = ConfigObj(config_file_path)
             self.lock = threading.Lock()
-            self.res_online = NFFG()
+            self.rlock = threading.RLock()
+            self.res_online = None
             self.__res_offline = NFFG()
             # All request in one NFFG
             self.SUM_req = NFFG()
@@ -88,10 +89,9 @@ class HybridOrchestrator():
         return sum
 
     def do_online_mapping(self, request, online_RG):
-
         try:
-            self.lock.acquire()
             mode = NFFG.MODE_ADD
+            self.lock.acquire()
             self.res_online = online_mapping.MAP(request, online_RG,
                                             enable_shortest_path_cache=True,
                                             bw_factor=1, res_factor=1,
@@ -100,8 +100,11 @@ class HybridOrchestrator():
                                             return_dist=False, mode=mode,
                                             bt_limit=6,
                                             bt_branching_factor=3)
+            log.info("do_online_mapping : Successful online mapping :)")
         except:
-            log.warning("Can not acquire res_online")
+            log.warning("do_online_mapping : Can not acquire res_online :( ")
+            #(nem a acqure-rol ugrik az exceprt-re hanem a online mapping utan
+
         finally:
             self.lock.release()
 
@@ -110,15 +113,20 @@ class HybridOrchestrator():
                 #self.__res_offline = offline_mapping.convert_mip_solution_to_nffg([request], offline_RG)
                 self.__res_offline = offline_mapping.MAP(
                     request, offline_RG, True, "ConstantMigrationCost")
+                log.debug("Offline mapping is ready")
                 try:
                     self.offline_status = False
-                    log.info("Merge online and offline")
+                    log.info("Try to merge online and offline")
 
-                    # self.res_online = self.merge_online_offline(self.res_online,
-                    #                         self.__res_offline)
-
-                    self.merge_online_offline(self.res_online,
-                                             self.__res_offline,)
+                    try:
+                        self.rlock.acquire()
+                        self.merge_online_offline(self.res_online,
+                                             self.__res_offline)
+                    except:
+                        log.warning("do_offline_mapping : can not acquire "
+                                    "rlock res_online, __res_offline :(")
+                    finally:
+                        self.rlock.release()
                 except:
                     log.warning("Unable to merge online and offline")
             except:
@@ -129,54 +137,48 @@ class HybridOrchestrator():
 
     def set_resource_graphs(self):
         # Resource sharing strategy
-        if self.resource_share_strat == "dynamic":
-            try:
+        try:
+            if self.resource_share_strat == "dynamic":
                 self.lock.acquire()
                 self.res_online, self.__res_offline = DynamicMaxOnlineToAll(). \
                     share_resource(self.resource_graph, self.res_online,
                                    self.__res_offline)
-            except:
-                log.warning("Can not accuire res_online")
-            finally:
-                self.lock.release()
 
-        elif self.resource_share_strat == "double_hundred":
-            try:
+            elif self.resource_share_strat == "double_hundred":
                 self.lock.acquire()
                 self.res_online, self.__res_offline = DoubleHundred(). \
                     share_resource(self.resource_graph, self.res_online,
                                    self.__res_offline)
-            except:
-                log.warning("Can not accuire res_online")
-            finally:
-                self.lock.release()
-
-        else:
-            log.error("Invalid res_share type!")
-
+            else:
+                log.error("Invalid res_share type!")
+        except:
+            log.warning("set_resource_graphs: Can not acquire res_online")
+        finally:
+            self.lock.release()
 
 
     def merge_online_offline(self, onlineRG, offlineRG):
-            mergeRG= onlineRG.copy()
+            mergeRG = onlineRG.copy()
             mergeRG = NFFGToolBox().merge_nffgs(mergeRG, offlineRG)
             try:
                 self.lock.acquire()
                 self.res_online = mergeRG
+                log.info("merge_online_offline : Lock res_online, optimalization enforce :)")
             except:
-                log.warning("Can not accuire res_online")
+                log.warning("merge_online_offline : Can not accuire res_online  :(")
             finally:
                 self.lock.release()
 
 
     def MAP(self, request, vmi):
 
-        #Collect the requests
+        # Collect the requests
         self.merge_all_request(self.SUM_req, request)
 
         #if not self.offline_mapping_thread.is_alive:
         self.set_resource_graphs()
 
-        #Start online mapping thread
+        # Start online mapping thread
         online_mapping_thread = threading.Thread(None, self.do_online_mapping,
                         "Online mapping thread", (request, self.res_online))
         try:
