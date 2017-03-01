@@ -33,13 +33,16 @@ class HybridOrchestrator():
     #def __init__(self, RG, what_to_opt_strat, when_to_opt_strat, resource_share_strat):
     def __init__(self, RG, config_file_path):
             config = ConfigObj(config_file_path)
+
+            # Protects the res_online
             self.lock = threading.Lock()
-            self.rlock = threading.RLock()
+
             self.res_online = None
             self.__res_offline = NFFG()
             # All request in one NFFG
             self.SUM_req = NFFG()
-
+            self.offline_mapping_thread = None
+            self.when_to_opt_param = config['when_to_opt_parameter']
             # What to optimize strategy
             what_to_opt_strat = config['what_to_optimize']
             if what_to_opt_strat == "reqs_since_last":
@@ -71,10 +74,10 @@ class HybridOrchestrator():
                                    'periodical_model_based, allways')
 
             # Resource sharing strategy
-            self.resource_share_strat = config['resource_share_strat']
-            if self.resource_share_strat == "double_hundred":
+            resource_share_strat = config['resource_share_strat']
+            if resource_share_strat == "double_hundred":
                 self.__res_sharing_strat = DoubleHundred()
-            elif self.resource_share_strat == "dynamic":
+            elif resource_share_strat == "dynamic":
                 self.__res_sharing_strat = DynamicMaxOnlineToAll()
             else:
                 raise RuntimeError(
@@ -108,25 +111,17 @@ class HybridOrchestrator():
         finally:
             self.lock.release()
 
-    def do_offline_mapping(self, request, offline_RG):
+
+    def do_offline_mapping(self, request, vme):
             try:
+                self.offline_status = True
                 #self.__res_offline = offline_mapping.convert_mip_solution_to_nffg([request], offline_RG)
                 self.__res_offline = offline_mapping.MAP(
-                    request, offline_RG, True, "ConstantMigrationCost")
-                log.debug("Offline mapping is ready")
+                    request, self.__res_offline, True, "ConstantMigrationCost")
+                log.info("Offline mapping is ready")
                 try:
-                    self.offline_status = False
                     log.info("Try to merge online and offline")
-
-                    try:
-                        self.rlock.acquire()
-                        self.merge_online_offline(self.res_online,
-                                             self.__res_offline)
-                    except:
-                        log.warning("do_offline_mapping : can not acquire "
-                                    "rlock res_online, __res_offline :(")
-                    finally:
-                        self.rlock.release()
+                    self.merge_online_offline()
                 except:
                     log.warning("Unable to merge online and offline")
             except:
@@ -138,31 +133,21 @@ class HybridOrchestrator():
     def set_resource_graphs(self):
         # Resource sharing strategy
         try:
-            if self.resource_share_strat == "dynamic":
-                self.lock.acquire()
-                self.res_online, self.__res_offline = DynamicMaxOnlineToAll(). \
-                    share_resource(self.resource_graph, self.res_online,
-                                   self.__res_offline)
-
-            elif self.resource_share_strat == "double_hundred":
-                self.lock.acquire()
-                self.res_online, self.__res_offline = DoubleHundred(). \
-                    share_resource(self.resource_graph, self.res_online,
-                                   self.__res_offline)
-            else:
-                log.error("Invalid res_share type!")
+            self.lock.acquire()
+            self.res_online, self.__res_offline = self.__res_sharing_strat.\
+                share_resource(self.resource_graph, self.res_online,
+                               self.__res_offline)
         except:
             log.warning("set_resource_graphs: Can not acquire res_online")
         finally:
             self.lock.release()
 
 
-    def merge_online_offline(self, onlineRG, offlineRG):
-            mergeRG = onlineRG.copy()
-            mergeRG = NFFGToolBox().merge_nffgs(mergeRG, offlineRG)
+    def merge_online_offline(self):
             try:
                 self.lock.acquire()
-                self.res_online = mergeRG
+                self.res_online = NFFGToolBox().merge_nffgs(self.res_online,
+                                                            self.__res_offline)
                 log.info("merge_online_offline : Lock res_online, optimalization enforce :)")
             except:
                 log.warning("merge_online_offline : Can not accuire res_online  :(")
@@ -186,9 +171,8 @@ class HybridOrchestrator():
         except:
             log.error("Failed to start online thread")
 
-        # Set offline_status
         try:
-            offline_status = offline_mapping_thread.is_alive
+            offline_status = self.offline_mapping_thread.is_alive()
         except:
             offline_status = False
 
@@ -198,16 +182,16 @@ class HybridOrchestrator():
 
             requestToOpt = self.__what_to_opt.reqs_to_optimize(self.SUM_req)
             try:
-                offline_mapping_thread = threading.Thread(None,
+                self.offline_mapping_thread = threading.Thread(None,
                             self.do_offline_mapping, "Offline mapping thread",
-                                        (requestToOpt, self.__res_offline))
+                                                            (requestToOpt, vmi))
                 log.info("Start offline optimalization!")
-                offline_mapping_thread.start()
-                #self.offline_status = True
+                self.offline_mapping_thread.start()
+
             except:
                 log.error("Failed to start offline thread")
 
-            online_mapping_thread.join()
+            # online_mapping_thread.join() # a lock-ok hasznalata miatt erre nincs szukseg (de meg nem biztos)
 
         elif not self.__when_to_opt.need_to_optimize(self.offline_status, 3):
             online_mapping_thread.join()

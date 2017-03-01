@@ -44,9 +44,8 @@ class AbstractOrchestratorAdaptor(object):
     __metaclass__ = ABCMeta
 
     def __init__(self, resource):
-      super(AbstractOrchestratorAdaptor, self).__init__()
       self.__resource_graph = resource
-      self.dump_suffix = ""
+
 
     def del_service(self, request):
         mode = NFFG.MODE_DEL
@@ -92,6 +91,7 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
     def MAP(self, request):
         mode = NFFG.MODE_ADD
+        """""
         self.__resource_graph, shortest_paths = \
             online_mapping.MAP(request, self.__resource_graph,
                                             enable_shortest_path_cache=True,
@@ -101,11 +101,18 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
                                             return_dist=True, mode=mode,
                                             bt_limit=6,
                                             bt_branching_factor=3)
-
+        """
+        print self.__dict__
+        self.__resource_graph = online_mapping.MAP(request, self.__resource_graph,
+                                             enable_shortest_path_cache=True,
+                                             bw_factor=1, res_factor=1,
+                                             lat_factor=1,
+                                             shortest_paths=None,
+                                             return_dist=False, mode=mode,
+                                             bt_limit=6,
+                                             bt_branching_factor=3)
 
 class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
-
-    concrete_hybrid_orchestrator = None
 
     def __init__(self, resource):
         super(HybridOrchestratorAdaptor, self).__init__(resource)

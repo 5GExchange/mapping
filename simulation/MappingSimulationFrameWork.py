@@ -23,7 +23,7 @@ import time
 import logging
 import numpy as N
 from configobj import ConfigObj
-
+import alg1.UnifyExceptionTypes as uet
 
 try:
   # runs when mapping files are called from ESCAPE
@@ -35,15 +35,7 @@ except ImportError:
   site.addsitedir('..')
   from nffg_lib.nffg import NFFG, NFFGToolBox
 
-from ResourceGetter import *
-from RequestGenerator import TestReqGen
-from RequestGenerator import SimpleReqGen
-from RequestGenerator import MultiReqGen
-from OrchestratorAdaptor import *
 
-import alg1.UnifyExceptionTypes as uet
-
-config = ConfigObj("simulation.cfg")
 log = logging.getLogger(" Simulator")
 logging.basicConfig(format='%(levelname)s:%(message)s')
 logging.basicConfig(filename='log_file.log', filemode='w', level=logging.DEBUG)
@@ -53,28 +45,28 @@ hdlr.setFormatter(formatter)
 log.addHandler(hdlr)
 log.setLevel(logging.DEBUG)
 
-#Global variables
-#resource_graph = None
-#request_list = list()
-#mapping_thread_flag = True
 
-
-class MappingSolutionFramework(threading.Thread):
+class MappingSolutionFramework():
 
     def __init__(self, config_file_path, request_list):
         config = ConfigObj(config_file_path)
 
-        self.__discrete_simulation = bool(config['discrete_simulation'])
-        # Ha a discrete_simulation utan van vmi akkor True-ra ertekelodik ki
+        log.info(" Start simulation")
+        log.info(" ------ Simulation configurations -------")
+        log.info(" | Topology: " + str(config['topology']))
+        log.info(" | Request type: " + str(config['request_type']))
+        log.info(" | Orchestrator: " + str(config['orchestrator']))
+        log.info(" ----------------------------------------")
 
-        self.dump_interval = int(config['dump_interval'])
+        self.number_of_iter = config['max_number_of_iterations']
+        self.dump_freq = int(config['dump_freq'])
         self.max_number_of_iterations = int(config['max_number_of_iterations'])
 
-        # This stores the request waiting to be mapped
-        threading.Thread.__init__(self)
-        self.__request_list = request_list
+        # Ha a discrete_simulation utan van vmi akkor True-ra ertekelodik ki
+        self.__discrete_simulation = bool(config['discrete_simulation'])
 
-        # TODO: process other params
+        # This stores the request waiting to be mapped
+        self.__request_list = request_list
 
         # Resource
         resource_type = config['topology']
@@ -149,7 +141,7 @@ class MappingSolutionFramework(threading.Thread):
             self.__remaining_request_lifetimes.append(service_life_element)
             log.info("Mapping thread: Mapping service_request_"
                      + str(sim_iter) + " successful")
-            if not sim_iter % 5:
+            if not sim_iter % self.dump_freq:
                 log.info("Dump NFFG to file after the " + str(sim_iter) + ". mapping")
                 self.__orchestrator_adaptor.dump_mapped_nffg(sim_iter, "mapping")
         except uet.MappingException:
@@ -164,7 +156,7 @@ class MappingSolutionFramework(threading.Thread):
                      str(sim_iter) + " successful")
             self.__remaining_request_lifetimes.remove(service)
 
-            if not sim_iter % 5:
+            if not sim_iter % self.dump_freq:
                 log.info("Dump NFFG to file after the " +
                          str(sim_iter) + ". deletion")
                 self.__orchestrator_adaptor.\
@@ -184,6 +176,7 @@ class MappingSolutionFramework(threading.Thread):
                 life_time = request_list_element['life_time']
                 req_num = request_list_element['req_num']
                 self.__request_list.task_done()
+
                 self.__mapping(request, datetime.timedelta(0, life_time),
                                self.__orchestrator_adaptor,
                                datetime.datetime.now(),
@@ -207,10 +200,10 @@ class MappingSolutionFramework(threading.Thread):
                self.__del_service(service, service['req_num'])
 
 
-    def create_request(self, sim_end):
+    def create_request(self):
         log.info("Start request generator thread")
         topology = self.__network_topology
-
+        sim_end = self.number_of_iter
         # Simulation cycle
         sim_running = True
         sim_iter = 0
@@ -247,21 +240,12 @@ class MappingSolutionFramework(threading.Thread):
 
 
 if __name__ == "__main__":
-
-    log.info(" Start simulation")
-    log.info(" ------ Simulation configurations -------")
-    log.info(" | Topology: " + str(config['topology']))
-    log.info(" | Request type: " + str(config['request_type']))
-    log.info(" | Orchestrator: " + str(config['orchestrator']))
-    log.info(" ----------------------------------------")
-
     request_list = Queue.Queue()
     test = MappingSolutionFramework('simulation.cfg', request_list)
 
     try:
         req_gen_thread = threading.Thread(None, test.create_request,
-                                        "request_generator_thread_T1",
-                                        ([config['max_number_of_iterations']]))
+                                        "request_generator_thread_T1")
 
         mapping_thread = threading.Thread(None, test.make_mapping,
                                           "mapping_thread_T2")
@@ -269,7 +253,3 @@ if __name__ == "__main__":
         mapping_thread.start()
     except:
         log.error(" Unable to start threads")
-
-    #test.simulate("pico","simple","online",300,True)
-    #req_gen_thread.join()
-    #mapping_thread.join()
