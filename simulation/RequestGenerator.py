@@ -19,6 +19,7 @@ import random as rnd
 import string
 import random
 from collections import OrderedDict
+import numpy as N
 
 try:
   # runs when mapping files are called from ESCAPE
@@ -33,7 +34,7 @@ except ImportError:
 class AbstractRequestGenerator:
     __metaclass__ = ABCMeta
 
-    def __init__(self):
+    def __init__(self, request_lifetime_lambda):
         pass
 
     @abstractmethod
@@ -63,9 +64,10 @@ class AbstractRequestGenerator:
 
 class TestReqGen(AbstractRequestGenerator):
 
-    def __init__(self):
-        super(TestReqGen, self).__init__()
+    def __init__(self, request_lifetime_lambda):
+        super(TestReqGen, self).__init__(request_lifetime_lambda)
         self.nf_types = ['A']
+        self.request_lifetime_lambda = request_lifetime_lambda
 
     def get_request(self, resource_graph, test_lvl):
         all_saps_ending = [s.id for s in resource_graph.saps]
@@ -130,14 +132,18 @@ class TestReqGen(AbstractRequestGenerator):
                 for tmp in xrange(0, scid + 1):
                     current_nfs.extend(new_nfs)
 
-                life_time = random.randint(5, 15)
+                scale_radius = (1 / self.request_lifetime_lambda)
+                exp_time = N.random.exponential(scale_radius)
+                life_time = exp_time
+
                 return nffg, life_time
 
 class SimpleReqGen(AbstractRequestGenerator):
 
-    def __init__(self):
-        super(SimpleReqGen, self).__init__()
+    def __init__(self, request_lifetime_lambda):
+        super(SimpleReqGen, self).__init__(request_lifetime_lambda)
         self.nf_types = list(string.ascii_uppercase)[:10]
+        self.request_lifetime_lambda = request_lifetime_lambda
 
     def get_request(self, resource_graph, test_lvl):
         all_saps_ending = [s.id for s in resource_graph.saps]
@@ -204,14 +210,18 @@ class SimpleReqGen(AbstractRequestGenerator):
                 new_nfs = [vnf for vnf in nfs_this_sc if vnf not in current_nfs]
                 for tmp in xrange(0, scid + 1):
                     current_nfs.extend(new_nfs)
-                life_time = random.randint(10, 50)
+                scale_radius = (1 / self.request_lifetime_lambda)
+                exp_time = N.random.exponential(scale_radius)
+                life_time = exp_time
+
                 return nffg, life_time
 
 class MultiReqGen(AbstractRequestGenerator):
 
-    def __init__(self):
-        super(MultiReqGen, self).__init__()
+    def __init__(self, request_lifetime_lambda):
+        super(MultiReqGen, self).__init__(request_lifetime_lambda)
         self.nf_types = list(string.ascii_uppercase)[:10]
+        self.request_lifetime_lambda = request_lifetime_lambda
 
     def get_request(self, resource_graph, test_lvl):
         all_saps_ending = [s.id for s in resource_graph.saps]
@@ -283,7 +293,11 @@ class MultiReqGen(AbstractRequestGenerator):
                 new_nfs = [vnf for vnf in nfs_this_sc if vnf not in current_nfs]
                 for tmp in xrange(0, scid + 1):
                     current_nfs.extend(new_nfs)
-                life_time = random.randint(10, 50)
+
+                scale_radius = (1 / self.request_lifetime_lambda)
+                exp_time = N.random.exponential(scale_radius)
+                life_time = exp_time
+
                 return nffg, life_time
 
 

@@ -61,10 +61,10 @@ class MappingSolutionFramework():
         self.number_of_iter = config['max_number_of_iterations']
         self.dump_freq = int(config['dump_freq'])
         self.max_number_of_iterations = int(config['max_number_of_iterations'])
-
+        self.request_arrival_lambda = float(config['request_arrival_lambda'])
         # Ha a discrete_simulation utan van vmi akkor True-ra ertekelodik ki
         self.__discrete_simulation = bool(config['discrete_simulation'])
-
+        self.request_lifetime_lambda = float(config['request_lifetime_lambda'])
         # This stores the request waiting to be mapped
         self.__request_list = request_list
 
@@ -85,11 +85,11 @@ class MappingSolutionFramework():
         # Request
         request_type = config['request_type']
         if request_type == "test":
-            self.__request_generator = TestReqGen()
+            self.__request_generator = TestReqGen(self.request_lifetime_lambda)
         elif request_type == "simple":
-            self.__request_generator = SimpleReqGen()
+            self.__request_generator = SimpleReqGen(self.request_lifetime_lambda)
         elif request_type == "multi":
-            self.__request_generator = MultiReqGen()
+            self.__request_generator = MultiReqGen(self.request_lifetime_lambda)
         else:
             log.error("Invalid 'request_type' in the simulation.cfg file!")
             raise RuntimeError(
@@ -206,7 +206,7 @@ class MappingSolutionFramework():
         sim_end = self.number_of_iter
         # Simulation cycle
         sim_running = True
-        sim_iter = 0
+        sim_iter = 1
         while sim_running:
 
             # Get request
@@ -224,10 +224,8 @@ class MappingSolutionFramework():
                                     "life_time": life_time, "req_num": sim_iter}
                 self.__request_list.put(request_list_element)
 
-                #request_list.append(request_list_element)
-
-                scale_radius = 2
-                exp_time = N.random.exponential(scale_radius, (1, 1))
+                scale_radius = (1/self.request_arrival_lambda)
+                exp_time = N.random.exponential(scale_radius)
                 time.sleep(exp_time)
 
             # Increase simulation iteration
@@ -242,7 +240,6 @@ class MappingSolutionFramework():
 if __name__ == "__main__":
     request_list = Queue.Queue()
     test = MappingSolutionFramework('simulation.cfg', request_list)
-
     try:
         req_gen_thread = threading.Thread(None, test.create_request,
                                         "request_generator_thread_T1")
