@@ -1176,17 +1176,17 @@ class ModelCreator(object):
 
     migr_costs = self.migration_cost_handler.objective_migration_component()
     max_migr_cost = self.migration_cost_handler.get_maximal_cost()
-    print "Max possible migration cost: ", max_migr_cost
+    constant = LinExpr([(2.0, self.var_embedding_decision[req0])])
     if max_migr_cost < 1e-10:
-      raise Exception("Max possible migration is zero!")
+      print "Max possible migration is zero!"
+      return constant
     obj_comp = LinExpr(
       [(-1.0 * migr_costs[vnode][snode] / max_migr_cost,
         self.var_node_mapping[req0][vnode][snode]) for
        vnode in migr_costs.iterkeys() for snode in
        migr_costs[vnode].iterkeys()])
 
-    obj_comp.add(
-      LinExpr([(2.0, self.var_embedding_decision[req0])]))
+    obj_comp.add(constant)
 
     return obj_comp
 
