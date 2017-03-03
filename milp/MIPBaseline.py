@@ -696,7 +696,8 @@ class ModelCreator(object):
                           edge_cost_coeff=None):
 
     # if any of the coefficents is None then we ignore all of them
-    if None not in (migration_coeff, load_balance_coeff, edge_cost_coeff):
+    if None not in (migration_coeff, load_balance_coeff, edge_cost_coeff) and \
+          load_balance_coeff > 1e-10:
       self.do_node_load_balancing = True
 
     self.preprocess()
@@ -1185,7 +1186,7 @@ class ModelCreator(object):
        migr_costs[vnode].iterkeys()])
 
     obj_comp.add(
-      LinExpr([(1.0, self.var_embedding_decision[req0])]))
+      LinExpr([(2.0, self.var_embedding_decision[req0])]))
 
     return obj_comp
 
@@ -1207,7 +1208,7 @@ class ModelCreator(object):
        for sedge in self.substrate.edges])
 
     edge_cost_exp.add(
-      LinExpr([(1.0, self.var_embedding_decision[req0])]))
+      LinExpr([(2.0, self.var_embedding_decision[req0])]))
 
     return edge_cost_exp
 
@@ -1221,13 +1222,14 @@ class ModelCreator(object):
       raise Exception("There are more than one requests given to MILP!")
 
     return LinExpr([(1.0, self.var_node_util_lower_bound),
-                    (1.0, self.var_embedding_decision[req0])])
+                    (2.0, self.var_embedding_decision[req0])])
 
   def plugin_objective_maximize_multiple_component (self, migration_coeff,
                                                     load_balance_coeff,
                                                     edge_cost_coeff):
     total_profit = edge_cost_coeff * self.objective_component_edge_cost()
-    total_profit.add(load_balance_coeff * self.objective_component_load_balancing())
+    if self.do_node_load_balancing:
+      total_profit.add(load_balance_coeff * self.objective_component_load_balancing())
     if self.migration_cost_handler is not None and migration_coeff > 1e-10:
       total_profit.add(migration_coeff * self.objective_component_migration_cost())
     print "Total profit expression: ", total_profit
@@ -1317,7 +1319,7 @@ class ModelCreator(object):
 
 
       else:
-        mapping = Mapping(req, self.substrate, self.scenario, is_embedded=False)
+         mapping = Mapping(req, self.substrate, self.scenario, is_embedded=False)
 
       print "\t storing the solution for request {}".format(req.id)
       self.solution.set_mapping_of_request(req, mapping)

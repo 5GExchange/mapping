@@ -73,10 +73,11 @@ def get_MIP_solution (reqnffgs, netnffg, migration_handler,
 
 
 def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
-                                  mode=NFFG.MODE_REMAP, migration_handler=None,
+                                  migration_handler=None,
                                   migration_coeff=None,
                                   load_balance_coeff=None,
-                                  edge_cost_coeff=None):
+                                  edge_cost_coeff=None,
+                                  reopt=True):
   """
   At this point the VNFs of 'net' should only represent the occupied
   resources and reqs the request NFFGs to be mapped!
@@ -135,18 +136,20 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
   ############################################################################
   # HACK: We only want to use the algorithm class to generate an NFFG, we will 
   # fill the mapping struct with the one found by MIP
-  alg = CoreAlgorithm(net, request, chainlist, mode, False,
+  alg = CoreAlgorithm(net, request, chainlist,
+                      NFFG.MODE_REMAP if reopt else NFFG.MODE_ADD, False,
                       overall_highest_delay, dry_init=True,
                       propagate_e2e_reqs=False, keep_e2e_reqs_in_output=True)
 
+  net = alg.bare_infrastucture_nffg
   # move 'availres' and 'availbandwidth' values of the network to maxres, 
   # because the MIP solution takes them as available resource.
-  net = alg.bare_infrastucture_nffg
-  for n in net.infras:
-    n.resources = n.availres
-  for d in net.links:
-    # there shouldn't be any Dynamic links by now.
-    d.bandwidth = d.availbandwidth
+  if not reopt:
+    for n in net.infras:
+      n.resources = n.availres
+    for d in net.links:
+      # there shouldn't be any Dynamic links by now.
+      d.bandwidth = d.availbandwidth
 
   log.debug("TIMING: %ss has passed during CoreAlgorithm initialization" % (
     time.time() - current_time))
@@ -271,7 +274,8 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
                                       migration_handler=migration_handler,
                                       migration_coeff=migration_coeff,
                                       load_balance_coeff=load_balance_coeff,
-                                      edge_cost_coeff=edge_cost_coeff)
+                                      edge_cost_coeff=edge_cost_coeff,
+                                      reopt=optimize_already_mapped_nfs)
 
 
 if __name__ == '__main__':
@@ -281,10 +285,10 @@ if __name__ == '__main__':
   with open('../alg1/nffgs/escape-mn-double-mapped.nffg', "r") as f:
     net = NFFG.parse(f.read())
 
-  # print "\nMIGRATION-TEST: Simple MILP: \n"
-  # with open("simple-milp.nffg", "w") as f:
-  #   f.write(MAP(req, net, optimize_already_mapped_nfs=False).dump())
-  #
+  print "\nMIGRATION-TEST: Simple MILP: \n"
+  with open("simple-milp.nffg", "w") as f:
+    f.write(MAP(req, net, optimize_already_mapped_nfs=False, edge_cost_coeff=1.0).dump())
+
   # print "\nMIGRATION-TEST: Optimize everything MILP: \n"
   # with open("reopt-milp.nffg", "w") as f:
   #   f.write(MAP(req, net, optimize_already_mapped_nfs=True).dump())
@@ -299,7 +303,7 @@ if __name__ == '__main__':
   #   f.write(MAP(req, net, optimize_already_mapped_nfs=True,
   #               migration_handler_name="ZeroMigrationCost").dump())
 
-  print "\nMIGRATION-TEST: Optimize everything ONLY load balancing"
+  print "\nMIGRATION-TEST: Optimize everything with composite objective"
   with open("reopt-milp-lb.nffg", "w") as f:
     f.write(MAP(req, net, optimize_already_mapped_nfs=True, migration_coeff=0.0,
                 load_balance_coeff=1.0, edge_cost_coeff=0.0,
