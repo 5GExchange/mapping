@@ -123,7 +123,8 @@ class MappingSolutionFramework():
             self.__orchestrator_adaptor = OfflineOrchestratorAdaptor(
                 self.__network_topology,
                 bool(config['optimize_already_mapped_nfs']),
-                config['migration_handler_name'],
+                config['migration_handler_name'], config['migration_coeff'],
+                config['load_balance_coeff'], config['edge_cost_coeff'],
                 **config['migration_handler_kwargs'])
         else:
             log.error("Invalid 'orchestrator' in the simulation.cfg file!")

@@ -90,7 +90,7 @@ class ConstantMigrationCost(AbstractMigrationCostHandler):
     :param const_cost: cost of moving a single VNF.
     """
     super(ConstantMigrationCost, self).__init__(request, resource)
-    self.const_cost = const_cost
+    self.const_cost = float(const_cost)
     self._create_migration_costs()
 
   def _create_migration_costs (self):

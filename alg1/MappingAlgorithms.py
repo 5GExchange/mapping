@@ -131,6 +131,11 @@ def MAP (request, network, enable_shortest_path_cache=False,
                       lat_factor=lat_factor, shortest_paths=shortest_paths,
                       propagate_e2e_reqs=propagate_e2e_reqs)
   alg.setBacktrackParameters(bt_limit, bt_branching_factor)
+  if 'cpu' in kwargs or 'mem' in kwargs or 'storage' in kwargs:
+    cpu = kwargs['cpu'] if 'cpu' in kwargs else 0.0
+    mem = kwargs['mem'] if 'mem' in kwargs else 0.0
+    storage = kwargs['storage'] if 'storage' in kwargs else 0.0
+    alg.setResourcePrioritiesOnNodes(cpu=cpu, mem=mem, storage=storage)
   mappedNFFG = alg.start()
 
   if not mode == NFFG.MODE_DEL:
@@ -381,7 +386,7 @@ if __name__ == '__main__':
       # The following line must not be called if the input has already 
       # bidirectional links in the resource graph
       # net.duplicate_static_links()
-    mapped = MAP(req, net, mode=req.mode)
+    mapped = MAP(req, net, mode=req.mode, cpu=0.5, mem=0.5)
     print mapped.dump()
   except uet.UnifyException as ue:
     print ue, ue.msg

@@ -11,11 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from abc import ABCMeta, abstractmethod
+import io
 import logging
 import os
-import io
 import time
+from abc import ABCMeta, abstractmethod
 
 log = logging.getLogger(" Orchestrator ")
 log.setLevel(logging.DEBUG)
@@ -136,17 +136,27 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 class OfflineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
     def __init__(self, resource, optimize_already_mapped_nfs,
-                 migration_handler_name, **migration_handler_kwargs):
+                 migration_handler_name, migration_coeff,
+                 load_balance_coeff, edge_cost_coeff,
+                 **migration_handler_kwargs):
         super(OfflineOrchestratorAdaptor, self).__init__(resource)
         self.__resource_graph = resource
         self.optimize_already_mapped_nfs = optimize_already_mapped_nfs
         self.migration_handler_name = migration_handler_name
         self.migration_handler_kwargs = migration_handler_kwargs
+        print migration_coeff
+        self.migration_coeff = float(migration_coeff)
+        self.load_balance_coeff = float(load_balance_coeff)
+        self.edge_cost_coeff = float(edge_cost_coeff)
         self.dump_suffix = "offline"
 
-    def MAP(self, request):
-        self.__resource_graph = offline_mapping.MAP(
-                request, self.__resource_graph,
-                optimize_already_mapped_nfs=self.optimize_already_mapped_nfs,
-                migration_handler_name=self.migration_handler_name,
-                **self.migration_handler_kwargs)
+    def MAP (self, request):
+      print "# of VNFs: ", len([n for n in request.nfs])
+      self.__resource_graph = offline_mapping.MAP(
+        request, self.__resource_graph,
+        optimize_already_mapped_nfs=self.optimize_already_mapped_nfs,
+        migration_handler_name=self.migration_handler_name,
+        migration_coeff=self.migration_coeff,
+        load_balance_coeff=self.load_balance_coeff,
+        edge_cost_coeff=self.edge_cost_coeff,
+        **self.migration_handler_kwargs)
