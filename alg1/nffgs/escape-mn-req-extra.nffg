@@ -123,7 +123,7 @@
       "dst_node": "SAP2",
       "dst_port": 1, 
       "delay": 30,
-      "bandwidth": 4, 
+      "bandwidth": 1,
       "sg_path": [
         11,
         12,
@@ -137,7 +137,7 @@
       "dst_node": "SAP1",
       "dst_port": 1, 
       "delay": 30,
-      "bandwidth": 4, 
+      "bandwidth": 1,
       "sg_path": [
         14,
         15

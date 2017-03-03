@@ -663,6 +663,7 @@ class ModelCreator(object):
     self.scenario = scenario
     self.substrate = scenario.substrate
     self.requests = scenario.requests
+    self.do_node_load_balancing = False
 
     # for easier lookup which nfs can be placed onto which substrate nodes
     self.allowed_nodes_copy = {}  # a dict of req --> vnode --> [snodes]
@@ -682,6 +683,7 @@ class ModelCreator(object):
     self.var_node_load = {}
     self.var_edge_load = {}
     self.var_path_delay = {}
+    self.var_node_util_lower_bound = None
     # self.var_vedge_to_snode_mapping = {}
 
     # the final solution (if any was found)
@@ -690,7 +692,13 @@ class ModelCreator(object):
     # add an object of tpye migration_costs.AbstractMigrationCostHandler
     self.migration_cost_handler = migration_cost_handler
 
-  def init_model_creator (self):
+  def init_model_creator (self, migration_coeff=None, load_balance_coeff=None,
+                          edge_cost_coeff=None):
+
+    # if any of the coefficents is None then we ignore all of them
+    if None not in (migration_coeff, load_balance_coeff, edge_cost_coeff) and \
+          load_balance_coeff > 1e-10:
+      self.do_node_load_balancing = True
 
     self.preprocess()
 
@@ -706,8 +714,15 @@ class ModelCreator(object):
     # create constraints and the objective
     self.create_constraints()
 
+    # objective may access variable
+    self.model.update()
+    # if any of the coefficents is None then we ignore all of them
+    if None not in (migration_coeff, load_balance_coeff, edge_cost_coeff):
+      self.plugin_objective_maximize_multiple_component(migration_coeff,
+                                                        load_balance_coeff,
+                                                        edge_cost_coeff)
     # use objective function which includes migration cost handler
-    if self.migration_cost_handler is not None:
+    elif self.migration_cost_handler is not None:
       self.plugin_objective_minimize_edge_and_migration_cost()
     else:
       self.plugin_objective_maximize_number_of_embedded_requests_and_minimize_costs()
@@ -845,6 +860,11 @@ class ModelCreator(object):
                                                          vtype=GRB.CONTINUOUS,
                                                          name=variable_id)
 
+    if self.do_node_load_balancing:
+      self.var_node_util_lower_bound = self.model.addVar(lb=0.0, ub=1.0, obj=0.0,
+                                                         vtype=GRB.CONTINUOUS,
+                                                         name="node_load_lower_bound")
+
         # for req in self.requests:
         #     self.var_vedge_to_snode_mapping[req] = {}
         #
@@ -868,6 +888,8 @@ class ModelCreator(object):
     self.create_constraint_node_load_bandwidth()
     self.create_constraint_edge_load_bandwidth()
     self.create_constraint_delay_requirements()
+    if self.do_node_load_balancing:
+      self.create_constraint_node_load_balancing()
 
   def create_constraint_request_embedding_triggers_node_embeddings (self):
     for req in self.requests:
@@ -1072,6 +1094,25 @@ class ModelCreator(object):
 
         self.model.addConstr(expr, GRB.LESS_EQUAL, delay_bound, constr_name)
 
+  def create_constraint_node_load_balancing (self):
+    """
+    Adds variable which provides lower bound for load utilization.
+    :return:
+    """
+    node_resources = ["cpu", "memory"]
+    for res in node_resources:
+      for snode in self.var_node_load:
+        # Ignore if a resources has infinite or zero resources
+        if 1e99 > self.substrate.node[snode][res] > 1e-10:
+          print self.substrate.node[snode][res]
+          expr = LinExpr([(-1.0/self.substrate.node[snode][res],
+                           self.var_node_load[snode][res]),
+                          (1.0, self.var_node_util_lower_bound)])
+          constr_name = construct_name("load_bal"+res, snode=snode)
+
+          self.model.addConstr(expr, GRB.LESS_EQUAL, 0.0, constr_name)
+
+
   def plugin_objective_maximize_number_of_embedded_requests (self):
     expr = LinExpr(
       [(1.0, self.var_embedding_decision[req]) for req in self.requests])
@@ -1099,14 +1140,14 @@ class ModelCreator(object):
   def plugin_objective_minimize_edge_and_migration_cost (self):
 
     # there should be only one request
-    req = self.requests[0]
+    req0 = self.requests[0]
     if len(self.requests) > 1:
       raise Exception("There are more than one requests given to MILP!")
 
     migr_costs = self.migration_cost_handler.objective_migration_component()
     max_migr_cost = self.migration_cost_handler.get_maximal_cost()
     migr_cost_exp = LinExpr(
-      [(-1.0 * migr_costs[vnode][snode], self.var_node_mapping[req][vnode][snode]) for
+      [(-1.0 * migr_costs[vnode][snode], self.var_node_mapping[req0][vnode][snode]) for
        vnode in migr_costs.iterkeys() for snode in migr_costs[vnode].iterkeys()])
 
     max_edge_cost = 0.0
@@ -1121,11 +1162,77 @@ class ModelCreator(object):
     # component be way too small?
     total_profit = migr_cost_exp
     total_profit.add(
-      LinExpr([(max_migr_cost, self.var_embedding_decision[req])]))
+      LinExpr([(max_migr_cost, self.var_embedding_decision[req0])]))
     total_profit.add(edge_cost_exp)
     total_profit.add(
-      LinExpr([(max_edge_cost, self.var_embedding_decision[req])]))
+      LinExpr([(max_edge_cost, self.var_embedding_decision[req0])]))
 
+    self.model.setObjective(total_profit, GRB.MAXIMIZE)
+
+  def objective_component_migration_cost (self):
+    req0 = self.requests[0]
+    if len(self.requests) > 1:
+      raise Exception("There are more than one requests given to MILP!")
+
+    migr_costs = self.migration_cost_handler.objective_migration_component()
+    max_migr_cost = self.migration_cost_handler.get_maximal_cost()
+    print "Max possible migration cost: ", max_migr_cost
+    if max_migr_cost < 1e-10:
+      raise Exception("Max possible migration is zero!")
+    obj_comp = LinExpr(
+      [(-1.0 * migr_costs[vnode][snode] / max_migr_cost,
+        self.var_node_mapping[req0][vnode][snode]) for
+       vnode in migr_costs.iterkeys() for snode in
+       migr_costs[vnode].iterkeys()])
+
+    obj_comp.add(
+      LinExpr([(2.0, self.var_embedding_decision[req0])]))
+
+    return obj_comp
+
+  def objective_component_edge_cost (self):
+    req0 = self.requests[0]
+    if len(self.requests) > 1:
+      raise Exception("There are more than one requests given to MILP!")
+
+    max_edge_cost = 0.0
+    for sedge in self.substrate.edges:
+      max_edge_cost += self.substrate.edge[sedge]['cost'] * \
+                       self.substrate.edge[sedge]['bandwidth']
+    print "Max possible edge cost: ", max_edge_cost
+    if max_edge_cost < 1e-10:
+      raise Exception("Maximal possible edge cost is zero!")
+    edge_cost_exp = LinExpr(
+      [(-1.0 * self.substrate.edge[sedge]['cost'] / max_edge_cost,
+        self.var_edge_load[sedge])
+       for sedge in self.substrate.edges])
+
+    edge_cost_exp.add(
+      LinExpr([(2.0, self.var_embedding_decision[req0])]))
+
+    return edge_cost_exp
+
+  def objective_component_load_balancing (self):
+    """
+    General ILP based load balancing method is to maximize a lower bound.
+    :return:
+    """
+    req0 = self.requests[0]
+    if len(self.requests) > 1:
+      raise Exception("There are more than one requests given to MILP!")
+
+    return LinExpr([(1.0, self.var_node_util_lower_bound),
+                    (2.0, self.var_embedding_decision[req0])])
+
+  def plugin_objective_maximize_multiple_component (self, migration_coeff,
+                                                    load_balance_coeff,
+                                                    edge_cost_coeff):
+    total_profit = edge_cost_coeff * self.objective_component_edge_cost()
+    if self.do_node_load_balancing:
+      total_profit.add(load_balance_coeff * self.objective_component_load_balancing())
+    if self.migration_cost_handler is not None and migration_coeff > 1e-10:
+      total_profit.add(migration_coeff * self.objective_component_migration_cost())
+    print "Total profit expression: ", total_profit
     self.model.setObjective(total_profit, GRB.MAXIMIZE)
 
   def _obtain_solution (self):
@@ -1212,7 +1319,7 @@ class ModelCreator(object):
 
 
       else:
-        mapping = Mapping(req, self.substrate, self.scenario, is_embedded=False)
+         mapping = Mapping(req, self.substrate, self.scenario, is_embedded=False)
 
       print "\t storing the solution for request {}".format(req.id)
       self.solution.set_mapping_of_request(req, mapping)
