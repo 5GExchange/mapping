@@ -61,24 +61,23 @@ class AbstractOrchestratorAdaptor(object):
     def MAP(self, request):
         return
 
-    def dump_mapped_nffg(self, calls, type):
+    @abstractmethod
+    def dump_mapped_nffg(self, calls, type, sim_number, orchest_type):
+
         dump_nffg = self.__resource_graph.dump()
 
-        i = 1
-        suffix = "_" + self.dump_suffix
-
-        if not os.path.exists('test' + str(i) + suffix):
-            os.mkdir('test' + str(i) + suffix)
-            path = os.path.abspath('test' + str(i) + suffix)
+        i = sim_number
+        if not os.path.exists('test' + str(i) + orchest_type):
+            os.mkdir('test' + str(i) + orchest_type)
+            path = os.path.abspath('test' + str(i) + orchest_type)
             full_path = os.path.join(path, 'dump_nffg_' + str(calls) + "_"
-                                + type + "_" + str(time.ctime()) + suffix)
+                                + type + "_" + str(i) + "_" + str(time.ctime()))
             with io.FileIO(full_path, "w") as file:
                 file.write(dump_nffg)
         else:
-            path = os.path.abspath('test' + str(i) + suffix)
-            full_path = os.path.join(path,
-                                     'dump_nffg_' + str(calls) + "_" + type +
-                                     "_" + str(time.ctime()) + suffix)
+            path = os.path.abspath('test' + str(i) + orchest_type)
+            full_path = os.path.join(path, 'dump_nffg_' + str(calls) + "_"
+                                + type + "_" + str(i) + "_" + str(time.ctime()))
             with io.FileIO(full_path, "w") as file:
                 file.write(dump_nffg)
 
@@ -125,6 +124,24 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
         self.concrete_hybrid_orchestrator.MAP(
             request, self.concrete_hybrid_orchestrator)
 
+    def dump_mapped_nffg(self, calls, type, sim_number, orchest_type):
+
+        dump_nffg = self.concrete_hybrid_orchestrator.res_online.dump()
+
+        i = sim_number
+        if not os.path.exists('test' + str(i) + orchest_type):
+            os.mkdir('test' + str(i) + orchest_type)
+            path = os.path.abspath('test' + str(i) + orchest_type)
+            full_path = os.path.join(path, 'dump_nffg_' + str(calls) + "_"
+                                + type + "_" + str(time.ctime()))
+            with io.FileIO(full_path, "w") as file:
+                file.write(dump_nffg)
+        else:
+            path = os.path.abspath('test' + str(i) + orchest_type)
+            full_path = os.path.join(path, 'dump_nffg_' + str(calls) + "_"
+                                + type + "_"  + str(time.ctime()))
+            with io.FileIO(full_path, "w") as file:
+                file.write(dump_nffg)
 
 class OfflineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 

@@ -60,6 +60,7 @@ class MappingSolutionFramework():
 
         self.number_of_iter = config['max_number_of_iterations']
         self.dump_freq = int(config['dump_freq'])
+        self.sim_number = int(config['simulation_number'])
         self.max_number_of_iterations = int(config['max_number_of_iterations'])
         self.request_arrival_lambda = float(config['request_arrival_lambda'])
         # Ha a discrete_simulation utan van vmi akkor True-ra ertekelodik ki
@@ -100,11 +101,11 @@ class MappingSolutionFramework():
 
 
         # Orchestrator
-        orchestrator_type = config['orchestrator']
-        if orchestrator_type == "online":
+        self.orchestrator_type = config['orchestrator']
+        if self.orchestrator_type == "online":
             self.__orchestrator_adaptor = OnlineOrchestratorAdaptor(
                 self.__network_topology)
-        elif orchestrator_type == "hybrid":
+        elif self.orchestrator_type == "hybrid":
             log.info(" ---- Hybrid specific configurations -----")
             log.info(" | What to optimize: " + str(config['what_to_optimize']))
             log.info(" | When to optimize: " + str(config['when_to_optimize']))
@@ -113,7 +114,7 @@ class MappingSolutionFramework():
             log.info(" -----------------------------------------")
             self.__orchestrator_adaptor = HybridOrchestratorAdaptor(
                 self.__network_topology)
-        elif orchestrator_type == "offline":
+        elif self.orchestrator_type == "offline":
             log.info(" ---- Offline specific configurations -----")
             log.info(" | Optimize already mapped nfs " + config[
                 'optimize_already_mapped_nfs'])
@@ -144,7 +145,8 @@ class MappingSolutionFramework():
                      + str(sim_iter) + " successful")
             if not sim_iter % self.dump_freq:
                 log.info("Dump NFFG to file after the " + str(sim_iter) + ". mapping")
-                self.__orchestrator_adaptor.dump_mapped_nffg(sim_iter, "mapping")
+                self.__orchestrator_adaptor.dump_mapped_nffg(
+                sim_iter, "mapping", self.sim_number, self.orchestrator_type)
         except uet.MappingException:
             log.info("Mapping thread: Mapping service_request_" +
                      str(sim_iter) + " unsuccessful")
@@ -161,7 +163,8 @@ class MappingSolutionFramework():
                 log.info("Dump NFFG to file after the " +
                          str(sim_iter) + ". deletion")
                 self.__orchestrator_adaptor.\
-                    dump_mapped_nffg(sim_iter, "deletion")
+                    dump_mapped_nffg(sim_iter, "deletion",
+                                     self.sim_number, self.orchestrator_type)
 
         except uet.MappingException:
             log.error("Mapping thread: Deleting service_request_" +
