@@ -39,10 +39,12 @@ class HybridOrchestrator():
 
             self.res_online = None
             self.__res_offline = NFFG()
+
             # All request in one NFFG
             self.SUM_req = NFFG()
             self.offline_mapping_thread = None
             self.when_to_opt_param = config['when_to_opt_parameter']
+
             # What to optimize strategy
             what_to_opt_strat = config['what_to_optimize']
             if what_to_opt_strat == "reqs_since_last":
