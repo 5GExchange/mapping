@@ -42,7 +42,10 @@ logging.basicConfig(format='%(levelname)s:%(name)s:%(message)s')
 log.setLevel(logging.DEBUG)
 
 
-def get_MIP_solution (reqnffgs, netnffg, migration_handler):
+def get_MIP_solution (reqnffgs, netnffg, migration_handler,
+                      migration_coeff=None,
+                      load_balance_coeff=None,
+                      edge_cost_coeff=None):
   """
   Executes the MIP mapping for the input requests and network NFFGs.
   Returns the mapped structure and the references to the mapped requests.
@@ -56,7 +59,9 @@ def get_MIP_solution (reqnffgs, netnffg, migration_handler):
 
   scen = Scenario(substrate, request_seq)
   mc = ModelCreator(scen, migration_handler)
-  mc.init_model_creator()
+  mc.init_model_creator(migration_coeff=migration_coeff,
+                        load_balance_coeff=load_balance_coeff,
+                        edge_cost_coeff=edge_cost_coeff)
   if isFeasibleStatus(mc.run_milp()):
     solution = mc.solution
     solution.validate_solution(debug_output=False)
@@ -68,7 +73,10 @@ def get_MIP_solution (reqnffgs, netnffg, migration_handler):
 
 
 def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
-                                  mode=NFFG.MODE_REMAP, migration_handler=None):
+                                  mode=NFFG.MODE_REMAP, migration_handler=None,
+                                  migration_coeff=None,
+                                  load_balance_coeff=None,
+                                  edge_cost_coeff=None):
   """
   At this point the VNFs of 'net' should only represent the occupied
   resources and reqs the request NFFGs to be mapped!
@@ -144,7 +152,10 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
     time.time() - current_time))
   current_time = time.time()
 
-  mapping_of_req = get_MIP_solution([request], net, migration_handler)
+  mapping_of_req = get_MIP_solution([request], net, migration_handler,
+                                    migration_coeff=migration_coeff,
+                                    load_balance_coeff=load_balance_coeff,
+                                    edge_cost_coeff=edge_cost_coeff)
 
   log.debug("TIMING: %ss has passed with MILP calculation" % (
     time.time() - current_time))
@@ -195,7 +206,8 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
 
 
 def MAP (request, resource, optimize_already_mapped_nfs=True,
-         migration_handler_name=None,
+         migration_handler_name=None, migration_coeff=None,
+         load_balance_coeff=None, edge_cost_coeff=None,
          **migration_handler_kwargs):
   """
   Starts an offline optimization of the 'resource', which may contain NFs for
@@ -256,7 +268,10 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
     # with MILP.
     pass
   return convert_mip_solution_to_nffg([request], resource,
-                                      migration_handler=migration_handler)
+                                      migration_handler=migration_handler,
+                                      migration_coeff=migration_coeff,
+                                      load_balance_coeff=load_balance_coeff,
+                                      edge_cost_coeff=edge_cost_coeff)
 
 
 if __name__ == '__main__':
@@ -266,20 +281,26 @@ if __name__ == '__main__':
   with open('../alg1/nffgs/escape-mn-double-mapped.nffg', "r") as f:
     net = NFFG.parse(f.read())
 
-  print "\nMIGRATION-TEST: Simple MILP: \n"
-  with open("simple-milp.nffg", "w") as f:
-    f.write(MAP(req, net, optimize_already_mapped_nfs=False).dump())
+  # print "\nMIGRATION-TEST: Simple MILP: \n"
+  # with open("simple-milp.nffg", "w") as f:
+  #   f.write(MAP(req, net, optimize_already_mapped_nfs=False).dump())
+  #
+  # print "\nMIGRATION-TEST: Optimize everything MILP: \n"
+  # with open("reopt-milp.nffg", "w") as f:
+  #   f.write(MAP(req, net, optimize_already_mapped_nfs=True).dump())
+  #
+  # print "\nMIGRATION-TEST: Optimize everything with migration cost MILP"
+  # with open("reopt-milp-migr.nffg", "w") as f:
+  #   f.write(MAP(req, net, optimize_already_mapped_nfs=True,
+  #       migration_handler_name="ConstantMigrationCost", const_cost=24.0).dump())
+  #
+  # print "\nMIGRATION-TEST: Optimize everything with ZERO migration cost MILP"
+  # with open("reopt-milp-0migr.nffg", "w") as f:
+  #   f.write(MAP(req, net, optimize_already_mapped_nfs=True,
+  #               migration_handler_name="ZeroMigrationCost").dump())
 
-  print "\nMIGRATION-TEST: Optimize everything MILP: \n"
-  with open("reopt-milp.nffg", "w") as f:
-    f.write(MAP(req, net, optimize_already_mapped_nfs=True).dump())
-
-  print "\nMIGRATION-TEST: Optimize everything with migration cost MILP"
-  with open("reopt-milp-migr.nffg", "w") as f:
-    f.write(MAP(req, net, optimize_already_mapped_nfs=True,
-        migration_handler_name="ConstantMigrationCost", const_cost=24.0).dump())
-
-  print "\nMIGRATION-TEST: Optimize everything with ZERO migration cost MILP"
-  with open("reopt-milp-0migr.nffg", "w") as f:
-    f.write(MAP(req, net, optimize_already_mapped_nfs=True,
-                migration_handler_name="ZeroMigrationCost").dump())
+  print "\nMIGRATION-TEST: Optimize everything ONLY load balancing"
+  with open("reopt-milp-lb.nffg", "w") as f:
+    f.write(MAP(req, net, optimize_already_mapped_nfs=True, migration_coeff=0.0,
+                load_balance_coeff=1.0, edge_cost_coeff=0.0,
+                migration_handler_name="ConstantMigrationCost", const_cost=24.0).dump())
