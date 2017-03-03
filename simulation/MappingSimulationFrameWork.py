@@ -68,7 +68,7 @@ class MappingSolutionFramework():
         self.request_lifetime_lambda = float(config['request_lifetime_lambda'])
         # This stores the request waiting to be mapped
         self.__request_list = request_list
-
+        self.sim_iter = 0
         # Resource
         resource_type = config['topology']
         if resource_type == "pico":
@@ -206,15 +206,15 @@ class MappingSolutionFramework():
     def create_request(self):
         log.info("Start request generator thread")
         topology = self.__network_topology
-        sim_end = self.number_of_iter
+        sim_end = self.max_number_of_iterations
         # Simulation cycle
         sim_running = True
-        sim_iter = 1
+        self.sim_iter = 1
         while sim_running:
 
             # Get request
             service_graph, life_time = \
-                self.__request_generator.get_request(topology, sim_iter)
+                self.__request_generator.get_request(topology, self.sim_iter)
 
             # Discrete working
             if self.__discrete_simulation:
@@ -222,9 +222,9 @@ class MappingSolutionFramework():
 
             # Not discrete working
             else:
-                log.info("Request Generator thread: Add request " + str(sim_iter))
+                log.info("Request Generator thread: Add request " + str(self.sim_iter))
                 request_list_element = {"request": service_graph,
-                                    "life_time": life_time, "req_num": sim_iter}
+                                    "life_time": life_time, "req_num": self.sim_iter}
                 self.__request_list.put(request_list_element)
 
                 scale_radius = (1/self.request_arrival_lambda)
@@ -232,8 +232,8 @@ class MappingSolutionFramework():
                 time.sleep(exp_time)
 
             # Increase simulation iteration
-            if (sim_iter < sim_end):
-                sim_iter += 1
+            if (self.sim_iter < sim_end):
+                self.sim_iter += 1
             else:
                 sim_running = False
                 mapping_thread_flag = False

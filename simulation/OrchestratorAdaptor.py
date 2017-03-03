@@ -90,17 +90,7 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
     def MAP(self, request):
         mode = NFFG.MODE_ADD
-        """""
-        self.__resource_graph, shortest_paths = \
-            online_mapping.MAP(request, self.__resource_graph,
-                                            enable_shortest_path_cache=True,
-                                            bw_factor=1, res_factor=1,
-                                            lat_factor=1,
-                                            shortest_paths=None,
-                                            return_dist=True, mode=mode,
-                                            bt_limit=6,
-                                            bt_branching_factor=3)
-        """
+
         print self.__dict__
         self.__resource_graph = online_mapping.MAP(request, self.__resource_graph,
                                              enable_shortest_path_cache=True,
