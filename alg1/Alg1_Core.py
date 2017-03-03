@@ -1467,8 +1467,8 @@ class CoreAlgorithm(object):
       self.bt_handler.subchains_with_subgraphs,
       self.bt_branching_factor, self.bt_limit)
 
-  def setResourcePrioritiesOnNodes (self, cpu=0.3333, mem=0.3333,
-                                    storage=0.3333):
+  def setResourcePrioritiesOnNodes (self, cpu=0.0, mem=0.0,
+                                    storage=0.0):
     """
     Sets what weights should be used for adding up the preference values of 
     resource utilization on nodes.
