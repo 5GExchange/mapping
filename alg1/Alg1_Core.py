@@ -1216,6 +1216,8 @@ class CoreAlgorithm(object):
             # right (updated in case of ADD operation mode) VNF instance!
             nffg.add_undirected_link(out_infra_port,
                                      mappednodenf.ports[d.src.id],
+                                    p1p2id="dynlink1"+infra_port_id,
+                                    p2p1id="dynlink2"+infra_port_id,
                                      dynamic=True)
           helperlink = self.manager.link_mapping[i][j][k]
           if 'infra_ports' in helperlink:
@@ -1240,6 +1242,8 @@ class CoreAlgorithm(object):
               mappednodenf.add_port(id=d.dst.id, properties=d.dst.properties)
             nffg.add_undirected_link(in_infra_port,
                                      mappednodenf.ports[d.dst.id],
+                                     p1p2id="dynlink1" + infra_port_id,
+                                     p2p1id="dynlink2" + infra_port_id,
                                      dynamic=True)
           helperlink = self.manager.link_mapping[i][vnf][k]
           if 'infra_ports' in helperlink:
