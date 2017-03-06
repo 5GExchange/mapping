@@ -52,7 +52,7 @@ class GwinResourceGetter(AbstractResourceGetter):
 
     def GetNFFG(self):
       network = CarrierTopoBuilder.getSNDlib_dfn_gwin(
-        "../generator/dfn-gwin.gml")
+                             "../generator/dfn-gwin.gml")
       return network
 
 
