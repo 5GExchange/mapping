@@ -20,6 +20,7 @@ import threading
 import Queue
 import datetime
 import time
+import shutil
 import logging
 import numpy as N
 from configobj import ConfigObj
@@ -205,7 +206,9 @@ class MappingSolutionFramework():
                                req_num)
 
                 # Remove expired service graph requests
-                self.__clean_expired_requests(datetime.datetime.now())
+                #self.__clean_expired_requests(datetime.datetime.now())
+
+                self.running_array.append(self.running_requests)
 
         # Wait for all request to expire
         while len(self.__remaining_request_lifetimes) > 0:
@@ -221,9 +224,6 @@ class MappingSolutionFramework():
             if service['dead_time'] < time:
                self.__del_service(service, service['req_num'])
                self.running_requests -= 1
-
-
-        self.running_array.append(self.running_requests)
 
 
     def create_request(self):
@@ -276,16 +276,24 @@ if __name__ == "__main__":
 
         req_gen_thread.join()
         mapping_thread.join()
-
-
-        #Create JSON files
-
-        requests = {"mapped_requests": test.mapped_array,
-                                "running_requests": test.running_array,
-                                "refused_requests": test.refused_array}
-        with open('requests.txt', 'w') as outfile:
-            json.dump(requests, outfile)
-
-
     except:
         log.error(" Unable to start threads")
+
+    # Create JSON files
+    requests = {"mapped_requests": test.mapped_array,
+                                "running_requests": test.running_array,
+                                "refused_requests": test.refused_array}
+    try:
+        path = os.path.abspath('test' + str(test.sim_number) + test.orchestrator_type)
+        full_path = os.path.join(path, "requests" + "_" + str(time.ctime()) +".json")
+
+        with open(full_path, 'w') as outfile:
+            json.dump(requests, outfile)
+    except:
+        log.error("JSON dump")
+
+    # Copy simulation.cfg to testXY dir
+    shutil.copy('simulation.cfg', path)
+
+    # Move log_file.log to testxy dir
+    shutil.move('../log_file.log', path)
