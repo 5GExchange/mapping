@@ -21,14 +21,6 @@ import time
 import numpy as N
 from configobj import ConfigObj
 
-import alg1.UnifyExceptionTypes as uet
-import matplotlib.pyplot as plt
-from OrchestratorAdaptor import *
-from RequestGenerator import MultiReqGen
-from RequestGenerator import SimpleReqGen
-from RequestGenerator import TestReqGen
-from ResourceGetter import *
-
 try:
   # runs when mapping files are called from ESCAPE
   from escape.nffg_lib.nffg import NFFG, NFFGToolBox
@@ -38,6 +30,14 @@ except ImportError:
   import site
   site.addsitedir('..')
   from nffg_lib.nffg import NFFG, NFFGToolBox
+
+import alg1.UnifyExceptionTypes as uet
+import matplotlib.pyplot as plt
+from OrchestratorAdaptor import *
+from RequestGenerator import MultiReqGen
+from RequestGenerator import SimpleReqGen
+from RequestGenerator import TestReqGen
+from ResourceGetter import *
 
 
 log = logging.getLogger(" Simulator")
@@ -149,7 +149,7 @@ class MappingSolutionFramework():
     def __mapping(self, service_graph, life_time, orchestrator_adaptor, time, sim_iter):
         try:
 
-            log.debug("# of VNFs in resource graph: " % len(
+            log.debug("# of VNFs in resource graph: %s" % len(
                 [n for n in orchestrator_adaptor.resource_graph.nfs]))
             orchestrator_adaptor.MAP(service_graph)
             # Adding successfully mapped request to the remaining_request_lifetimes
