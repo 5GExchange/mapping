@@ -284,24 +284,27 @@ if __name__ == "__main__":
 
         req_gen_thread.join()
         mapping_thread.join()
-    except:
-        log.error(" Unable to start threads")
 
-    # Create JSON files
-    requests = {"mapped_requests": test.mapped_array,
-                                "running_requests": test.running_array,
-                                "refused_requests": test.refused_array}
-    try:
-        path = os.path.abspath('test' + str(test.sim_number) + test.orchestrator_type)
-        full_path = os.path.join(path, "requests" + "_" + str(time.ctime()) +".json")
+        # Create JSON files
+        requests = {"mapped_requests": test.mapped_array,
+                    "running_requests": test.running_array,
+                    "refused_requests": test.refused_array}
 
+        path = os.path.abspath(
+            'test' + str(test.sim_number) + test.orchestrator_type)
+        full_path = os.path.join(path,
+                                 "requests" + "_" + str(time.ctime()) + ".json")
         with open(full_path, 'w') as outfile:
             json.dump(requests, outfile)
+
+    except threading.ThreadError:
+        log.error(" Unable to start threads")
     except:
         log.error("JSON dump")
 
-    # Copy simulation.cfg to testXY dir
-    shutil.copy('simulation.cfg', path)
+    finally:
+        # Copy simulation.cfg to testXY dir
+        shutil.copy('simulation.cfg', path)
 
-    # Move log_file.log to testxy dir
-    shutil.move('../log_file.log', path)
+        # Move log_file.log to testxy dir
+        shutil.move('../log_file.log', path)
