@@ -11,21 +11,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from ResourceGetter import *
-from RequestGenerator import TestReqGen
-from RequestGenerator import SimpleReqGen
-from RequestGenerator import MultiReqGen
-from OrchestratorAdaptor import *
-import threading
 import Queue
 import datetime
-import time
+import json
 import logging
+import threading
+import time
+
 import numpy as N
 from configobj import ConfigObj
+
 import alg1.UnifyExceptionTypes as uet
-import json
 import matplotlib.pyplot as plt
+from OrchestratorAdaptor import *
+from RequestGenerator import MultiReqGen
+from RequestGenerator import SimpleReqGen
+from RequestGenerator import TestReqGen
+from ResourceGetter import *
 
 try:
   # runs when mapping files are called from ESCAPE
@@ -77,11 +79,13 @@ class MappingSolutionFramework():
             self.__resource_getter = PicoResourceGetter()
         elif resource_type == "gwin":
             self.__resource_getter = GwinResourceGetter()
+        elif resource_type == "carrier":
+            self.__resource_getter = CarrierTopoGetter()
         else:
             log.error("Invalid 'topology' in the simulation.cfg file!")
             raise RuntimeError(
                 "Invalid 'topology' in the simulation.cfg file! "
-                "Please choose one of the followings: pico, gwin")
+                "Please choose one of the followings: pico, gwin, carrier")
 
         self.__network_topology = self.__resource_getter.GetNFFG()
 
@@ -144,6 +148,9 @@ class MappingSolutionFramework():
 
     def __mapping(self, service_graph, life_time, orchestrator_adaptor, time, sim_iter):
         try:
+
+            log.debug("# of VNFs in resource graph: " % len(
+                [n for n in orchestrator_adaptor.resource_graph.nfs]))
             orchestrator_adaptor.MAP(service_graph)
             # Adding successfully mapped request to the remaining_request_lifetimes
             service_life_element = {"dead_time": time +
