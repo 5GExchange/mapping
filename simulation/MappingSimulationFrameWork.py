@@ -24,6 +24,8 @@ import logging
 import numpy as N
 from configobj import ConfigObj
 import alg1.UnifyExceptionTypes as uet
+import json
+import matplotlib.pyplot as plt
 
 try:
   # runs when mapping files are called from ESCAPE
@@ -99,6 +101,13 @@ class MappingSolutionFramework():
 
         self.__remaining_request_lifetimes = list()
 
+        self.mapped_requests = 0
+        self.mapped_array = [0]
+        self.refused_requests = 0
+        self.refused_array = [0]
+        self.running_requests = 0
+        self.running_array = [0]
+
 
         # Orchestrator
         self.orchestrator_type = config['orchestrator']
@@ -143,14 +152,22 @@ class MappingSolutionFramework():
             self.__remaining_request_lifetimes.append(service_life_element)
             log.info("Mapping thread: Mapping service_request_"
                      + str(sim_iter) + " successful")
+            self.mapped_requests += 1
+            self.running_requests += 1
+            self.mapped_array.append(self.mapped_requests)
+            self.refused_array.append(self.refused_requests)
+
             if not sim_iter % self.dump_freq:
                 log.info("Dump NFFG to file after the " + str(sim_iter) + ". mapping")
                 self.__orchestrator_adaptor.dump_mapped_nffg(
                 sim_iter, "mapping", self.sim_number, self.orchestrator_type)
+
+
         except uet.MappingException:
             log.info("Mapping thread: Mapping service_request_" +
                      str(sim_iter) + " unsuccessful")
-
+            self.refused_requests += 1
+            self.refused_array.append(self.refused_requests)
 
     def __del_service(self, service, sim_iter):
         try:
@@ -173,7 +190,8 @@ class MappingSolutionFramework():
 
     def make_mapping(self):
         log.info("Start mapping thread")
-        while mapping_thread.is_alive:
+
+        while req_gen_thread.is_alive():
             while not self.__request_list.empty():
                 request_list_element = self.__request_list.get()
                 request = request_list_element['request']
@@ -202,6 +220,10 @@ class MappingSolutionFramework():
         for service in self.__remaining_request_lifetimes:
             if service['dead_time'] < time:
                self.__del_service(service, service['req_num'])
+               self.running_requests -= 1
+
+
+        self.running_array.append(self.running_requests)
 
 
     def create_request(self):
@@ -237,7 +259,6 @@ class MappingSolutionFramework():
                 self.sim_iter += 1
             else:
                 sim_running = False
-                mapping_thread_flag = False
                 log.info("Stop request generator thread")
 
 
@@ -252,5 +273,19 @@ if __name__ == "__main__":
                                           "mapping_thread_T2")
         req_gen_thread.start()
         mapping_thread.start()
+
+        req_gen_thread.join()
+        mapping_thread.join()
+
+
+        #Create JSON files
+
+        requests = {"mapped_requests": test.mapped_array,
+                                "running_requests": test.running_array,
+                                "refused_requests": test.refused_array}
+        with open('requests.txt', 'w') as outfile:
+            json.dump(requests, outfile)
+
+
     except:
         log.error(" Unable to start threads")
