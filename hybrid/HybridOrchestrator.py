@@ -96,7 +96,7 @@ class HybridOrchestrator():
     def do_online_mapping(self, request, online_RG):
         try:
             mode = NFFG.MODE_ADD
-            self.lock.acquire()
+            self.lock.acquire(True)
             self.res_online = online_mapping.MAP(request, online_RG,
                                             enable_shortest_path_cache=True,
                                             bw_factor=1, res_factor=1,
@@ -106,8 +106,10 @@ class HybridOrchestrator():
                                             bt_limit=6,
                                             bt_branching_factor=3)
             log.info("do_online_mapping : Successful online mapping :)")
-        except:
-            log.warning("do_online_mapping : Can not acquire res_online :( ")
+        except Exception as e:
+            log.info(str(e.message) + str(e.__class__))
+
+            log.warning("do_online_mapping : Can not acquire res_online or cant online mapping:( ")
             #(nem a acqure-rol ugrik az exceprt-re hanem a online mapping utan
 
         finally:
@@ -189,6 +191,7 @@ class HybridOrchestrator():
                                                             (requestToOpt, vmi))
                 log.info("Start offline optimalization!")
                 self.offline_mapping_thread.start()
+                online_mapping_thread.join()
 
             except:
                 log.error("Failed to start offline thread")
