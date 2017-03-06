@@ -13,6 +13,7 @@
 # limitations under the License.
 
 # Embedded file name: /home/dj/escape/mapping/simulation/ResourceGetter.py
+import string
 from abc import ABCMeta, abstractmethod
 
 try:
@@ -39,11 +40,13 @@ class AbstractResourceGetter:
     def GetNFFG(self):
         pass
 
+
 class PicoResourceGetter(AbstractResourceGetter):
 
     def GetNFFG(self):
         network = CarrierTopoBuilder.getPicoTopo()
         return network
+
 
 class GwinResourceGetter(AbstractResourceGetter):
 
@@ -51,3 +54,20 @@ class GwinResourceGetter(AbstractResourceGetter):
       network = CarrierTopoBuilder.getSNDlib_dfn_gwin(
         "../generator/dfn-gwin.gml")
       return network
+
+
+class CarrierTopoGetter(AbstractResourceGetter):
+
+  def GetNFFG(self):
+    """
+    See parameter description in CarrierTopoBuilder module.
+    :return:
+    """
+    topoparams = []
+    topoparams.append({'Retail': (2, 5, 100), 'Business': (2, 6, 150),
+                       'CloudNFV': (2, 2, 4, 160000, 100000,
+                                    list(string.ascii_uppercase)[:10],
+                                    [8, 12, 16], [32000, 64000], [150], 40000,
+                                    4)})
+    topoparams = 4 * topoparams
+    return CarrierTopoBuilder.getCarrierTopo(topoparams)

@@ -49,7 +49,6 @@ class AbstractOrchestratorAdaptor(object):
 
     def del_service(self, request):
         mode = NFFG.MODE_DEL
-        print "DEL NFFG self:", self
         self.resource_graph = online_mapping.MAP(request,
                                                  self.resource_graph,
                                                  enable_shortest_path_cache=False,
@@ -64,7 +63,6 @@ class AbstractOrchestratorAdaptor(object):
 
     def dump_mapped_nffg(self, calls, type, sim_number, orchest_type):
 
-        print "DUMP NFFG self:", self
         dump_nffg = self.resource_graph.dump()
 
         i = sim_number
@@ -128,7 +126,6 @@ class OfflineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
         self.edge_cost_coeff = float(edge_cost_coeff)
 
     def MAP (self, request):
-      print "# of VNFs: ", len([n for n in request.nfs])
       self.resource_graph = offline_mapping.MAP(
         request, self.resource_graph,
         optimize_already_mapped_nfs=self.optimize_already_mapped_nfs,
