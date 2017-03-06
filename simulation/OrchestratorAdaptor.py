@@ -110,6 +110,7 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
         self.concrete_hybrid_orchestrator.MAP(
             request, self.concrete_hybrid_orchestrator)
 
+        self.resource_graph = self.concrete_hybrid_orchestrator.res_online
 
 class OfflineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
