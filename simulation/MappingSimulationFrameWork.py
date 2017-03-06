@@ -24,7 +24,7 @@ import logging
 import numpy as N
 from configobj import ConfigObj
 import alg1.UnifyExceptionTypes as uet
-import numpy as np
+import json
 import matplotlib.pyplot as plt
 
 try:
@@ -101,12 +101,12 @@ class MappingSolutionFramework():
 
         self.__remaining_request_lifetimes = list()
 
-        self.__mapped_requests = 0
-        self.__mapped_array = [0]
-        self.__refused_requests = 0
-        self.__refused_array = [0]
-        self.__running_requests = 0
-        self.__running_array = [0]
+        self.mapped_requests = 0
+        self.mapped_array = [0]
+        self.refused_requests = 0
+        self.refused_array = [0]
+        self.running_requests = 0
+        self.running_array = [0]
 
 
         # Orchestrator
@@ -152,19 +152,22 @@ class MappingSolutionFramework():
             self.__remaining_request_lifetimes.append(service_life_element)
             log.info("Mapping thread: Mapping service_request_"
                      + str(sim_iter) + " successful")
-            self.__mapped_requests += 1
-            self.__mapped_array.append(self.__mapped_requests)
-            self.__running_requests += 1
-            self.__running_array.append(self.__running_requests)
+            self.mapped_requests += 1
+            self.running_requests += 1
+            self.mapped_array.append(self.mapped_requests)
+            self.refused_array.append(self.refused_requests)
+
             if not sim_iter % self.dump_freq:
                 log.info("Dump NFFG to file after the " + str(sim_iter) + ". mapping")
                 self.__orchestrator_adaptor.dump_mapped_nffg(
                 sim_iter, "mapping", self.sim_number, self.orchestrator_type)
+
+
         except uet.MappingException:
             log.info("Mapping thread: Mapping service_request_" +
                      str(sim_iter) + " unsuccessful")
-            self.__refused_requests += 1
-            self.__refused_array.append(self.__refused_requests)
+            self.refused_requests += 1
+            self.refused_array.append(self.refused_requests)
 
     def __del_service(self, service, sim_iter):
         try:
@@ -172,9 +175,6 @@ class MappingSolutionFramework():
             log.info("Mapping thread: Deleting service_request_" +
                      str(sim_iter) + " successful")
             self.__remaining_request_lifetimes.remove(service)
-
-            self.__running_requests -= 1
-            self.__running_array.append(self.__running_requests)
 
             if not sim_iter % self.dump_freq:
                 log.info("Dump NFFG to file after the " +
@@ -190,7 +190,8 @@ class MappingSolutionFramework():
 
     def make_mapping(self):
         log.info("Start mapping thread")
-        while mapping_thread.is_alive:
+
+        while req_gen_thread.is_alive():
             while not self.__request_list.empty():
                 request_list_element = self.__request_list.get()
                 request = request_list_element['request']
@@ -219,6 +220,10 @@ class MappingSolutionFramework():
         for service in self.__remaining_request_lifetimes:
             if service['dead_time'] < time:
                self.__del_service(service, service['req_num'])
+               self.running_requests -= 1
+
+
+        self.running_array.append(self.running_requests)
 
 
     def create_request(self):
@@ -254,7 +259,6 @@ class MappingSolutionFramework():
                 self.sim_iter += 1
             else:
                 sim_running = False
-                mapping_thread_flag = False
                 log.info("Stop request generator thread")
 
 
@@ -273,10 +277,14 @@ if __name__ == "__main__":
         req_gen_thread.join()
         mapping_thread.join()
 
-        #Plot generator
-        plt.plot([0 for i in xrange(test.__mapped_array.length)],test.__mapped_array)
-        plt.show()
 
+        #Create JSON files
+
+        requests = {"mapped_requests": test.mapped_array,
+                                "running_requests": test.running_array,
+                                "refused_requests": test.refused_array}
+        with open('requests.txt', 'w') as outfile:
+            json.dump(requests, outfile)
 
 
     except:
