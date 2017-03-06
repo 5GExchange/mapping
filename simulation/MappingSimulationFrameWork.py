@@ -205,7 +205,9 @@ class MappingSolutionFramework():
                                req_num)
 
                 # Remove expired service graph requests
-                self.__clean_expired_requests(datetime.datetime.now())
+                #self.__clean_expired_requests(datetime.datetime.now())
+
+                self.running_array.append(self.running_requests)
 
         # Wait for all request to expire
         while len(self.__remaining_request_lifetimes) > 0:
@@ -221,9 +223,6 @@ class MappingSolutionFramework():
             if service['dead_time'] < time:
                self.__del_service(service, service['req_num'])
                self.running_requests -= 1
-
-
-        self.running_array.append(self.running_requests)
 
 
     def create_request(self):
@@ -283,7 +282,7 @@ if __name__ == "__main__":
         requests = {"mapped_requests": test.mapped_array,
                                 "running_requests": test.running_array,
                                 "refused_requests": test.refused_array}
-        with open('requests.txt', 'w') as outfile:
+        with open('requests.json', 'w') as outfile:
             json.dump(requests, outfile)
 
 
