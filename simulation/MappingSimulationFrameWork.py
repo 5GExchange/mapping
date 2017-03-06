@@ -24,6 +24,8 @@ import logging
 import numpy as N
 from configobj import ConfigObj
 import alg1.UnifyExceptionTypes as uet
+import numpy as np
+import matplotlib.pyplot as plt
 
 try:
   # runs when mapping files are called from ESCAPE
@@ -99,6 +101,13 @@ class MappingSolutionFramework():
 
         self.__remaining_request_lifetimes = list()
 
+        self.__mapped_requests = 0
+        self.__mapped_array = [0]
+        self.__refused_requests = 0
+        self.__refused_array = [0]
+        self.__running_requests = 0
+        self.__running_array = [0]
+
 
         # Orchestrator
         self.orchestrator_type = config['orchestrator']
@@ -143,6 +152,10 @@ class MappingSolutionFramework():
             self.__remaining_request_lifetimes.append(service_life_element)
             log.info("Mapping thread: Mapping service_request_"
                      + str(sim_iter) + " successful")
+            self.__mapped_requests += 1
+            self.__mapped_array.append(self.__mapped_requests)
+            self.__running_requests += 1
+            self.__running_array.append(self.__running_requests)
             if not sim_iter % self.dump_freq:
                 log.info("Dump NFFG to file after the " + str(sim_iter) + ". mapping")
                 self.__orchestrator_adaptor.dump_mapped_nffg(
@@ -150,7 +163,8 @@ class MappingSolutionFramework():
         except uet.MappingException:
             log.info("Mapping thread: Mapping service_request_" +
                      str(sim_iter) + " unsuccessful")
-
+            self.__refused_requests += 1
+            self.__refused_array.append(self.__refused_requests)
 
     def __del_service(self, service, sim_iter):
         try:
@@ -158,6 +172,9 @@ class MappingSolutionFramework():
             log.info("Mapping thread: Deleting service_request_" +
                      str(sim_iter) + " successful")
             self.__remaining_request_lifetimes.remove(service)
+
+            self.__running_requests -= 1
+            self.__running_array.append(self.__running_requests)
 
             if not sim_iter % self.dump_freq:
                 log.info("Dump NFFG to file after the " +
@@ -252,5 +269,15 @@ if __name__ == "__main__":
                                           "mapping_thread_T2")
         req_gen_thread.start()
         mapping_thread.start()
+
+        req_gen_thread.join()
+        mapping_thread.join()
+
+        #Plot generator
+        plt.plot([0 for i in xrange(test.__mapped_array.length)],test.__mapped_array)
+        plt.show()
+
+
+
     except:
         log.error(" Unable to start threads")
