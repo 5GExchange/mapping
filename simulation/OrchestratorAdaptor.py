@@ -43,28 +43,29 @@ import milp.milp_solution_in_nffg as offline_mapping
 class AbstractOrchestratorAdaptor(object):
     __metaclass__ = ABCMeta
 
-    def __init__(self, resource):
-      self.__resource_graph = resource
-
+    def __init__(self, resource, suffix):
+      self.resource_graph = resource
+      self.dump_suffix = suffix
 
     def del_service(self, request):
         mode = NFFG.MODE_DEL
-        self.__resource_graph = online_mapping.MAP(request,
-                                        self.__resource_graph,
-                                        enable_shortest_path_cache=False,
-                                        bw_factor=1, res_factor=1,
-                                        lat_factor=1,
-                                        shortest_paths=None,
-                                        return_dist=False, mode=mode)
+        print "DEL NFFG self:", self
+        self.resource_graph = online_mapping.MAP(request,
+                                                 self.resource_graph,
+                                                 enable_shortest_path_cache=False,
+                                                 bw_factor=1, res_factor=1,
+                                                 lat_factor=1,
+                                                 shortest_paths=None,
+                                                 return_dist=False, mode=mode)
 
     @abstractmethod
     def MAP(self, request):
-        return
+        raise NotImplemented()
 
-    @abstractmethod
     def dump_mapped_nffg(self, calls, type, sim_number, orchest_type):
 
-        dump_nffg = self.__resource_graph.dump()
+        print "DUMP NFFG self:", self
+        dump_nffg = self.resource_graph.dump()
 
         i = sim_number
         if not os.path.exists('test' + str(i) + orchest_type):
@@ -85,14 +86,11 @@ class AbstractOrchestratorAdaptor(object):
 class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
     def __init__(self, resource):
-        super(OnlineOrchestratorAdaptor, self).__init__(resource)
-        self.dump_suffix = "online"
+        super(OnlineOrchestratorAdaptor, self).__init__(resource, "online")
 
     def MAP(self, request):
         mode = NFFG.MODE_ADD
-
-        print self.__dict__
-        self.__resource_graph = online_mapping.MAP(request, self.__resource_graph,
+        self.resource_graph = online_mapping.MAP(request, self.resource_graph,
                                              enable_shortest_path_cache=True,
                                              bw_factor=1, res_factor=1,
                                              lat_factor=1,
@@ -101,37 +99,19 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
                                              bt_limit=6,
                                              bt_branching_factor=3)
 
+
 class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
     def __init__(self, resource):
-        super(HybridOrchestratorAdaptor, self).__init__(resource)
+        super(HybridOrchestratorAdaptor, self).__init__(resource, "hybrid")
         self.concrete_hybrid_orchestrator = \
             hybrid_mapping.HybridOrchestrator(resource, "./simulation.cfg")
-        self.dump_suffix = "hybrid"
 
     def MAP(self, request):
         mode = NFFG.MODE_ADD
         self.concrete_hybrid_orchestrator.MAP(
             request, self.concrete_hybrid_orchestrator)
 
-    def dump_mapped_nffg(self, calls, type, sim_number, orchest_type):
-
-        dump_nffg = self.concrete_hybrid_orchestrator.res_online.dump()
-
-        i = sim_number
-        if not os.path.exists('test' + str(i) + orchest_type):
-            os.mkdir('test' + str(i) + orchest_type)
-            path = os.path.abspath('test' + str(i) + orchest_type)
-            full_path = os.path.join(path, 'dump_nffg_' + str(calls) + "_"
-                                + type + "_" + str(time.ctime()))
-            with io.FileIO(full_path, "w") as file:
-                file.write(dump_nffg)
-        else:
-            path = os.path.abspath('test' + str(i) + orchest_type)
-            full_path = os.path.join(path, 'dump_nffg_' + str(calls) + "_"
-                                + type + "_"  + str(time.ctime()))
-            with io.FileIO(full_path, "w") as file:
-                file.write(dump_nffg)
 
 class OfflineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
@@ -139,21 +119,18 @@ class OfflineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
                  migration_handler_name, migration_coeff,
                  load_balance_coeff, edge_cost_coeff,
                  **migration_handler_kwargs):
-        super(OfflineOrchestratorAdaptor, self).__init__(resource)
-        self.__resource_graph = resource
+        super(OfflineOrchestratorAdaptor, self).__init__(resource, "offline")
         self.optimize_already_mapped_nfs = optimize_already_mapped_nfs
         self.migration_handler_name = migration_handler_name
         self.migration_handler_kwargs = migration_handler_kwargs
-        print migration_coeff
         self.migration_coeff = float(migration_coeff)
         self.load_balance_coeff = float(load_balance_coeff)
         self.edge_cost_coeff = float(edge_cost_coeff)
-        self.dump_suffix = "offline"
 
     def MAP (self, request):
       print "# of VNFs: ", len([n for n in request.nfs])
-      self.__resource_graph = offline_mapping.MAP(
-        request, self.__resource_graph,
+      self.resource_graph = offline_mapping.MAP(
+        request, self.resource_graph,
         optimize_already_mapped_nfs=self.optimize_already_mapped_nfs,
         migration_handler_name=self.migration_handler_name,
         migration_coeff=self.migration_coeff,
