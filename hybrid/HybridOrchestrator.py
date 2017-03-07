@@ -131,9 +131,11 @@ class HybridOrchestrator():
                 try:
                     log.info("Try to merge online and offline")
                     self.merge_online_offline()
-                except:
-                    log.warning("Unable to merge online and offline")
-            except:
+                except Exception as e:
+                    log.error(e.message)
+                    log.error("Unable to merge online and offline")
+            except Exception as e:
+                log.error(e.message)
                 log.error(
                 "Mapping thread: Offline mapping: Unable to mapping offline!")
                 self.offline_status = False
@@ -146,8 +148,9 @@ class HybridOrchestrator():
             self.res_online, self.__res_offline = self.__res_sharing_strat.\
                 share_resource(self.resource_graph, self.res_online,
                                self.__res_offline)
-        except:
-            log.warning("set_resource_graphs: Can not acquire res_online")
+        except Exception as e:
+            log.error(e.message)
+            log.error("set_resource_graphs: Can not acquire res_online")
         finally:
             self.lock.release()
 
@@ -158,8 +161,9 @@ class HybridOrchestrator():
                 self.res_online = NFFGToolBox().merge_nffgs(self.res_online,
                                                             self.__res_offline)
                 log.info("merge_online_offline : Lock res_online, optimalization enforce :)")
-            except:
-                log.warning("merge_online_offline : Can not accuire res_online  :(")
+            except Exception as e:
+                log.error(e.message)
+                log.error("merge_online_offline : Can not accuire res_online  :(")
             finally:
                 self.lock.release()
 
@@ -177,12 +181,14 @@ class HybridOrchestrator():
                         "Online mapping thread", (request, self.res_online))
         try:
             online_mapping_thread.start()
-        except:
+        except Exception as e:
+            log.error(e.message)
             log.error("Failed to start online thread")
 
         try:
             offline_status = self.offline_mapping_thread.is_alive()
-        except:
+        except Exception as e:
+            log.error(e.message)
             offline_status = False
 
         # Start offline mapping thread
@@ -198,7 +204,8 @@ class HybridOrchestrator():
                 self.offline_mapping_thread.start()
                 online_mapping_thread.join()
 
-            except:
+            except Exception as e:
+                log.error(e.message)
                 log.error("Failed to start offline thread")
 
             # online_mapping_thread.join() # a lock-ok hasznalata miatt erre nincs szukseg (de meg nem biztos)
