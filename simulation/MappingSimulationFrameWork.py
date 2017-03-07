@@ -19,6 +19,7 @@ import logging
 import threading
 import time
 import json
+import copy
 
 import numpy as N
 from configobj import ConfigObj
@@ -153,6 +154,8 @@ class MappingSolutionFramework():
 
             log.debug("# of VNFs in resource graph: %s" % len(
                 [n for n in orchestrator_adaptor.resource_graph.nfs]))
+            # TRY TO SET IT BACK TO THE STATE BEFORE UNSUCCESSFUL MAPPING
+            self.__network_topology = copy.deepcopy(orchestrator_adaptor.resource_graph)
             orchestrator_adaptor.MAP(service_graph)
             # Adding successfully mapped request to the remaining_request_lifetimes
             service_life_element = {"dead_time": time +
@@ -172,11 +175,13 @@ class MappingSolutionFramework():
                 sim_iter, "mapping", self.sim_number, self.orchestrator_type)
 
 
-        except uet.MappingException:
+        except uet.MappingException as me:
             log.info("Mapping thread: Mapping service_request_" +
-                     str(sim_iter) + " unsuccessful")
+                     str(sim_iter) + " unsuccessful, message: %s"%me.msg)
             self.refused_requests += 1
             self.refused_array.append(self.refused_requests)
+            # TRY TO SET IT BACK TO THE STATE BEFORE UNSUCCESSFUL MAPPING
+            orchestrator_adaptor.resource_graph = self.__network_topology
         except Exception as e:
             log.error("Mapping failed: %s", e)
             raise

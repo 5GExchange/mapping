@@ -97,7 +97,6 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
                                              bt_limit=6,
                                              bt_branching_factor=3)
 
-
 class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
     def __init__(self, resource):
