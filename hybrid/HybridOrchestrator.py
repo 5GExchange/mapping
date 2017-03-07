@@ -118,7 +118,7 @@ class HybridOrchestrator():
         finally:
             self.lock.release()
 
-    def do_offline_mapping(self, request, vmi):
+    def do_offline_mapping(self, request):
             try:
                 self.offline_status = True
                 self.__res_offline = offline_mapping.MAP(
@@ -165,7 +165,7 @@ class HybridOrchestrator():
                 self.lock.release()
 
 
-    def MAP(self, request, vmi):
+    def MAP(self, request):
 
         # Collect the requests
         self.merge_all_request(self.SUM_req, request)
@@ -186,10 +186,6 @@ class HybridOrchestrator():
             offline_status = self.offline_mapping_thread.is_alive()
         except:
             offline_status = False
-        """except Exception as e:
-            log.error(e.message)
-            log.error("Cannot set offline status")
-            raise RuntimeError"""
 
         # Start offline mapping thread
         if self.__when_to_opt.need_to_optimize(offline_status, 3):
@@ -197,10 +193,10 @@ class HybridOrchestrator():
             try:
                 self.offline_mapping_thread = threading.Thread(None,
                             self.do_offline_mapping, "Offline mapping thread",
-                                                            (requestToOpt, vmi))
+                                                            [requestToOpt])
                 log.info("Start offline optimalization!")
                 self.offline_mapping_thread.start()
-                #online_mapping_thread.join()
+                #online_mapping_thread.join()  #ez miert is kell ide?
 
             except Exception as e:
                 log.error(e.message)
@@ -208,7 +204,7 @@ class HybridOrchestrator():
                 raise RuntimeError
 
         elif not self.__when_to_opt.need_to_optimize(self.offline_status, 3):
-            #online_mapping_thread.join()
+            #online_mapping_thread.join()  #es ez?
             log.info("No need to optimize!")
         else:
             log.error("Failed to start offline")

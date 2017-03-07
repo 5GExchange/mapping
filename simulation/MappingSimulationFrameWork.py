@@ -76,12 +76,15 @@ class MappingSolutionFramework():
         self.sim_number = int(config['simulation_number'])
         self.max_number_of_iterations = int(config['max_number_of_iterations'])
         self.request_arrival_lambda = float(config['request_arrival_lambda'])
+
         # Ha a discrete_simulation utan van vmi akkor True-ra ertekelodik ki
         self.__discrete_simulation = bool(config['discrete_simulation'])
         self.request_lifetime_lambda = float(config['request_lifetime_lambda'])
+
         # This stores the request waiting to be mapped
         self.__request_list = request_list
         self.sim_iter = 0
+
         # Resource
         resource_type = config['topology']
         if resource_type == "pico":
@@ -113,7 +116,6 @@ class MappingSolutionFramework():
                 "Please choose one of the followings: test, simple, multi")
 
         self.__remaining_request_lifetimes = list()
-
         self.mapped_requests = 0
         self.mapped_array = [0]
         self.refused_requests = 0
