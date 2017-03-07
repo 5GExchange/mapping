@@ -76,7 +76,7 @@ class DoubleHundred(AbstractResourceSharingStrategy):
                 # a link_res mindig except-re ugrik
                 #tempNetwork_copy.calculate_available_link_res()
 
-                to_online = tempNetwork.copy()
+                to_online = res_online.copy()
                 to_offline = resource_graph.copy()
 
             except:

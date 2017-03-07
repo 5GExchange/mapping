@@ -15,6 +15,7 @@ import io
 import logging
 import os
 import time
+import copy
 from abc import ABCMeta, abstractmethod
 
 log = logging.getLogger(" Orchestrator ")
@@ -47,6 +48,10 @@ class AbstractOrchestratorAdaptor(object):
       self.resource_graph = resource
       self.dump_suffix = suffix
 
+    @abstractmethod
+    def get_copy_of_rg(self):
+        pass
+
     def del_service(self, request):
         mode = NFFG.MODE_DEL
         """self.resource_graph = online_mapping.MAP(request,
@@ -57,6 +62,9 @@ class AbstractOrchestratorAdaptor(object):
                                                  shortest_paths=None,
                                                  return_dist=False, mode=mode)
         """
+        for i in request.nfs:
+            i.operation = NFFG.OP_DELETE
+
         self.resource_graph = online_mapping.MAP(request, self.resource_graph,
                                                  enable_shortest_path_cache=True,
                                                  bw_factor=1, res_factor=1,
@@ -65,12 +73,15 @@ class AbstractOrchestratorAdaptor(object):
                                                  return_dist=False, mode=mode,
                                                  bt_limit=6,
                                                  bt_branching_factor=3)
+        asd =0
+
     @abstractmethod
     def MAP(self, request):
         raise NotImplemented()
 
     def dump_mapped_nffg(self, calls, type, sim_number, orchest_type):
-
+        pass
+"""
         dump_nffg = self.resource_graph.dump()
 
         i = sim_number
@@ -87,6 +98,7 @@ class AbstractOrchestratorAdaptor(object):
                                 + type + "_" + str(i) + "_" + str(time.ctime()))
             with io.FileIO(full_path, "w") as file:
                 file.write(dump_nffg)
+"""
 
 
 class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
@@ -105,6 +117,9 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
                                              bt_limit=6,
                                              bt_branching_factor=3)
 
+    def get_copy_of_rg(self):
+        return copy.deepcopy(self.resource_graph)
+
 class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
     def __init__(self, resource):
@@ -114,10 +129,18 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
     def MAP(self, request):
         mode = NFFG.MODE_ADD
+        self.concrete_hybrid_orchestrator.res_online = self.resource_graph
         self.concrete_hybrid_orchestrator.MAP(
             request, self.concrete_hybrid_orchestrator)
 
         self.resource_graph = self.concrete_hybrid_orchestrator.res_online
+
+    def get_copy_of_rg(self):
+        self.concrete_hybrid_orchestrator.lock.acquire()
+        network_topology = copy.deepcopy(self.resource_graph)
+        self.concrete_hybrid_orchestrator.lock.release()
+        return network_topology
+
 
 class OfflineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
@@ -142,3 +165,6 @@ class OfflineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
         load_balance_coeff=self.load_balance_coeff,
         edge_cost_coeff=self.edge_cost_coeff,
         **self.migration_handler_kwargs)
+
+    def get_copy_of_rg(self):
+        return copy.deepcopy(self.resource_graph)

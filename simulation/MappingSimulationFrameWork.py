@@ -167,7 +167,8 @@ class MappingSolutionFramework():
                 [n for n in self.__orchestrator_adaptor.resource_graph.nfs]))
 
             # TRY TO SET IT BACK TO THE STATE BEFORE UNSUCCESSFUL MAPPING
-            self.__network_topology = copy.deepcopy(orchestrator_adaptor.resource_graph)
+            network_topology = self.__orchestrator_adaptor.get_copy_of_rg()
+
             orchestrator_adaptor.MAP(service_graph)
             # Adding successfully mapped request to the remaining_request_lifetimes
             service_life_element = {"dead_time": time +
@@ -193,7 +194,7 @@ class MappingSolutionFramework():
             self.refused_requests += 1
             self.refused_array.append(self.refused_requests)
             # TRY TO SET IT BACK TO THE STATE BEFORE UNSUCCESSFUL MAPPING
-            orchestrator_adaptor.resource_graph = self.__network_topology
+            orchestrator_adaptor.resource_graph = network_topology
         except Exception as e:
             log.error("Mapping failed: %s", e)
             raise
@@ -335,15 +336,15 @@ if __name__ == "__main__":
         # Copy simulation.cfg to testXY dir
         shutil.copy('simulation.cfg', path)
 
-        try:
+        #try:
             # Move log_file.log to testXY dir and rename
-            log_path_new = os.path.join(path,
-                                    "log_file_" + str(time.ctime()) + ".log")
-            log_path_old = os.path.join(path, "log_file.log")
-            shutil.move('../log_file.log', path)
-            os.rename(log_path_old, log_path_new)
-        except IOError as io:
-            log.error(io)
+            #log_path_new = os.path.join(path,
+                           #         "log_file_" + str(time.ctime()) + ".log")
+           # log_path_old = os.path.join(path, "log_file.log")
+          #  shutil.move('../log_file.log', path)
+#            os.rename(log_path_old, log_path_new)
+        #except IOError as io:
+           # log.error(io)
 
 
 
