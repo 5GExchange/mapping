@@ -84,6 +84,7 @@ class MappingSolutionFramework():
         # This stores the request waiting to be mapped
         self.__request_list = request_list
         self.sim_iter = 0
+        self.copy_of_rg_network_topology = None
 
         # Resource
         resource_type = config['topology']
@@ -169,7 +170,7 @@ class MappingSolutionFramework():
                 [n for n in self.__orchestrator_adaptor.resource_graph.nfs]))
 
             # TRY TO SET IT BACK TO THE STATE BEFORE UNSUCCESSFUL MAPPING
-            network_topology = self.__orchestrator_adaptor.get_copy_of_rg()
+            self.copy_of_rg_network_topology = self.__orchestrator_adaptor.get_copy_of_rg()
 
             orchestrator_adaptor.MAP(service_graph)
             # Adding successfully mapped request to the remaining_request_lifetimes
@@ -196,7 +197,7 @@ class MappingSolutionFramework():
             self.refused_requests += 1
             self.refused_array.append(self.refused_requests)
             # TRY TO SET IT BACK TO THE STATE BEFORE UNSUCCESSFUL MAPPING
-            orchestrator_adaptor.resource_graph = network_topology
+            orchestrator_adaptor.resource_graph = self.copy_of_rg_network_topology
         except Exception as e:
             log.error("Mapping failed: %s", e)
             raise

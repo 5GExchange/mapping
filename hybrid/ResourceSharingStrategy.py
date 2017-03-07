@@ -61,27 +61,7 @@ class DoubleHundred(AbstractResourceSharingStrategy):
             return to_online, to_offline
 
         else:
-            #Create NFFG without mapped requests by offline
-            tempNetwork = res_online.copy()
-            #TODO: del_service ertelmesebb lenne NFFGToolBox()-bol
-            #tempNetwork = NFFGToolBox().remove_required_services(tempNetwork, res_offline)
-            #tempNetwork = self.del_service(res_offline,tempNetwork)
-            #Try to merge online and offline results
-            #NFFGToolBox().merge_nffgs(tempNetwork, res_offline)
-            #TODO: Kell ide a tempNetwork_copy? Letezik meg a calculate_link_res BUG?
-            tempNetwork_copy = tempNetwork.copy()
-            try:
-                tempNetwork_copy.calculate_available_node_res()
-
-                # a link_res mindig except-re ugrik
-                #tempNetwork_copy.calculate_available_link_res()
-
-                to_online = res_online.copy()
-                to_offline = resource_graph.copy()
-
-            except:
-                log.warning("Link merge FAILED ")
-                to_online = res_online
-                to_offline = resource_graph.copy()
+            to_online = res_online.copy()
+            to_offline = resource_graph.copy()
 
         return to_online, to_offline
