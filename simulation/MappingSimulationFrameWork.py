@@ -177,6 +177,9 @@ class MappingSolutionFramework():
                      str(sim_iter) + " unsuccessful")
             self.refused_requests += 1
             self.refused_array.append(self.refused_requests)
+        except Exception as e:
+            log.error("Mapping failed: %s", e)
+            raise
 
     def __del_service(self, service, sim_iter):
         try:
@@ -195,6 +198,9 @@ class MappingSolutionFramework():
         except uet.MappingException:
             log.error("Mapping thread: Deleting service_request_" +
                       str(sim_iter) + " unsuccessful")
+        except Exception as e:
+            log.error("Delete failed: %s", e)
+            raise
 
 
     def make_mapping(self):
@@ -214,7 +220,7 @@ class MappingSolutionFramework():
                                req_num)
 
                 # Remove expired service graph requests
-                #self.__clean_expired_requests(datetime.datetime.now())
+                self.__clean_expired_requests(datetime.datetime.now())
 
                 self.running_array.append(self.running_requests)
 
@@ -260,7 +266,7 @@ class MappingSolutionFramework():
 
                 scale_radius = (1/self.request_arrival_lambda)
                 exp_time = N.random.exponential(scale_radius)
-                #time.sleep(exp_time)
+                time.sleep(exp_time)
 
             # Increase simulation iteration
             if (self.sim_iter < sim_end):
@@ -299,8 +305,10 @@ if __name__ == "__main__":
 
     except threading.ThreadError:
         log.error(" Unable to start threads")
-    except:
-        log.error("JSON dump")
+    except Exception as e:
+        # log.error("JSON dump") - THIS DOESN'T SAY ANYTHING
+        log.error("Exception in simulation: %s", e)
+        raise
 
     finally:
         # Copy simulation.cfg to testXY dir
