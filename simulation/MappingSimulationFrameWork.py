@@ -260,7 +260,7 @@ class MappingSolutionFramework():
 
                 scale_radius = (1/self.request_arrival_lambda)
                 exp_time = N.random.exponential(scale_radius)
-                time.sleep(exp_time)
+                #time.sleep(exp_time)
 
             # Increase simulation iteration
             if (self.sim_iter < sim_end):
