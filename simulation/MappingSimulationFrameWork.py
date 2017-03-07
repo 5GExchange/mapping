@@ -320,7 +320,7 @@ if __name__ == "__main__":
                     "refused_requests": test.refused_array}
 
         path = os.path.abspath(
-            'test' + str(test.sim_number) + test.orchestrator_type)
+            'test' + str(test.sim_number) + str(test.orchestrator_type))
         full_path = os.path.join(path,
                                  "requests_" + str(time.ctime()) + ".json")
         with open(full_path, 'w') as outfile:
@@ -336,15 +336,15 @@ if __name__ == "__main__":
         # Copy simulation.cfg to testXY dir
         shutil.copy('simulation.cfg', path)
 
-        #try:
+        try:
             # Move log_file.log to testXY dir and rename
-            #log_path_new = os.path.join(path,
-                           #         "log_file_" + str(time.ctime()) + ".log")
-           # log_path_old = os.path.join(path, "log_file.log")
-          #  shutil.move('../log_file.log', path)
-#            os.rename(log_path_old, log_path_new)
-        #except IOError as io:
-           # log.error(io)
+            log_path_new = os.path.join(path,
+                                    "log_file_" + str(time.ctime()) + ".log")
+            log_path_old = os.path.join(path, "log_file.log")
+            shutil.move('../log_file.log', path)
+            os.rename(log_path_old, log_path_new)
+        except IOError as io:
+            log.error(io)
 
 
 

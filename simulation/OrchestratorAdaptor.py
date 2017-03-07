@@ -80,8 +80,7 @@ class AbstractOrchestratorAdaptor(object):
         raise NotImplemented()
 
     def dump_mapped_nffg(self, calls, type, sim_number, orchest_type):
-        pass
-"""
+
         dump_nffg = self.resource_graph.dump()
 
         i = sim_number
@@ -98,7 +97,7 @@ class AbstractOrchestratorAdaptor(object):
                                 + type + "_" + str(i) + "_" + str(time.ctime()))
             with io.FileIO(full_path, "w") as file:
                 file.write(dump_nffg)
-"""
+
 
 
 class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
