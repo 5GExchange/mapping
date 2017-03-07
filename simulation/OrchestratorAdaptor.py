@@ -49,14 +49,22 @@ class AbstractOrchestratorAdaptor(object):
 
     def del_service(self, request):
         mode = NFFG.MODE_DEL
-        self.resource_graph = online_mapping.MAP(request,
+        """self.resource_graph = online_mapping.MAP(request,
                                                  self.resource_graph,
                                                  enable_shortest_path_cache=False,
                                                  bw_factor=1, res_factor=1,
                                                  lat_factor=1,
                                                  shortest_paths=None,
                                                  return_dist=False, mode=mode)
-
+        """
+        self.resource_graph = online_mapping.MAP(request, self.resource_graph,
+                                                 enable_shortest_path_cache=True,
+                                                 bw_factor=1, res_factor=1,
+                                                 lat_factor=1,
+                                                 shortest_paths=None,
+                                                 return_dist=False, mode=mode,
+                                                 bt_limit=6,
+                                                 bt_branching_factor=3)
     @abstractmethod
     def MAP(self, request):
         raise NotImplemented()

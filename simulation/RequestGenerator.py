@@ -158,8 +158,6 @@ class SimpleReqGen(AbstractRequestGenerator):
         sc_count = 1
         max_bw = 7.0
 
-        #time.sleep(1)
-
         while len(all_saps_ending) > sc_count and len(all_saps_beginning) > sc_count:
             nffg = NFFG(id='Benchmark-Req-' + str(test_lvl) + '-Piece')
             current_nfs = []

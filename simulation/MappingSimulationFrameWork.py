@@ -60,9 +60,15 @@ class MappingSolutionFramework():
 
         log.info(" Start simulation")
         log.info(" ------ Simulation configurations -------")
+        log.info(" | Simulation number: " + str(config['simulation_number']))
+        log.info(" | Discrete: " + str(config['discrete_simulation']))
         log.info(" | Topology: " + str(config['topology']))
         log.info(" | Request type: " + str(config['request_type']))
         log.info(" | Orchestrator: " + str(config['orchestrator']))
+        log.info(" | Dump freq: " + str(config['dump_freq']))
+        log.info(" | Request arrival lambda: " + str(config['request_arrival_lambda']))
+        log.info(" | Request lifetime lambda: " + str(config['request_lifetime_lambda']))
+        log.info(" | Number of iteration: " + str(config['max_number_of_iterations']))
         log.info(" ----------------------------------------")
 
         self.number_of_iter = config['max_number_of_iterations']
@@ -125,17 +131,23 @@ class MappingSolutionFramework():
             log.info(" ---- Hybrid specific configurations -----")
             log.info(" | What to optimize: " + str(config['what_to_optimize']))
             log.info(" | When to optimize: " + str(config['when_to_optimize']))
-            log.info(
-                " | Optimize strategy: " + str(config['orchestrator']))
+            log.info(" | When to optimize parameter: " + str(config['when_to_opt_parameter']))
+            log.info(" | Optimize strategy: " + str(config['orchestrator']))
             log.info(" -----------------------------------------")
             self.__orchestrator_adaptor = HybridOrchestratorAdaptor(
                 self.__network_topology)
         elif self.orchestrator_type == "offline":
             log.info(" ---- Offline specific configurations -----")
-            log.info(" | Optimize already mapped nfs " + config[
-                'optimize_already_mapped_nfs'])
+            log.info(" | Optimize already mapped nfs " + config['optimize_already_mapped_nfs'])
+            log.info(" | migration_coeff: " + config[
+                'migration_coeff'])
+            log.info(" | load_balance_coeff: " + config[
+                'load_balance_coeff'])
+            log.info(" | edge_cost_coeff: " + config[
+                'edge_cost_coeff'])
             log.info(" | Migration cost handler given: " + config[
                 'migration_handler_name'] if 'migration_handler_name' in config else "None")
+
             self.__orchestrator_adaptor = OfflineOrchestratorAdaptor(
                 self.__network_topology,
                 bool(config['optimize_already_mapped_nfs']),
@@ -151,9 +163,9 @@ class MappingSolutionFramework():
 
     def __mapping(self, service_graph, life_time, orchestrator_adaptor, time, sim_iter):
         try:
-
             log.debug("# of VNFs in resource graph: %s" % len(
-                [n for n in orchestrator_adaptor.resource_graph.nfs]))
+                [n for n in self.__orchestrator_adaptor.resource_graph.nfs]))
+
             # TRY TO SET IT BACK TO THE STATE BEFORE UNSUCCESSFUL MAPPING
             self.__network_topology = copy.deepcopy(orchestrator_adaptor.resource_graph)
             orchestrator_adaptor.MAP(service_graph)
@@ -163,7 +175,7 @@ class MappingSolutionFramework():
 
             self.__remaining_request_lifetimes.append(service_life_element)
             log.info("Mapping thread: Mapping service_request_"
-                     + str(sim_iter) + " successful")
+                     + str(sim_iter) + " successful +")
             self.mapped_requests += 1
             self.running_requests += 1
             self.mapped_array.append(self.mapped_requests)
@@ -188,9 +200,13 @@ class MappingSolutionFramework():
 
     def __del_service(self, service, sim_iter):
         try:
+            log.debug("# of VNFs in resource graph: %s" % len(
+                [n for n in self.__orchestrator_adaptor.resource_graph.nfs]))
+
+            log.info("Try to delete " + str(sim_iter) + ". sc")
             self.__orchestrator_adaptor.del_service(service['SG'])
             log.info("Mapping thread: Deleting service_request_" +
-                     str(sim_iter) + " successful")
+                     str(sim_iter) + " successful -")
             self.__remaining_request_lifetimes.remove(service)
 
             if not sim_iter % self.dump_freq:
@@ -294,6 +310,7 @@ if __name__ == "__main__":
         mapping_thread.start()
 
         req_gen_thread.join()
+
         mapping_thread.join()
 
         # Create JSON files
@@ -304,14 +321,13 @@ if __name__ == "__main__":
         path = os.path.abspath(
             'test' + str(test.sim_number) + test.orchestrator_type)
         full_path = os.path.join(path,
-                                 "requests" + "_" + str(time.ctime()) + ".json")
+                                 "requests_" + str(time.ctime()) + ".json")
         with open(full_path, 'w') as outfile:
             json.dump(requests, outfile)
 
     except threading.ThreadError:
         log.error(" Unable to start threads")
     except Exception as e:
-        # log.error("JSON dump") - THIS DOESN'T SAY ANYTHING
         log.error("Exception in simulation: %s", e)
         raise
 
@@ -319,5 +335,15 @@ if __name__ == "__main__":
         # Copy simulation.cfg to testXY dir
         shutil.copy('simulation.cfg', path)
 
-        # Move log_file.log to testxy dir
-        shutil.move('../log_file.log', path)
+        try:
+            # Move log_file.log to testXY dir and rename
+            log_path_new = os.path.join(path,
+                                    "log_file_" + str(time.ctime()) + ".log")
+            log_path_old = os.path.join(path, "log_file.log")
+            shutil.move('../log_file.log', path)
+            os.rename(log_path_old, log_path_new)
+        except IOError as io:
+            log.error(io)
+
+
+
