@@ -16,6 +16,7 @@ from hybrid.WhenToOptimizeStrategy import *
 from hybrid.ResourceSharingStrategy import *
 import milp.milp_solution_in_nffg as offline_mapping
 import alg1.MappingAlgorithms as online_mapping
+import alg1.UnifyExceptionTypes as uet
 
 log = logging.getLogger(" Hybrid Orchestrator")
 log.setLevel(logging.DEBUG)
@@ -106,10 +107,14 @@ class HybridOrchestrator():
                                             bt_limit=6,
                                             bt_branching_factor=3)
             log.info("do_online_mapping : Successful online mapping :)")
-        except Exception as e:
-            log.info(str(e.message) + str(e.__class__))
+        except uet.MappingException as error:
+            log.error("do_online_mapping : Unsuccessful online mapping :( ")
+            log.error(error.msg)
+            raise uet.MappingException(error.msg,error.backtrack_possible)
 
-            log.warning("do_online_mapping : Can not acquire res_online or cant online mapping:( ")
+        except Exception as e:
+            log.error(str(e.message) + str(e.__class__))
+            log.error("do_online_mapping : Can not acquire res_online or cant online mapping:( ")
             #(nem a acqure-rol ugrik az exceprt-re hanem a online mapping utan
 
         finally:
