@@ -102,9 +102,10 @@ class HybridOrchestrator():
                                             bw_factor=1, res_factor=1,
                                             lat_factor=1,
                                             shortest_paths=None,
-                                            return_dist=False, mode=mode,
+                                            return_dist=False,
+                                            propagate_e2e_reqs=True,
                                             bt_limit=6,
-                                            bt_branching_factor=3)
+                                            bt_branching_factor=3, mode=mode)
             log.info("do_online_mapping : Successful online mapping :)")
         except uet.MappingException as error:
             log.error("do_online_mapping : Unsuccessful online mapping :( ")
@@ -195,7 +196,7 @@ class HybridOrchestrator():
                             self.do_offline_mapping, "Offline mapping thread",
                                                             [requestToOpt])
                 log.info("Start offline optimalization!")
-                self.offline_mapping_thread.start()
+                #self.offline_mapping_thread.start()
                 #online_mapping_thread.join()  #ez miert is kell ide?
 
             except Exception as e:
