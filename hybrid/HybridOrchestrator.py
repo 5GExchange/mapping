@@ -16,6 +16,7 @@ from hybrid.WhenToOptimizeStrategy import *
 from hybrid.ResourceSharingStrategy import *
 import milp.milp_solution_in_nffg as offline_mapping
 import alg1.MappingAlgorithms as online_mapping
+import alg1.UnifyExceptionTypes as uet
 
 log = logging.getLogger(" Hybrid Orchestrator")
 log.setLevel(logging.DEBUG)
@@ -30,7 +31,6 @@ log.setLevel(logging.DEBUG)
 
 class HybridOrchestrator():
 
-    #def __init__(self, RG, what_to_opt_strat, when_to_opt_strat, resource_share_strat):
     def __init__(self, RG, config_file_path):
             config = ConfigObj(config_file_path)
 
@@ -52,7 +52,7 @@ class HybridOrchestrator():
             elif what_to_opt_strat == "all_reqs":
                 self.__what_to_opt = AllReqsOpt()
             else:
-                raise RuntimeError(
+                raise ValueError(
                     'Invalid what_to_opt_strat type! Please choose one of the '
                     'followings: all_reqs, reqs_since_last')
 
@@ -69,7 +69,7 @@ class HybridOrchestrator():
             elif when_to_opt_strat == "allways":
                 self.__when_to_opt = Allways()
             else:
-                raise RuntimeError(
+                raise ValueError(
                     'Invalid when_to_opt type! Please choose '
                                    'one of the followings: modell_based, '
                                    'fixed_req_count, fixed_time, '
@@ -82,11 +82,11 @@ class HybridOrchestrator():
             elif resource_share_strat == "dynamic":
                 self.__res_sharing_strat = DynamicMaxOnlineToAll()
             else:
-                raise RuntimeError(
+                raise ValueError(
                     'Invalid resource_share_strat type! Please choose '
                                    'one of the followings: double_hundred, '
                                    'dynamic')
-            #Mapped RG
+            # Mapped RG
             self.resource_graph = RG
 
     def merge_all_request(self, sum, request):
@@ -96,7 +96,7 @@ class HybridOrchestrator():
     def do_online_mapping(self, request, online_RG):
         try:
             mode = NFFG.MODE_ADD
-            self.lock.acquire()
+            self.lock.acquire(True)
             self.res_online = online_mapping.MAP(request, online_RG,
                                             enable_shortest_path_cache=True,
                                             bw_factor=1, res_factor=1,
@@ -106,29 +106,34 @@ class HybridOrchestrator():
                                             bt_limit=6,
                                             bt_branching_factor=3)
             log.info("do_online_mapping : Successful online mapping :)")
-        except:
-            log.warning("do_online_mapping : Can not acquire res_online :( ")
-            #(nem a acqure-rol ugrik az exceprt-re hanem a online mapping utan
+        except uet.MappingException as error:
+            log.error("do_online_mapping : Unsuccessful online mapping :( ")
+            log.error(error.msg)
+            raise uet.MappingException(error.msg,error.backtrack_possible)
 
+        except Exception as e:
+            log.error(str(e.message) + str(e.__class__))
+            log.error("do_online_mapping : "
+                      "Can not acquire res_online or cant online mapping :( ")
         finally:
             self.lock.release()
 
-
-    def do_offline_mapping(self, request, vme):
+    def do_offline_mapping(self, request):
             try:
                 self.offline_status = True
-                #self.__res_offline = offline_mapping.convert_mip_solution_to_nffg([request], offline_RG)
                 self.__res_offline = offline_mapping.MAP(
                     request, self.__res_offline, True, "ConstantMigrationCost")
                 log.info("Offline mapping is ready")
                 try:
                     log.info("Try to merge online and offline")
                     self.merge_online_offline()
-                except:
-                    log.warning("Unable to merge online and offline")
-            except:
-                log.error(
-                "Mapping thread: Offline mapping: Unable to mapping offline!")
+                except Exception as e:
+                    log.error(e.message)
+                    log.error("Unable to merge online and offline")
+            except Exception as e:
+                log.error(e.message)
+                log.error("Mapping thread: "
+                          "Offline mapping: Unable to mapping offline!")
                 self.offline_status = False
 
 
@@ -139,8 +144,9 @@ class HybridOrchestrator():
             self.res_online, self.__res_offline = self.__res_sharing_strat.\
                 share_resource(self.resource_graph, self.res_online,
                                self.__res_offline)
-        except:
-            log.warning("set_resource_graphs: Can not acquire res_online")
+        except Exception as e:
+            log.error(e.message)
+            log.error("set_resource_graphs: Can not acquire res_online")
         finally:
             self.lock.release()
 
@@ -150,19 +156,21 @@ class HybridOrchestrator():
                 self.lock.acquire()
                 self.res_online = NFFGToolBox().merge_nffgs(self.res_online,
                                                             self.__res_offline)
-                log.info("merge_online_offline : Lock res_online, optimalization enforce :)")
-            except:
-                log.warning("merge_online_offline : Can not accuire res_online  :(")
+                log.info("merge_online_offline : "
+                         "Lock res_online, optimalization enforce :)")
+            except Exception as e:
+                log.error(e.message)
+                log.error("merge_online_offline: Can not accuire res_online :(")
             finally:
                 self.lock.release()
 
 
-    def MAP(self, request, vmi):
+    def MAP(self, request):
 
         # Collect the requests
         self.merge_all_request(self.SUM_req, request)
 
-        #if not self.offline_mapping_thread.is_alive:
+        #if not self.offline_mapping_thread.is_alive():
         self.set_resource_graphs()
 
         # Start online mapping thread
@@ -170,9 +178,10 @@ class HybridOrchestrator():
                         "Online mapping thread", (request, self.res_online))
         try:
             online_mapping_thread.start()
-        except:
+        except Exception as e:
+            log.error(e.message)
             log.error("Failed to start online thread")
-
+            raise RuntimeError
         try:
             offline_status = self.offline_mapping_thread.is_alive()
         except:
@@ -180,23 +189,22 @@ class HybridOrchestrator():
 
         # Start offline mapping thread
         if self.__when_to_opt.need_to_optimize(offline_status, 3):
-            #if self.offline_status:
-
             requestToOpt = self.__what_to_opt.reqs_to_optimize(self.SUM_req)
             try:
                 self.offline_mapping_thread = threading.Thread(None,
                             self.do_offline_mapping, "Offline mapping thread",
-                                                            (requestToOpt, vmi))
+                                                            [requestToOpt])
                 log.info("Start offline optimalization!")
                 self.offline_mapping_thread.start()
+                #online_mapping_thread.join()  #ez miert is kell ide?
 
-            except:
+            except Exception as e:
+                log.error(e.message)
                 log.error("Failed to start offline thread")
-
-            # online_mapping_thread.join() # a lock-ok hasznalata miatt erre nincs szukseg (de meg nem biztos)
+                raise RuntimeError
 
         elif not self.__when_to_opt.need_to_optimize(self.offline_status, 3):
-            online_mapping_thread.join()
+            #online_mapping_thread.join()  #es ez?
             log.info("No need to optimize!")
         else:
             log.error("Failed to start offline")
