@@ -64,10 +64,20 @@ class CarrierTopoGetter(AbstractResourceGetter):
     :return:
     """
     topoparams = []
-    topoparams.append({'Retail': (2, 5, 100), 'Business': (2, 6, 150),
+    topoparams.append({'Retail': (2, 3, 100), 'Business': (2, 2, 150),
                        'CloudNFV': (2, 2, 4, 160000, 100000,
                                     list(string.ascii_uppercase)[:10],
                                     [8, 12, 16], [32000, 64000], [150], 40000,
                                     4)})
-    topoparams = 4 * topoparams
+    topoparams = 3 * topoparams
     return CarrierTopoBuilder.getCarrierTopo(topoparams)
+
+
+
+if __name__ == "__main__":
+  carrier = CarrierTopoGetter().GetNFFG()
+
+  print "total: ", len(carrier)
+  print "nfs: ", len([n for n in carrier.nfs])
+  print "saps: ", len([n for n in carrier.saps])
+  print "infras: ", len([n for n in carrier.infras])
