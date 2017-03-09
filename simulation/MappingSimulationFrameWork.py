@@ -107,7 +107,13 @@ class MappingSolutionFramework():
         if request_type == "test":
             self.__request_generator = TestReqGen(self.request_lifetime_lambda)
         elif request_type == "simple":
-            self.__request_generator = SimpleReqGen(self.request_lifetime_lambda)
+            if 'request_min_lat' in config and 'request_max_lat' in config:
+                minlat = float(config['request_min_lat'])
+                maxlat = float(config['request_max_lat'])
+                self.__request_generator = SimpleReqGen(
+                    self.request_lifetime_lambda, min_lat=minlat, max_lat=maxlat)
+            else:
+                self.__request_generator = SimpleReqGen(self.request_lifetime_lambda)
         elif request_type == "multi":
             self.__request_generator = MultiReqGen(self.request_lifetime_lambda)
         else:

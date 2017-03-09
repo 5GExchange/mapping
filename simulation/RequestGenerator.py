@@ -140,10 +140,12 @@ class TestReqGen(AbstractRequestGenerator):
 
 class SimpleReqGen(AbstractRequestGenerator):
 
-    def __init__(self, request_lifetime_lambda):
+    def __init__(self, request_lifetime_lambda, min_lat=60, max_lat=220):
         super(SimpleReqGen, self).__init__(request_lifetime_lambda)
         self.nf_types = list(string.ascii_uppercase)[:10]
         self.request_lifetime_lambda = request_lifetime_lambda
+        self.min_lat = min_lat
+        self.max_lat = max_lat
 
     def get_request(self, resource_graph, test_lvl):
         all_saps_ending = [s.id for s in resource_graph.saps]
@@ -156,7 +158,7 @@ class SimpleReqGen(AbstractRequestGenerator):
         vnf_sharing_probabilty = 0.0
         vnf_sharing_same_sg = 0.0
         sc_count = 1
-        max_bw = 7.0
+        max_bw = 1.0
 
         while len(all_saps_ending) > sc_count and len(all_saps_beginning) > sc_count:
             nffg = NFFG(id='Benchmark-Req-' + str(test_lvl) + '-Piece')
@@ -189,7 +191,7 @@ class SimpleReqGen(AbstractRequestGenerator):
                     else:
                         nf = nffg.add_nf(id='-'.join(('Test', str(test_lvl), 'SC', str(scid), 'VNF',
                                                           str(vnf))), func_type=rnd.choice(self.nf_types),
-                                             cpu=rnd.randint(1, 4), mem=rnd.random() * 1600, storage=rnd.random() * 3)
+                                             cpu=rnd.randint(1, 2), mem=rnd.random() * 800, storage=rnd.random() * 3)
                         vnf_added = True
                     if vnf_added:
                         nfs_this_sc.append(nf)
@@ -201,8 +203,8 @@ class SimpleReqGen(AbstractRequestGenerator):
                 sap2port = sap2.add_port()
                 sglink = nffg.add_sglink(last_req_port, sap2port)
                 sg_path.append(sglink.id)
-                minlat = 60.0
-                maxlat = 220.0
+                minlat = self.min_lat
+                maxlat = self.max_lat
                 nffg.add_req(sap1port, sap2port, delay=rnd.uniform(minlat, maxlat), bandwidth=rnd.random() * max_bw,
                                  sg_path=sg_path)
                 new_nfs = [vnf for vnf in nfs_this_sc if vnf not in current_nfs]
