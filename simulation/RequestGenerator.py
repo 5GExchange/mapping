@@ -15,7 +15,7 @@ from abc import ABCMeta, abstractmethod
 import math
 import threading
 import time
-import random as rnd
+import random
 import string
 import random
 from collections import OrderedDict
@@ -34,8 +34,11 @@ except ImportError:
 class AbstractRequestGenerator:
     __metaclass__ = ABCMeta
 
-    def __init__(self, request_lifetime_lambda):
-        pass
+    def __init__(self, request_lifetime_lambda, nf_type_count, seed=0):
+        self.nf_types = list(string.ascii_uppercase)[:nf_type_count]
+        self.request_lifetime_lambda = request_lifetime_lambda
+        self.rnd = random.Random()
+        self.rnd.seed(seed)
 
     @abstractmethod
     def get_request(self, resource_graph, test_lvl):
@@ -49,25 +52,27 @@ class AbstractRequestGenerator:
             i += 1
             ratio += float((i + 1) * len(running_nfs.values()[i])) / sumlen
 
-        nf = rnd.choice(running_nfs.values()[i])
+        nf = self.rnd.choice(running_nfs.values()[i])
         if reduce(lambda a, b: a and b, [ v in nfs_this_sc for v in running_nfs.values()[i] ]):
             return (False, None)
         else:
             while nf in nfs_this_sc:
-                nf = rnd.choice(running_nfs.values()[i])
+                nf = self.rnd.choice(running_nfs.values()[i])
 
             if nf in nffg.nfs:
                 return (False, nf)
             nffg.add_node(nf)
             return (True, nf)
 
+    def gen_seq (self):
+        while True:
+            yield int(math.floor(self.rnd.random() * 999999999))
+
 
 class TestReqGen(AbstractRequestGenerator):
 
-    def __init__(self, request_lifetime_lambda):
-        super(TestReqGen, self).__init__(request_lifetime_lambda)
-        self.nf_types = ['A']
-        self.request_lifetime_lambda = request_lifetime_lambda
+    def __init__(self, request_lifetime_lambda, nf_type_count, seed):
+        super(TestReqGen, self).__init__(request_lifetime_lambda, nf_type_count, seed)
 
     def get_request(self, resource_graph, test_lvl):
         all_saps_ending = [s.id for s in resource_graph.saps]
@@ -86,18 +91,18 @@ class TestReqGen(AbstractRequestGenerator):
             current_nfs = []
             for scid in xrange(0, sc_count):
                 nfs_this_sc = []
-                sap1 = nffg.add_sap(id=all_saps_beginning.pop() if use_saps_once else rnd.choice(all_saps_beginning))
+                sap1 = nffg.add_sap(id=all_saps_beginning.pop() if use_saps_once else self.rnd.choice(all_saps_beginning))
                 sap2 = None
                 if loops:
                     sap2 = sap1
                 else:
-                    tmpid = all_saps_ending.pop() if use_saps_once else rnd.choice(all_saps_ending)
+                    tmpid = all_saps_ending.pop() if use_saps_once else self.rnd.choice(all_saps_ending)
                     while True:
                         if tmpid != sap1.id:
                             sap2 = nffg.add_sap(id=tmpid)
                             break
                         else:
-                            tmpid = all_saps_ending.pop() if use_saps_once else rnd.choice(all_saps_ending)
+                            tmpid = all_saps_ending.pop() if use_saps_once else self.rnd.choice(all_saps_ending)
 
                 sg_path = []
                 sap1port = sap1.add_port()
@@ -106,8 +111,8 @@ class TestReqGen(AbstractRequestGenerator):
 
                 for vnf in xrange(0, vnf_cnt):
                     vnf_added = False
-                    p = rnd.random()
-                    if rnd.random() < vnf_sharing_probabilty and len(running_nfs) > 0 and not multiSC:
+                    p = self.rnd.random()
+                    if self.rnd.random() < vnf_sharing_probabilty and len(running_nfs) > 0 and not multiSC:
                         vnf_added, nf = self._shareVNFFromEarlierSG(nffg, running_nfs, nfs_this_sc, p)
                     else:
                         nf = nffg.add_nf(id='-'.join(('Test',
@@ -115,7 +120,7 @@ class TestReqGen(AbstractRequestGenerator):
                         'SC',
                         str(scid),
                         'VNF',
-                        str(vnf))), func_type=rnd.choice(self.nf_types), cpu=2, mem=1600, storage=5)
+                        str(vnf))), func_type=self.rnd.choice(self.nf_types), cpu=2, mem=1600, storage=5)
                         vnf_added = True
                     if vnf_added:
                         nfs_this_sc.append(nf)
@@ -138,12 +143,11 @@ class TestReqGen(AbstractRequestGenerator):
 
                 return nffg, life_time
 
+
 class SimpleReqGen(AbstractRequestGenerator):
 
-    def __init__(self, request_lifetime_lambda, min_lat=60, max_lat=220):
-        super(SimpleReqGen, self).__init__(request_lifetime_lambda)
-        self.nf_types = list(string.ascii_uppercase)[:10]
-        self.request_lifetime_lambda = request_lifetime_lambda
+    def __init__(self, request_lifetime_lambda, nf_type_count, seed, min_lat=60, max_lat=220):
+        super(SimpleReqGen, self).__init__(request_lifetime_lambda, nf_type_count, seed)
         self.min_lat = min_lat
         self.max_lat = max_lat
 
@@ -165,33 +169,33 @@ class SimpleReqGen(AbstractRequestGenerator):
             current_nfs = []
             for scid in xrange(0, sc_count):
                 nfs_this_sc = []
-                sap1 = nffg.add_sap(id=all_saps_beginning.pop() if use_saps_once else rnd.choice(all_saps_beginning))
+                sap1 = nffg.add_sap(id=all_saps_beginning.pop() if use_saps_once else self.rnd.choice(all_saps_beginning))
                 sap2 = None
                 if loops:
                     sap2 = sap1
                 else:
-                    tmpid = all_saps_ending.pop() if use_saps_once else rnd.choice(all_saps_ending)
+                    tmpid = all_saps_ending.pop() if use_saps_once else self.rnd.choice(all_saps_ending)
                     while True:
                         if tmpid != sap1.id:
                             sap2 = nffg.add_sap(id=tmpid)
                             break
                         else:
-                            tmpid = all_saps_ending.pop() if use_saps_once else rnd.choice(all_saps_ending)
+                            tmpid = all_saps_ending.pop() if use_saps_once else self.rnd.choice(all_saps_ending)
 
                 sg_path = []
                 sap1port = sap1.add_port()
                 last_req_port = sap1port
-                vnf_cnt = next(gen_seq()) % chain_maxlen + 1
+                vnf_cnt = next(self.gen_seq()) % chain_maxlen + 1
                 for vnf in xrange(0, vnf_cnt):
                     vnf_added = False
-                    p = rnd.random()
-                    if rnd.random() < vnf_sharing_probabilty and len(running_nfs) > 0 and not multiSC:
+                    p = self.rnd.random()
+                    if self.rnd.random() < vnf_sharing_probabilty and len(running_nfs) > 0 and not multiSC:
                         vnf_added, nf = self._shareVNFFromEarlierSG(nffg, running_nfs, nfs_this_sc,
                                                                                         p)
                     else:
                         nf = nffg.add_nf(id='-'.join(('Test', str(test_lvl), 'SC', str(scid), 'VNF',
-                                                          str(vnf))), func_type=rnd.choice(self.nf_types),
-                                             cpu=rnd.randint(1, 2), mem=rnd.random() * 800, storage=rnd.random() * 3)
+                                                          str(vnf))), func_type=self.rnd.choice(self.nf_types),
+                                             cpu=self.rnd.randint(1, 2), mem=self.rnd.random() * 800, storage=self.rnd.random() * 3)
                         vnf_added = True
                     if vnf_added:
                         nfs_this_sc.append(nf)
@@ -205,7 +209,7 @@ class SimpleReqGen(AbstractRequestGenerator):
                 sg_path.append(sglink.id)
                 minlat = self.min_lat
                 maxlat = self.max_lat
-                nffg.add_req(sap1port, sap2port, delay=rnd.uniform(minlat, maxlat), bandwidth=rnd.random() * max_bw,
+                nffg.add_req(sap1port, sap2port, delay=self.rnd.uniform(minlat, maxlat), bandwidth=self.rnd.random() * max_bw,
                                  sg_path=sg_path)
                 new_nfs = [vnf for vnf in nfs_this_sc if vnf not in current_nfs]
                 for tmp in xrange(0, scid + 1):
@@ -216,12 +220,11 @@ class SimpleReqGen(AbstractRequestGenerator):
 
                 return nffg, life_time
 
+
 class MultiReqGen(AbstractRequestGenerator):
 
-    def __init__(self, request_lifetime_lambda):
-        super(MultiReqGen, self).__init__(request_lifetime_lambda)
-        self.nf_types = list(string.ascii_uppercase)[:10]
-        self.request_lifetime_lambda = request_lifetime_lambda
+    def __init__(self, request_lifetime_lambda, nf_type_count, seed):
+        super(MultiReqGen, self).__init__(request_lifetime_lambda, nf_type_count, seed)
 
     def get_request(self, resource_graph, test_lvl):
         all_saps_ending = [s.id for s in resource_graph.saps]
@@ -234,7 +237,7 @@ class MultiReqGen(AbstractRequestGenerator):
         use_saps_once = True
         vnf_sharing_probabilty = 0.0
         vnf_sharing_same_sg = 0.0
-        sc_count = rnd.randint(2, max_sc_count)
+        sc_count = self.rnd.randint(2, max_sc_count)
         max_bw = 7.0
 
         while len(all_saps_ending) > sc_count and len(all_saps_beginning) > sc_count:
@@ -242,39 +245,39 @@ class MultiReqGen(AbstractRequestGenerator):
             current_nfs = []
             for scid in xrange(0, sc_count):
                 nfs_this_sc = []
-                sap1 = nffg.add_sap(id=all_saps_beginning.pop() if use_saps_once else rnd.choice(all_saps_beginning))
+                sap1 = nffg.add_sap(id=all_saps_beginning.pop() if use_saps_once else self.rnd.choice(all_saps_beginning))
                 sap2 = None
                 if loops:
                     sap2 = sap1
                 else:
-                    tmpid = all_saps_ending.pop() if use_saps_once else rnd.choice(all_saps_ending)
+                    tmpid = all_saps_ending.pop() if use_saps_once else self.rnd.choice(all_saps_ending)
                     while True:
                         if tmpid != sap1.id:
                             sap2 = nffg.add_sap(id=tmpid)
                             break
                         else:
-                            tmpid = all_saps_ending.pop() if use_saps_once else rnd.choice(all_saps_ending)
+                            tmpid = all_saps_ending.pop() if use_saps_once else self.rnd.choice(all_saps_ending)
 
                 sg_path = []
                 sap1port = sap1.add_port()
                 last_req_port = sap1port
-                vnf_cnt = next(gen_seq()) % chain_maxlen + 1
+                vnf_cnt = next(self.gen_seq()) % chain_maxlen + 1
                 for vnf in xrange(0, vnf_cnt):
                     vnf_added = False
-                    p = rnd.random()
+                    p = self.rnd.random()
                     if multiSC and p < vnf_sharing_probabilty and len(current_nfs) > 0 and len(running_nfs) > 0:
                         if reduce(lambda a, b: a and b, [v in nfs_this_sc for v in current_nfs]):
                             pass
-                        elif rnd.random() < vnf_sharing_same_sg:
-                            nf = rnd.choice(current_nfs)
+                        elif self.rnd.random() < vnf_sharing_same_sg:
+                            nf = self.rnd.choice(current_nfs)
                             while nf in nfs_this_sc:
-                                nf = rnd.choice(current_nfs)
+                                nf = self.rnd.choice(current_nfs)
                         else:
                             vnf_added, nf = self._shareVNFFromEarlierSG(nffg, running_nfs,nfs_this_sc, p)
                     else:
                         nf = nffg.add_nf(id='-'.join(('Test', str(test_lvl), 'SC', str(scid), 'VNF',
-                                                          str(vnf))), func_type=rnd.choice(self.nf_types),
-                                             cpu=rnd.randint(1, 4), mem=rnd.random() * 1600, storage=rnd.random() * 3)
+                                                          str(vnf))), func_type=self.rnd.choice(self.nf_types),
+                                             cpu=self.rnd.randint(1, 4), mem=self.rnd.random() * 1600, storage=self.rnd.random() * 3)
                         vnf_added = True
                     if vnf_added:
                         nfs_this_sc.append(nf)
@@ -288,7 +291,7 @@ class MultiReqGen(AbstractRequestGenerator):
                 sg_path.append(sglink.id)
                 minlat = 5.0 * (len(nfs_this_sc) + 2)
                 maxlat = 13.0 * (len(nfs_this_sc) + 2)
-                nffg.add_req(sap1port, sap2port, delay=rnd.uniform(minlat, maxlat), bandwidth=rnd.random() * max_bw,
+                nffg.add_req(sap1port, sap2port, delay=self.rnd.uniform(minlat, maxlat), bandwidth=self.rnd.random() * max_bw,
                                  sg_path=sg_path)
                 new_nfs = [vnf for vnf in nfs_this_sc if vnf not in current_nfs]
                 for tmp in xrange(0, scid + 1):
@@ -299,10 +302,3 @@ class MultiReqGen(AbstractRequestGenerator):
                 life_time = exp_time
 
                 return nffg, life_time
-
-
-
-
-def gen_seq():
-    while True:
-        yield int(math.floor(rnd.random() * 999999999))
