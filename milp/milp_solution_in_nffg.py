@@ -33,6 +33,7 @@ from milp.MIPBaseline import Scenario, ModelCreator, isFeasibleStatus, \
   convert_req_to_request, convert_nffg_to_substrate
 from alg1.Alg1_Core import CoreAlgorithm
 import alg1.Alg1_Helper as helper
+import alg1.UnifyExceptionTypes as uet
 
 # This is used by eval("migration_costs." + migration_handler_name)
 import migration_costs
@@ -270,12 +271,17 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
     # No migration can happen! We just map the given request and resource
     # with MILP.
     pass
-  return convert_mip_solution_to_nffg([request], resource,
-                                      migration_handler=migration_handler,
-                                      migration_coeff=migration_coeff,
-                                      load_balance_coeff=load_balance_coeff,
-                                      edge_cost_coeff=edge_cost_coeff,
-                                      reopt=optimize_already_mapped_nfs)
+  mappedNFFG = convert_mip_solution_to_nffg([request], resource,
+                                            migration_handler=migration_handler,
+                                            migration_coeff=migration_coeff,
+                                            load_balance_coeff=load_balance_coeff,
+                                            edge_cost_coeff=edge_cost_coeff,
+                                            reopt=optimize_already_mapped_nfs)
+  if mappedNFFG is not None:
+    return mappedNFFG
+  else:
+    raise uet.MappingException("MILP couldn't map the given service request.",
+                               False)
 
 
 if __name__ == '__main__':
