@@ -69,7 +69,7 @@ class CarrierTopoGetter(AbstractResourceGetter):
                                     list(string.ascii_uppercase)[:10],
                                     [8, 12, 16], [32000, 64000], [150], 40000,
                                     4)})
-    topoparams = 3 * topoparams
+    topoparams = 4 * topoparams
     return CarrierTopoBuilder.getCarrierTopo(topoparams)
 
 
@@ -81,3 +81,8 @@ if __name__ == "__main__":
   print "nfs: ", len([n for n in carrier.nfs])
   print "saps: ", len([n for n in carrier.saps])
   print "infras: ", len([n for n in carrier.infras])
+  import networkx as nx
+  carrier_gml = nx.MultiDiGraph()
+  carrier_gml.add_nodes_from(carrier.network.nodes_iter())
+  carrier_gml.add_edges_from(carrier.network.edges_iter())
+  nx.write_gml(carrier_gml, "carrier"+str(len(carrier))+".gml")
