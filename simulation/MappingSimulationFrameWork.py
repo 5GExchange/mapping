@@ -20,6 +20,7 @@ import threading
 import time
 import json
 import copy
+import os
 
 import numpy as N
 from configobj import ConfigObj
@@ -76,7 +77,7 @@ class MappingSolutionFramework():
         self.sim_number = int(config['simulation_number'])
         self.max_number_of_iterations = int(config['max_number_of_iterations'])
         self.request_arrival_lambda = float(config['request_arrival_lambda'])
-
+        self.wait_all_req_expire = bool(config['wait_all_req_expire'])
         # Ha a discrete_simulation utan van vmi akkor True-ra ertekelodik ki
         self.__discrete_simulation = bool(config['discrete_simulation'])
         self.request_lifetime_lambda = float(config['request_lifetime_lambda'])
@@ -249,10 +250,12 @@ class MappingSolutionFramework():
 
                 self.running_array.append(self.running_requests)
 
-        # Wait for all request to expire
-        while len(self.__remaining_request_lifetimes) > 0:
-            # Remove expired service graph requests
-            self.__clean_expired_requests(datetime.datetime.now())
+
+        if self.wait_all_req_expire:
+            # Wait for all request to expire
+            while len(self.__remaining_request_lifetimes) > 0:
+                # Remove expired service graph requests
+                self.__clean_expired_requests(datetime.datetime.now())
 
         log.info("End mapping thread")
 
@@ -322,10 +325,12 @@ if __name__ == "__main__":
                     "running_requests": test.running_array,
                     "refused_requests": test.refused_array}
 
+        if not os.path.exists('test' + str(test.sim_number) + test.orchestrator_type):
+            os.mkdir('test' + str(test.sim_number) + test.orchestrator_type)
+
         path = os.path.abspath(
             'test' + str(test.sim_number) + str(test.orchestrator_type))
-        full_path = os.path.join(path,
-                                 "requests_" + str(time.ctime()) + ".json")
+        full_path = os.path.join(path, "requests" + str(time.ctime()) + ".json")
         with open(full_path, 'w') as outfile:
             json.dump(requests, outfile)
 

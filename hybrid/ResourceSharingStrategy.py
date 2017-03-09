@@ -62,6 +62,6 @@ class DoubleHundred(AbstractResourceSharingStrategy):
 
         else:
             to_online = res_online.copy()
-            to_offline = resource_graph.copy()
+            to_offline = res_offline.copy()
 
         return to_online, to_offline

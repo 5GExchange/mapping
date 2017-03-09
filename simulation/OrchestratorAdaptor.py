@@ -56,15 +56,16 @@ class AbstractOrchestratorAdaptor(object):
         mode = NFFG.MODE_DEL
         for i in request.nfs:
             i.operation = NFFG.OP_DELETE
-
         self.resource_graph = online_mapping.MAP(request, self.resource_graph,
                                                  enable_shortest_path_cache=True,
                                                  bw_factor=1, res_factor=1,
                                                  lat_factor=1,
                                                  shortest_paths=None,
-                                                 return_dist=False, mode=mode,
+                                                 return_dist=False,
+                                                 propagate_e2e_reqs=True,
                                                  bt_limit=6,
-                                                 bt_branching_factor=3)
+                                                 bt_branching_factor=3,
+                                                 mode=mode)
 
     @abstractmethod
     def MAP(self, request):
@@ -119,10 +120,13 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
     def MAP(self, request):
         mode = NFFG.MODE_ADD
+        # a torles miatt kell ez:
         self.concrete_hybrid_orchestrator.res_online = self.resource_graph
+        #self.concrete_hybrid_orchestrator.res_online = self.get_copy_of_rg()
         self.concrete_hybrid_orchestrator.MAP(request)
 
         self.resource_graph = self.concrete_hybrid_orchestrator.res_online
+
 
     def get_copy_of_rg(self):
         self.concrete_hybrid_orchestrator.lock.acquire()

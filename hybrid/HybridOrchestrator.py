@@ -96,7 +96,7 @@ class HybridOrchestrator():
     def do_online_mapping(self, request, online_RG):
         try:
             mode = NFFG.MODE_ADD
-            self.lock.acquire(True)
+            self.lock.acquire()
             self.res_online = online_mapping.MAP(request, online_RG,
                                             enable_shortest_path_cache=True,
                                             bw_factor=1, res_factor=1,
@@ -110,7 +110,7 @@ class HybridOrchestrator():
         except uet.MappingException as error:
             log.error("do_online_mapping : Unsuccessful online mapping :( ")
             log.error(error.msg)
-            raise uet.MappingException(error.msg,error.backtrack_possible)
+            raise uet.MappingException(error.msg, error.backtrack_possible)
 
         except Exception as e:
             log.error(str(e.message) + str(e.__class__))
@@ -131,8 +131,8 @@ class HybridOrchestrator():
                 except Exception as e:
                     log.error(e.message)
                     log.error("Unable to merge online and offline")
-            except Exception as e:
-                log.error(e.message)
+            except uet.MappingException as e:
+                log.error(e.msg)
                 log.error("Mapping thread: "
                           "Offline mapping: Unable to mapping offline!")
                 self.offline_status = False
@@ -196,8 +196,8 @@ class HybridOrchestrator():
                             self.do_offline_mapping, "Offline mapping thread",
                                                             [requestToOpt])
                 log.info("Start offline optimalization!")
-                #self.offline_mapping_thread.start()
-                #online_mapping_thread.join()  #ez miert is kell ide?
+                self.offline_mapping_thread.start()
+                online_mapping_thread.join()
 
             except Exception as e:
                 log.error(e.message)
@@ -205,7 +205,7 @@ class HybridOrchestrator():
                 raise RuntimeError
 
         elif not self.__when_to_opt.need_to_optimize(self.offline_status, 3):
-            #online_mapping_thread.join()  #es ez?
+            online_mapping_thread.join()
             log.info("No need to optimize!")
         else:
             log.error("Failed to start offline")
