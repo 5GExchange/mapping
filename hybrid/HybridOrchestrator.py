@@ -1,6 +1,6 @@
 import threading
 from configobj import ConfigObj
-
+import copy
 try:
   # runs when mapping files are called from ESCAPE
   from escape.nffg_lib.nffg import NFFG, NFFGToolBox
@@ -36,9 +36,8 @@ class HybridOrchestrator():
 
             # Protects the res_online
             self.lock = threading.Lock()
-
             self.res_online = None
-            self.__res_offline = NFFG()
+            self.__res_offline = RG.copy()
 
             # All request in one NFFG
             self.SUM_req = NFFG()
@@ -97,6 +96,7 @@ class HybridOrchestrator():
         try:
             mode = NFFG.MODE_ADD
             self.lock.acquire()
+            temp_res_online = copy.deepcopy(self.res_online)
             self.res_online = online_mapping.MAP(request, online_RG,
                                             enable_shortest_path_cache=True,
                                             bw_factor=1, res_factor=1,
@@ -110,6 +110,7 @@ class HybridOrchestrator():
         except uet.MappingException as error:
             log.error("do_online_mapping : Unsuccessful online mapping :( ")
             log.error(error.msg)
+            self.res_online = temp_res_online
             raise uet.MappingException(error.msg, error.backtrack_possible)
 
         except Exception as e:
@@ -164,7 +165,6 @@ class HybridOrchestrator():
                 log.error("merge_online_offline: Can not accuire res_online :(")
             finally:
                 self.lock.release()
-
 
     def MAP(self, request):
 

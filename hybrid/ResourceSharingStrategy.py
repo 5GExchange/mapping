@@ -39,7 +39,7 @@ class DynamicMaxOnlineToAll(AbstractResourceSharingStrategy):
 
 class DoubleHundred(AbstractResourceSharingStrategy):
 
-    def del_service(self, what_nffg, from_nffg):
+    """def del_service(self, what_nffg, from_nffg):
 
         mode = NFFG.MODE_DEL
         self.__res_online = online_mapping.MAP(what_nffg, from_nffg,
@@ -50,18 +50,16 @@ class DoubleHundred(AbstractResourceSharingStrategy):
                                                           shortest_paths=None,
                                                           return_dist=False,
                                                           mode=mode)
-
+        """
     def share_resource(self, resource_graph, res_online, res_offline):
-        #For first resourve sharing
-        empty_nffg = NFFG()
+        # For first resource sharing
+
+        # az if nem fut le sose mert a OrchAdap-ben van egy iylen:
+        # self.concrete_hybrid_orchestrator.res_online = self.resource_graph
         if res_online == None:
             to_online = resource_graph.copy()
             to_offline = resource_graph.copy()
-
             return to_online, to_offline
 
         else:
-            to_online = res_online.copy()
-            to_offline = res_offline.copy()
-
-        return to_online, to_offline
+            return res_online, resource_graph

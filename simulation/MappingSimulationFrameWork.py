@@ -70,6 +70,7 @@ class MappingSolutionFramework():
         log.info(" | Request arrival lambda: " + str(config['request_arrival_lambda']))
         log.info(" | Request lifetime lambda: " + str(config['request_lifetime_lambda']))
         log.info(" | Number of iteration: " + str(config['max_number_of_iterations']))
+        log.info(" | Wait all request to expire (nothing = False): " + str(config['wait_all_req_expire']))
         log.info(" ----------------------------------------")
 
         self.number_of_iter = config['max_number_of_iterations']
@@ -124,7 +125,6 @@ class MappingSolutionFramework():
         self.refused_array = [0]
         self.running_requests = 0
         self.running_array = [0]
-
 
         # Orchestrator
         self.orchestrator_type = config['orchestrator']
