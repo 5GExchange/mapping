@@ -123,8 +123,12 @@ class HybridOrchestrator():
     def do_offline_mapping(self, request):
             try:
                 self.offline_status = True
+                log.debug("SAP count in request %s and in resource: %s, resource total size: %s"%(len([s for s in request.saps]),
+                          len([s for s in self.__res_offline.saps]), len(self.__res_offline)))
                 self.__res_offline = offline_mapping.MAP(
-                    request, self.__res_offline, True, "ConstantMigrationCost")
+                    request, self.__res_offline, True, "ConstantMigrationCost",
+                  migration_coeff=1.0, load_balance_coeff=1.0,
+                  edge_cost_coeff=1.0)
                 log.info("Offline mapping is ready")
                 try:
                     log.info("Try to merge online and offline")
