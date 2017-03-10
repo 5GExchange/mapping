@@ -80,13 +80,15 @@ class AbstractOrchestratorAdaptor(object):
             os.mkdir('test' + str(i) + orchest_type)
             path = os.path.abspath('test' + str(i) + orchest_type)
             full_path = os.path.join(path, 'dump_nffg_' + str(calls) + "_"
-                                + type + "_" + str(i) + "_" + str(time.ctime()))
+                                + type + "_" + str(i) + "_" + str(time.ctime()).
+                                     replace(' ', '-'))
             with io.FileIO(full_path, "w") as file:
                 file.write(dump_nffg)
         else:
             path = os.path.abspath('test' + str(i) + orchest_type)
             full_path = os.path.join(path, 'dump_nffg_' + str(calls) + "_"
-                                + type + "_" + str(i) + "_" + str(time.ctime()))
+                                + type + "_" + str(i) + "_" + str(time.ctime()).
+                                     replace(' ', '-'))
             with io.FileIO(full_path, "w") as file:
                 file.write(dump_nffg)
 
