@@ -160,10 +160,20 @@ class HybridOrchestrator():
     def merge_online_offline(self):
             try:
                 self.lock.acquire()
-                self.res_online = NFFGToolBox().merge_nffgs(self.res_online,
+                before_merge = self.res_online.copy()
+                try:
+                    self.res_online = NFFGToolBox().merge_nffgs(self.res_online,
                                                             self.__res_offline)
-                log.info("merge_online_offline : "
-                         "Lock res_online, optimalization enforce :)")
+                    self.res_online.calculate_available_node_res()
+                    self.res_online.calculate_available_link_res([])
+                    log.info("merge_online_offline : "
+                             "Lock res_online, optimalization enforce :)")
+                except Exception as e:
+                    self.res_online = before_merge
+                    log.error(e.message)
+                    log.error("Unable to merge online and offline")
+
+
             except Exception as e:
                 log.error(e.message)
                 log.error("merge_online_offline: Can not accuire res_online :(")
@@ -213,6 +223,8 @@ class HybridOrchestrator():
             log.info("No need to optimize!")
         else:
             log.error("Failed to start offline")
+
+        online_mapping_thread.join()
 
 
 
