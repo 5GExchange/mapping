@@ -22,7 +22,8 @@ class AbstractWhenToOptimizeStrategy:
 
 class FixedReqCount(AbstractWhenToOptimizeStrategy):
 
-    req_counter = 0
+    def __init__(self):
+        self.req_counter = 0
 
     def need_to_optimize(self, offline_status, parameter):
         self.req_counter += 1
@@ -42,9 +43,7 @@ class Allways(AbstractWhenToOptimizeStrategy):
             return True
 
 
-class Fixedtime(AbstractWhenToOptimizeStrategy):
-
-    start_time = None
+class FixedTime(AbstractWhenToOptimizeStrategy):
 
     def __init__(self):
         self.start_time = time.time()

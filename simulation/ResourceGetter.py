@@ -65,11 +65,11 @@ class CarrierTopoGetter(AbstractResourceGetter):
     """
     topoparams = []
     topoparams.append({'Retail': (2, 3, 100), 'Business': (2, 2, 150),
-                       'CloudNFV': (2, 2, 2, 160000, 100000,
+                       'CloudNFV': (2, 2, 4, 160000, 100000,
                                     list(string.ascii_uppercase)[:10],
                                     [80, 120, 160], [32000, 64000], [150], 40000,
                                     4)})
-    topoparams = 3 * topoparams
+    topoparams = 4 * topoparams
     return CarrierTopoBuilder.getCarrierTopo(topoparams)
 
 

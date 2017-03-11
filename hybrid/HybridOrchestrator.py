@@ -62,7 +62,7 @@ class HybridOrchestrator():
             elif when_to_opt_strat == "fixed_req_count":
                 self.__when_to_opt = FixedReqCount()
             elif when_to_opt_strat == "fixed_time":
-                self.__when_to_opt = Fixedtime()
+                self.__when_to_opt = FixedTime()
             elif when_to_opt_strat == "periodical_model_based":
                 self.__when_to_opt = PeriodicalModelBased()
             elif when_to_opt_strat == "allways":
