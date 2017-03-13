@@ -202,7 +202,7 @@ class MappingSolutionFramework():
 
         except uet.MappingException as me:
             log.info("Mapping thread: Mapping service_request_" +
-                     str(sim_iter) + " unsuccessful, message: %s"%me.msg)
+                     str(sim_iter) + " unsuccessful\n message: %s"%me.msg)
             self.refused_requests += 1
             self.refused_array.append(self.refused_requests)
             # TRY TO SET IT BACK TO THE STATE BEFORE UNSUCCESSFUL MAPPING

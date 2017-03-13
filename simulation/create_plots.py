@@ -61,17 +61,18 @@ def main(argv):
         x.append(i)
 
     if hybrid:
-        plt.plot(x, hybrid_requests['running_requests'])
+        plt.plot(x, hybrid_requests['running_requests'],label="hybrid")
 
     if online:
-        plt.plot(x, online_requests['running_requests'])
+        plt.plot(x, online_requests['running_requests'],label="online")
 
     if offline:
-        plt.plot(x, offline_requests['running_requests'])
+        plt.plot(x, offline_requests['running_requests'],label="offline")
 
     plt.title('Accepted incoming service requests')
     plt.ylabel('Accepted requests count')
     plt.xlabel('Incoming requests')
+    plt.legend(loc=3)
     plt.savefig("mapped_requests.png")
     plt.clf()
 
@@ -81,18 +82,19 @@ def main(argv):
         x.append(i)
 
     if hybrid:
-        plt.plot(x, hybrid_requests['running_requests'])
+        plt.plot(x, hybrid_requests['running_requests'],label="hybrid")
 
     if online:
-        plt.plot(x, online_requests['running_requests'])
+        plt.plot(x, online_requests['running_requests'],label="online")
 
     if offline:
-        plt.plot(x, offline_requests['running_requests'])
+        plt.plot(x, offline_requests['running_requests'],label="offline")
 
     plt.plot(x,hybrid_requests['running_requests'])
     plt.title('Currently running (mapped) requests in the NFFG')
     plt.ylabel('Mapped requests count')
     plt.xlabel('Incoming requests')
+    plt.legend(loc=3)
     plt.savefig("running_requests.png")
     plt.clf()
 
@@ -103,19 +105,22 @@ def main(argv):
         x.append(i)
 
     if hybrid:
-        plt.plot(x, hybrid_requests['refused_requests'])
+        plt.plot(x, hybrid_requests['refused_requests'],label="hybrid")
 
     if online:
-        plt.plot(x, online_requests['refused_requests'])
+        plt.plot(x, online_requests['refused_requests'],label="online")
 
     if offline:
-        plt.plot(x, offline_requests['refused_requests'])
+        plt.plot(x, offline_requests['refused_requests'],label="offline")
 
     plt.plot(x,hybrid_requests['refused_requests'])
     plt.title('Refused requests during the simulation')
     plt.ylabel('Refused requests count')
     plt.xlabel('Incoming requests')
+    plt.legend(loc=3)
     plt.savefig("refused_requests.png")
+
+    print("DONE")
 
 
 if __name__ == "__main__":
