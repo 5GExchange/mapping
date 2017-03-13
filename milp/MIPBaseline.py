@@ -708,6 +708,9 @@ class ModelCreator(object):
     # create the variables
     self.create_variables()
 
+    # set time limit of 20 minutes
+    self.model.setParam('TimeLimit', 20*60)
+
     # necessary for accessing the variables after creation
     self.model.update()
 
