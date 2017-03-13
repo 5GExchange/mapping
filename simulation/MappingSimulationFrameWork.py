@@ -56,8 +56,8 @@ log.setLevel(logging.DEBUG)
 
 class MappingSolutionFramework():
 
-    def __init__(self, config_file_path, request_list,
-                 remaining_request_lifetimes, deleted_services):
+    def __init__(self, config_file_path, request_list
+                 ):
         config = ConfigObj(config_file_path)
 
         log.info(" Start simulation")
@@ -84,7 +84,7 @@ class MappingSolutionFramework():
         self.__discrete_simulation = bool(config['discrete_simulation'])
         self.request_lifetime_lambda = float(config['request_lifetime_lambda'])
 
-        self.deleted_services = deleted_services
+        self.deleted_services = []
         # This stores the request waiting to be mapped
         self.__request_list = request_list
         self.sim_iter = 0
@@ -128,7 +128,7 @@ class MappingSolutionFramework():
                 "Invalid 'request_type' in the simulation.cfg file! "
                 "Please choose one of the followings: test, simple, multi")
 
-        self.__remaining_request_lifetimes = remaining_request_lifetimes
+        self.__remaining_request_lifetimes = []
         self.mapped_requests = 0
         self.mapped_array = [0]
         self.refused_requests = 0
@@ -319,10 +319,8 @@ class MappingSolutionFramework():
 
 if __name__ == "__main__":
     request_list = Queue.Queue()
-    remaining_request_lifetimes = []
-    deleted_services = []
-    test = MappingSolutionFramework('simulation.cfg', request_list,
-                                remaining_request_lifetimes, deleted_services)
+
+    test = MappingSolutionFramework('simulation.cfg', request_list)
     try:
         req_gen_thread = threading.Thread(None, test.create_request,
                                         "request_generator_thread_T1")

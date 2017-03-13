@@ -158,8 +158,8 @@ class HybridOrchestrator():
 
     def del_exp_reqs_from_SUMreq(self):
         mode = NFFG.MODE_DEL
-        for i in self.deleted_services.nfs:
-            i.operation = NFFG.OP_DELETE
+        for i in self.deleted_services:
+            asd = i['SG']#.nfs.operation = NFFG.OP_DELETE
         self.__res_offline = online_mapping.MAP(self.deleted_services,
                                                 self.__res_offline,
                                                 enable_shortest_path_cache=True,
@@ -256,10 +256,9 @@ class HybridOrchestrator():
         online_mapping_thread.join()
         if not self.online_fails.empty():
             error = self.online_fails.get()
-            if error.backtrack_possible:
-                raise uet.MappingException(error.msg,error.backtrack_possible)
-            else:
-                raise RuntimeError
+            if "error.backtrack_possible" in locals():
+                raise uet.MappingException(error.msg, error.backtrack_possible)
+
 
 
 

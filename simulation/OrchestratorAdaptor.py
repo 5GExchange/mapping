@@ -116,6 +116,20 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
     def get_copy_of_rg(self):
         return copy.deepcopy(self.resource_graph)
 
+    def del_service(self, request):
+        mode = NFFG.MODE_DEL
+        for i in request.nfs:
+            i.operation = NFFG.OP_DELETE
+        self.resource_graph = online_mapping.MAP(request, self.resource_graph,
+                                                 enable_shortest_path_cache=True,
+                                                 bw_factor=1, res_factor=1,
+                                                 lat_factor=1,
+                                                 shortest_paths=None,
+                                                 return_dist=False,
+                                                 propagate_e2e_reqs=True,
+                                                 bt_limit=6,
+                                                 bt_branching_factor=3,
+                                                 mode=mode)
 
 
 class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
