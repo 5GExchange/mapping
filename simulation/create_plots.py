@@ -90,7 +90,6 @@ def main(argv):
     if offline:
         plt.plot(x, offline_requests['running_requests'],label="offline")
 
-    plt.plot(x,hybrid_requests['running_requests'])
     plt.title('Currently running (mapped) requests in the NFFG')
     plt.ylabel('Mapped requests count')
     plt.xlabel('Incoming requests')
@@ -113,7 +112,6 @@ def main(argv):
     if offline:
         plt.plot(x, offline_requests['refused_requests'],label="offline")
 
-    plt.plot(x,hybrid_requests['refused_requests'])
     plt.title('Refused requests during the simulation')
     plt.ylabel('Refused requests count')
     plt.xlabel('Incoming requests')

@@ -121,6 +121,8 @@ class HybridOrchestrator():
             log.error(str(e.message) + str(e.__class__))
             log.error("do_online_mapping : "
                       "Can not acquire res_online or cant online mapping :( ")
+            self.online_fails.put(e)
+
         finally:
             self.lock.release()
 
@@ -175,7 +177,7 @@ class HybridOrchestrator():
                 except Exception as e:
                     self.res_online = before_merge
                     log.error(e.message)
-                    log.error("Unable to merge online and offline")
+                    log.error("Unable to merge online and offline :(")
 
             except Exception as e:
                 log.error(e.message)
@@ -230,7 +232,10 @@ class HybridOrchestrator():
         online_mapping_thread.join()
         if not self.online_fails.empty():
             error = self.online_fails.get()
-            raise uet.MappingException(error.msg,error.backtrack_possible)
+            if error.backtrack_possible:
+                raise uet.MappingException(error.msg,error.backtrack_possible)
+            else:
+                raise RuntimeError
 
 
 
