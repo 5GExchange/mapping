@@ -17,6 +17,7 @@ import os
 import time
 import copy
 from abc import ABCMeta, abstractmethod
+import threading
 
 log = logging.getLogger(" Orchestrator ")
 log.setLevel(logging.DEBUG)
@@ -138,10 +139,8 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
         super(HybridOrchestratorAdaptor, self).__init__(resource, "hybrid")
         self.concrete_hybrid_orchestrator = \
             hybrid_mapping.HybridOrchestrator(resource, "./simulation.cfg", deleted_services)
-
+        self.lock2 = threading.Lock()
     def MAP(self, request):
-        # a torles miatt kell ez:
-        #TODO: a res_online-ba nem biztos hogy csak igy bele kellene eroszakolni ezt az eredmenyt
         try:
             self.concrete_hybrid_orchestrator.lock.acquire()
             self.concrete_hybrid_orchestrator.res_online = self.resource_graph
@@ -157,9 +156,10 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
             i.operation = NFFG.OP_DELETE
         try:
             self.concrete_hybrid_orchestrator.lock.acquire()
-            self.concrete_hybrid_orchestrator.res_online = online_mapping.MAP\
+
+            self.resource_graph = online_mapping.MAP\
                                                 (request,
-                                self.concrete_hybrid_orchestrator.res_online,
+                                                self.resource_graph,
                                                 enable_shortest_path_cache=True,
                                                 bw_factor=1, res_factor=1,
                                                 lat_factor=1,
@@ -171,6 +171,7 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
                                                 mode=mode)
         finally:
             self.concrete_hybrid_orchestrator.lock.release()
+            #self.lock2.release()
 
 
 

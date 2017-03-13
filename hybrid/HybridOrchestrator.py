@@ -159,8 +159,13 @@ class HybridOrchestrator():
     def del_exp_reqs_from_SUMreq(self):
         mode = NFFG.MODE_DEL
         for i in self.deleted_services:
-            asd = i['SG']#.nfs.operation = NFFG.OP_DELETE
-        self.__res_offline = online_mapping.MAP(self.deleted_services,
+            delete = False
+            for j in i['SG'].nfs:
+                if j in self.__res_offline.nfs:
+                    delete = True
+                    j.operation = NFFG.OP_DELETE
+            if delete:
+                self.__res_offline = online_mapping.MAP(i['SG'],
                                                 self.__res_offline,
                                                 enable_shortest_path_cache=True,
                                                 bw_factor=1, res_factor=1,
@@ -171,6 +176,7 @@ class HybridOrchestrator():
                                                 bt_limit=6,
                                                 bt_branching_factor=3,
                                                 mode=mode)
+                self.deleted_services.remove(i)
 
     def set_resource_graphs(self):
         # Resource sharing strategy
@@ -189,8 +195,7 @@ class HybridOrchestrator():
     def merge_online_offline(self):
             try:
                 self.lock.acquire()
-                before_merge = copy.deepcopy(self.res_online)
-                try:
+                before_merge = copy.deepcopy(self.res_online                try:
                     self.res_online = NFFGToolBox().merge_nffgs(self.res_online,
                                                             self.__res_offline)
                     self.res_online.calculate_available_node_res()
