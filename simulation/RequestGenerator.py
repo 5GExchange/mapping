@@ -158,7 +158,7 @@ class SimpleReqGen(AbstractRequestGenerator):
         multiSC = False
         chain_maxlen = 8
         loops = False
-        use_saps_once = True
+        use_saps_once = False
         vnf_sharing_probabilty = 0.0
         vnf_sharing_same_sg = 0.0
         sc_count = 1
