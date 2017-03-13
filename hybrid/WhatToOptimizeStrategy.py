@@ -21,4 +21,6 @@ class ReqsSinceLastOpt(AbstractWhatToOptimizeStrategy):
 
 class AllReqsOpt(AbstractWhatToOptimizeStrategy):
     def reqs_to_optimize(self, sum_req):
+
+
        return sum_req
