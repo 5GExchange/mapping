@@ -17,6 +17,7 @@ from hybrid.ResourceSharingStrategy import *
 import milp.milp_solution_in_nffg as offline_mapping
 import alg1.MappingAlgorithms as online_mapping
 import alg1.UnifyExceptionTypes as uet
+import Queue
 
 log = logging.getLogger(" Hybrid Orchestrator")
 log.setLevel(logging.DEBUG)
@@ -88,15 +89,18 @@ class HybridOrchestrator():
             # Mapped RG
             self.resource_graph = RG
 
+            #Queue for online mapping
+            self.online_fails = Queue.Queue()
+
     def merge_all_request(self, sum, request):
         sum = NFFGToolBox.merge_nffgs(sum, request)
         return sum
 
     def do_online_mapping(self, request, online_RG):
+        temp_res_online = copy.deepcopy(self.res_online)
         try:
             mode = NFFG.MODE_ADD
             self.lock.acquire()
-            temp_res_online = copy.deepcopy(self.res_online)
             self.res_online = online_mapping.MAP(request, online_RG,
                                             enable_shortest_path_cache=True,
                                             bw_factor=1, res_factor=1,
@@ -108,10 +112,10 @@ class HybridOrchestrator():
                                             bt_branching_factor=3, mode=mode)
             log.info("do_online_mapping : Successful online mapping :)")
         except uet.MappingException as error:
-            log.error("do_online_mapping : Unsuccessful online mapping :( ")
-            log.error(error.msg)
+            log.warning("do_online_mapping : Unsuccessful online mapping :( ")
+            log.warning(error.msg)
             self.res_online = temp_res_online
-            raise uet.MappingException(error.msg, error.backtrack_possible)
+            self.online_fails.put(error)
 
         except Exception as e:
             log.error(str(e.message) + str(e.__class__))
@@ -129,7 +133,7 @@ class HybridOrchestrator():
                     request, self.__res_offline, True, "ConstantMigrationCost",
                   migration_coeff=1.0, load_balance_coeff=1.0,
                   edge_cost_coeff=1.0)
-                log.info("Offline mapping is ready")
+                log.info("Offline mapping is done")
                 try:
                     log.info("Try to merge online and offline")
                     self.merge_online_offline()
@@ -172,7 +176,6 @@ class HybridOrchestrator():
                     self.res_online = before_merge
                     log.error(e.message)
                     log.error("Unable to merge online and offline")
-
 
             except Exception as e:
                 log.error(e.message)
@@ -218,14 +221,16 @@ class HybridOrchestrator():
                 log.error("Failed to start offline thread")
                 raise RuntimeError
 
-        elif not self.__when_to_opt.need_to_optimize(self.offline_status, 3):
+        elif not self.__when_to_opt.need_to_optimize(offline_status, 3):
             online_mapping_thread.join()
             log.info("No need to optimize!")
         else:
             log.error("Failed to start offline")
 
         online_mapping_thread.join()
-
+        if not self.online_fails.empty():
+            error = self.online_fails.get()
+            raise uet.MappingException(error.msg,error.backtrack_possible)
 
 
 
