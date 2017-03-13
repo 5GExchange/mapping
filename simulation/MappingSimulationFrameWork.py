@@ -188,7 +188,7 @@ class MappingSolutionFramework():
             service_life_element = {"dead_time": time +
                             life_time, "SG": service_graph, "req_num": sim_iter}
 
-            self.__remaining_request_lifetimes.put(service_life_element)
+            self.__remaining_request_lifetimes.append(service_life_element)
             log.info("Mapping thread: Mapping service_request_"
                      + str(sim_iter) + " successful +")
             self.mapped_requests += 1
@@ -204,7 +204,7 @@ class MappingSolutionFramework():
 
         except uet.MappingException as me:
             log.info("Mapping thread: Mapping service_request_" +
-                     str(sim_iter) + " unsuccessful, message: %s"%me.msg)
+                     str(sim_iter) + " unsuccessful\n message: %s"%me.msg)
             self.refused_requests += 1
             self.refused_array.append(self.refused_requests)
             # TRY TO SET IT BACK TO THE STATE BEFORE UNSUCCESSFUL MAPPING
@@ -222,8 +222,7 @@ class MappingSolutionFramework():
             self.__orchestrator_adaptor.del_service(service['SG'])
             log.info("Mapping thread: Deleting service_request_" +
                      str(sim_iter) + " successful -")
-            self.__remaining_request_lifetimes.get(service)
-            self.__remaining_request_lifetimes.task_done()
+            self.__remaining_request_lifetimes.remove(service)
 
             """""
             if not sim_iter % self.dump_freq:
@@ -278,7 +277,7 @@ class MappingSolutionFramework():
         for service in self.__remaining_request_lifetimes:
             if service['dead_time'] < time:
                self.__del_service(service, service['req_num'])
-               self.deleted_services.put(service)
+               self.deleted_services.append(service)
                self.running_requests -= 1
 
 
@@ -320,8 +319,8 @@ class MappingSolutionFramework():
 
 if __name__ == "__main__":
     request_list = Queue.Queue()
-    remaining_request_lifetimes = Queue.Queue()
-    deleted_services = Queue.Queue()
+    remaining_request_lifetimes = []
+    deleted_services = []
     test = MappingSolutionFramework('simulation.cfg', request_list,
                                 remaining_request_lifetimes, deleted_services)
     try:
