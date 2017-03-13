@@ -258,7 +258,7 @@ class MappingSolutionFramework():
                                req_num)
 
                 # Remove expired service graph requests
-                #self.__clean_expired_requests(datetime.datetime.now())
+                self.__clean_expired_requests(datetime.datetime.now())
 
                 self.running_array.append(self.running_requests)
 
