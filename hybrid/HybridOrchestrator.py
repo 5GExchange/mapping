@@ -218,7 +218,7 @@ class HybridOrchestrator():
                 log.error("Failed to start offline thread")
                 raise RuntimeError
 
-        elif not self.__when_to_opt.need_to_optimize(self.offline_status, 3):
+        elif not self.__when_to_opt.need_to_optimize(offline_status, 3):
             online_mapping_thread.join()
             log.info("No need to optimize!")
         else:
