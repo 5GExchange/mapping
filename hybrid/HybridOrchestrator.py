@@ -195,7 +195,8 @@ class HybridOrchestrator():
     def merge_online_offline(self):
             try:
                 self.lock.acquire()
-                before_merge = copy.deepcopy(self.res_online                try:
+                before_merge = copy.deepcopy(self.res_online)
+                try:
                     self.res_online = NFFGToolBox().merge_nffgs(self.res_online,
                                                             self.__res_offline)
                     self.res_online.calculate_available_node_res()
@@ -259,10 +260,12 @@ class HybridOrchestrator():
             log.error("Failed to start offline")
 
         online_mapping_thread.join()
+
         if not self.online_fails.empty():
             error = self.online_fails.get()
-            if "error.backtrack_possible" in locals():
-                raise uet.MappingException(error.msg, error.backtrack_possible)
+            raise uet.MappingException(error.msg, False)
+
+
 
 
 

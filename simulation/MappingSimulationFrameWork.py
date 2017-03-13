@@ -135,7 +135,6 @@ class MappingSolutionFramework():
         self.refused_array = [0]
         self.running_requests = 0
         self.running_array = [0]
-
         # Orchestrator
         self.orchestrator_type = config['orchestrator']
         if self.orchestrator_type == "online":
