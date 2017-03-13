@@ -80,7 +80,7 @@ class TestReqGen(AbstractRequestGenerator):
         running_nfs = OrderedDict()
         multiSC = False
         loops = False
-        use_saps_once = True
+        use_saps_once = False
         vnf_sharing_probabilty = 0.0
         vnf_sharing_same_sg = 0.0
         vnf_cnt = 4
@@ -158,7 +158,7 @@ class SimpleReqGen(AbstractRequestGenerator):
         multiSC = False
         chain_maxlen = 8
         loops = False
-        use_saps_once = True
+        use_saps_once = False
         vnf_sharing_probabilty = 0.0
         vnf_sharing_same_sg = 0.0
         sc_count = 1
@@ -234,7 +234,7 @@ class MultiReqGen(AbstractRequestGenerator):
         max_sc_count = 10
         chain_maxlen = 8
         loops = False
-        use_saps_once = True
+        use_saps_once = False
         vnf_sharing_probabilty = 0.0
         vnf_sharing_same_sg = 0.0
         sc_count = self.rnd.randint(2, max_sc_count)

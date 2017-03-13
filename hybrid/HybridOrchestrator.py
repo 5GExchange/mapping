@@ -31,14 +31,14 @@ log.setLevel(logging.DEBUG)
 
 class HybridOrchestrator():
 
-    def __init__(self, RG, config_file_path):
+    def __init__(self, RG, config_file_path, deleted_services):
             config = ConfigObj(config_file_path)
 
             # Protects the res_online
             self.lock = threading.Lock()
             self.res_online = None
             self.__res_offline = RG.copy()
-
+            self.deleted_services = deleted_services
             # All request in one NFFG
             self.SUM_req = NFFG()
             self.offline_mapping_thread = None
@@ -130,6 +130,13 @@ class HybridOrchestrator():
                   migration_coeff=1.0, load_balance_coeff=1.0,
                   edge_cost_coeff=1.0)
                 log.info("Offline mapping is ready")
+
+                try:
+                    log.info("Delete expired requests")
+                    self.del_exp_reqs_from_SUMreq()
+                except Exception as e:
+                    log.error(e.message)
+                    log.error("Unable to delete expired services")
                 try:
                     log.info("Try to merge online and offline")
                     self.merge_online_offline()
@@ -142,6 +149,21 @@ class HybridOrchestrator():
                           "Offline mapping: Unable to mapping offline!")
                 self.offline_status = False
 
+    def del_exp_reqs_from_SUMreq(self):
+        mode = NFFG.MODE_DEL
+        for i in self.deleted_services.nfs:
+            i.operation = NFFG.OP_DELETE
+        self.__res_offline = online_mapping.MAP(self.deleted_services,
+                                                self.__res_offline,
+                                                enable_shortest_path_cache=True,
+                                                bw_factor=1, res_factor=1,
+                                                lat_factor=1,
+                                                shortest_paths=None,
+                                                return_dist=False,
+                                                propagate_e2e_reqs=True,
+                                                bt_limit=6,
+                                                bt_branching_factor=3,
+                                                mode=mode)
 
     def set_resource_graphs(self):
         # Resource sharing strategy
@@ -208,7 +230,7 @@ class HybridOrchestrator():
             try:
                 self.offline_mapping_thread = threading.Thread(None,
                             self.do_offline_mapping, "Offline mapping thread",
-                                                            [requestToOpt])
+                                            [requestToOpt])
                 log.info("Start offline optimalization!")
                 self.offline_mapping_thread.start()
                 online_mapping_thread.join()

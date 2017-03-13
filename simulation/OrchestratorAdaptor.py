@@ -52,6 +52,8 @@ class AbstractOrchestratorAdaptor(object):
     def get_copy_of_rg(self):
         pass
 
+    #todo: a del service-t meg kell hivni a SUM_requesten mert igy az offline feleleszti a hallott kereseket is
+
     def del_service(self, request):
         mode = NFFG.MODE_DEL
         for i in request.nfs:
@@ -66,6 +68,7 @@ class AbstractOrchestratorAdaptor(object):
                                                  bt_limit=6,
                                                  bt_branching_factor=3,
                                                  mode=mode)
+
 
     @abstractmethod
     def MAP(self, request):
@@ -113,21 +116,24 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
     def get_copy_of_rg(self):
         return copy.deepcopy(self.resource_graph)
 
+
+
 class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
-    def __init__(self, resource):
+    def __init__(self, resource, deleted_services):
         super(HybridOrchestratorAdaptor, self).__init__(resource, "hybrid")
         self.concrete_hybrid_orchestrator = \
-            hybrid_mapping.HybridOrchestrator(resource, "./simulation.cfg")
+            hybrid_mapping.HybridOrchestrator(resource, "./simulation.cfg", deleted_services)
 
     def MAP(self, request):
-        mode = NFFG.MODE_ADD
         # a torles miatt kell ez:
+        #TODO: a res_online-ba nem biztos hogy csak igy bele kellene eroszakolni ezt az eredmenyt
+        self.concrete_hybrid_orchestrator.lock.acquire()
         self.concrete_hybrid_orchestrator.res_online = self.resource_graph
-        #self.concrete_hybrid_orchestrator.res_online = self.get_copy_of_rg()
         self.concrete_hybrid_orchestrator.MAP(request)
-
         self.resource_graph = self.concrete_hybrid_orchestrator.res_online
+        self.concrete_hybrid_orchestrator.lock.release()
+
 
 
     def get_copy_of_rg(self):
