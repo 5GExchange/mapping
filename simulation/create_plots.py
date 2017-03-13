@@ -57,17 +57,17 @@ def main(argv):
     #Create mapped picture
 
     x=[]
-    for i in xrange(0,len(hybrid_requests['mapped_requests'])):
+    for i in xrange(0,len(hybrid_requests['running_requests'])):
         x.append(i)
 
     if hybrid:
-        plt.plot(x, hybrid_requests['mapped_requests'])
+        plt.plot(x, hybrid_requests['running_requests'])
 
     if online:
-        plt.plot(x, online_requests['mapped_requests'])
+        plt.plot(x, online_requests['running_requests'])
 
     if offline:
-        plt.plot(x, offline_requests['mapped_requests'])
+        plt.plot(x, offline_requests['running_requests'])
 
     plt.title('Accepted incoming service requests')
     plt.ylabel('Accepted requests count')
@@ -81,13 +81,13 @@ def main(argv):
         x.append(i)
 
     if hybrid:
-        plt.plot(x, hybrid_requests['mapped_requests'])
+        plt.plot(x, hybrid_requests['running_requests'])
 
     if online:
-        plt.plot(x, online_requests['mapped_requests'])
+        plt.plot(x, online_requests['running_requests'])
 
     if offline:
-        plt.plot(x, offline_requests['mapped_requests'])
+        plt.plot(x, offline_requests['running_requests'])
 
     plt.plot(x,hybrid_requests['running_requests'])
     plt.title('Currently running (mapped) requests in the NFFG')
@@ -103,13 +103,13 @@ def main(argv):
         x.append(i)
 
     if hybrid:
-        plt.plot(x, hybrid_requests['mapped_requests'])
+        plt.plot(x, hybrid_requests['refused_requests'])
 
     if online:
-        plt.plot(x, online_requests['mapped_requests'])
+        plt.plot(x, online_requests['refused_requests'])
 
     if offline:
-        plt.plot(x, offline_requests['mapped_requests'])
+        plt.plot(x, offline_requests['refused_requests'])
 
     plt.plot(x,hybrid_requests['refused_requests'])
     plt.title('Refused requests during the simulation')
