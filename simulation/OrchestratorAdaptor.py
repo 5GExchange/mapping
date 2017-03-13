@@ -128,11 +128,16 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
     def MAP(self, request):
         # a torles miatt kell ez:
         #TODO: a res_online-ba nem biztos hogy csak igy bele kellene eroszakolni ezt az eredmenyt
-        self.concrete_hybrid_orchestrator.lock.acquire()
-        self.concrete_hybrid_orchestrator.res_online = self.resource_graph
+        try:
+            self.concrete_hybrid_orchestrator.lock.acquire()
+            self.concrete_hybrid_orchestrator.res_online = self.resource_graph
+        finally:
+            self.concrete_hybrid_orchestrator.lock.release()
+
         self.concrete_hybrid_orchestrator.MAP(request)
         self.resource_graph = self.concrete_hybrid_orchestrator.res_online
-        self.concrete_hybrid_orchestrator.lock.release()
+
+
 
 
 
