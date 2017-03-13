@@ -195,7 +195,9 @@ class HybridOrchestrator():
     def merge_online_offline(self):
             try:
                 self.lock.acquire()
-                before_merge = copy.deepcopy(self.res_online                try:
+                before_merge = copy.deepcopy(self.res_online)
+
+                try:
                     self.res_online = NFFGToolBox().merge_nffgs(self.res_online,
                                                             self.__res_offline)
                     self.res_online.calculate_available_node_res()
