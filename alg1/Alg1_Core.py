@@ -57,9 +57,6 @@ class CoreAlgorithm(object):
     # intensive step, could be used to change the mapping structure and
     # construct an output NFFG based on a custom mapping structure
     self.dry_init = dry_init
-    if dry_init:
-      self.log.warn("Dry initialization! The start function won't be able to "
-                    "run, because only minimal preprocessing was done!")
     if keep_e2e_reqs_in_output and propagate_e2e_reqs:
       raise uet.BadInputException(
         "Cannot propagate and keep E2E requirements in the output NFFG",
@@ -122,9 +119,9 @@ class CoreAlgorithm(object):
     self.net = self.preprocessor.processNetwork(self.mode,
                                                 self.enable_shortest_path_cache,
                                                 self.dry_init)
-    self.req, chains_with_subgraphs = self.preprocessor.processRequest(
-      self.mode, self.net, self.dry_init)
     if not self.dry_init:
+      self.req, chains_with_subgraphs = self.preprocessor.processRequest(
+        self.mode, self.net)
       self.bt_handler = backtrack.BacktrackHandler(chains_with_subgraphs,
                                                    self.bt_branching_factor,
                                                    self.bt_limit)

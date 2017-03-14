@@ -544,7 +544,7 @@ class GraphPreprocessorClass(object):
 
     return self.req_graph
 
-  def processRequest (self, mode, preprocessed_network, dry_init):
+  def processRequest (self, mode, preprocessed_network):
     """
     Translates the e2e bandwidth reqs to links, and chains to subchains,
     additionally finds subgraph for subchains.
@@ -659,41 +659,40 @@ class GraphPreprocessorClass(object):
         # any object can be in the NFFG in MODE_DEL
         pass
 
-    if not dry_init:
-      # SAPs are already mapped by the manager, based on their IDs.
-      for vnf, data in self.req_graph.network.nodes_iter(data=True):
-        if data.type == 'SAP':
-          self.rechained[vnf] = True
-        elif data.type == 'NF' and vnf not in self.rechained:
-          # if we added this VNF due to ADD operation mode, leave it there!
-          self.rechained[vnf] = False
-        elif data.type != 'NF':
-          raise uet.BadInputException(
-            "After preprocessing stage, only SAPs or VNFs should be in the "
-            "request graph.", "Node %s, type: %s is still in the graph" % (
-              vnf, data.type))
+    # SAPs are already mapped by the manager, based on their IDs.
+    for vnf, data in self.req_graph.network.nodes_iter(data=True):
+      if data.type == 'SAP':
+        self.rechained[vnf] = True
+      elif data.type == 'NF' and vnf not in self.rechained:
+        # if we added this VNF due to ADD operation mode, leave it there!
+        self.rechained[vnf] = False
+      elif data.type != 'NF':
+        raise uet.BadInputException(
+          "After preprocessing stage, only SAPs or VNFs should be in the "
+          "request graph.", "Node %s, type: %s is still in the graph" % (
+            vnf, data.type))
 
-      # Give a spare chain ID for all the best effort subchains, so connect all
-      # the subchains to this (self.max_input_chainid) chain in the helper graph
-      if len(self.chains) == 0:
-        # set max_input_chainid to arbitrary value, if no chains were given
-        self.max_chain_id = 1
-      else:
-        self.max_chain_id = max(c['id'] for c in self.chains) + 1
-      self.manager.setMaxInputChainId(self.max_chain_id)
+    # Give a spare chain ID for all the best effort subchains, so connect all
+    # the subchains to this (self.max_input_chainid) chain in the helper graph
+    if len(self.chains) == 0:
+      # set max_input_chainid to arbitrary value, if no chains were given
+      self.max_chain_id = 1
+    else:
+      self.max_chain_id = max(c['id'] for c in self.chains) + 1
+    self.manager.setMaxInputChainId(self.max_chain_id)
 
-      # Placement criteria is a list of physical nodes, where the VNF
-      # can be placed. It can be also specified by the upper layer, and the
-      # preprocessing procedure
-      for vnf, vnfobj in self.req_graph.network.nodes_iter(data=True):
-        if not hasattr(vnfobj, 'placement_criteria'):
-          setattr(vnfobj, 'placement_criteria', [])
-        if vnfobj.type == 'NF':
-          if reduce(lambda a, b: a or b, (vnfobj.resources[attr] is None \
-                                          for attr in ['cpu', 'mem', 'storage'])):
-            raise uet.BadInputException("VNF resource requirements should always"
-                                        " be given", "One of %s`s components is"
-                                                     " None" % vnf)
+    # Placement criteria is a list of physical nodes, where the VNF
+    # can be placed. It can be also specified by the upper layer, and the
+    # preprocessing procedure
+    for vnf, vnfobj in self.req_graph.network.nodes_iter(data=True):
+      if not hasattr(vnfobj, 'placement_criteria'):
+        setattr(vnfobj, 'placement_criteria', [])
+      if vnfobj.type == 'NF':
+        if reduce(lambda a, b: a or b, (vnfobj.resources[attr] is None \
+                                        for attr in ['cpu', 'mem', 'storage'])):
+          raise uet.BadInputException("VNF resource requirements should always"
+                                      " be given", "One of %s`s components is"
+                                                   " None" % vnf)
 
     for chain in self.chains:
       node_path = chain['chain']
@@ -703,38 +702,33 @@ class GraphPreprocessorClass(object):
       for i, j, k in zip(node_path[:-1], node_path[1:], link_ids):
         self.req_graph.network[i][j][k].bandwidth += chain['bandwidth']
 
-      if not dry_init:
-        # Find separate subgraph only for e2e chains from the upper layer.
-        if self.req_graph.network.node[node_path[0]].type == 'SAP' and \
-              self.req_graph.network.node[node_path[-1]].type == 'SAP':
-          subg = self._findSubgraphForChain(chain)
-          e2e_chains_with_graphs.append((chain, subg))
-        else:
-          # not SAP-SAP chains will be mapped to some (intersections of)
-          # subgraphs found to e2e chains
-          not_e2e_chains.append(chain)
+      # Find separate subgraph only for e2e chains from the upper layer.
+      if self.req_graph.network.node[node_path[0]].type == 'SAP' and \
+            self.req_graph.network.node[node_path[-1]].type == 'SAP':
+        subg = self._findSubgraphForChain(chain)
+        e2e_chains_with_graphs.append((chain, subg))
+      else:
+        # not SAP-SAP chains will be mapped to some (intersections of)
+        # subgraphs found to e2e chains
+        not_e2e_chains.append(chain)
       self.log.info("Chain %s preprocessed" % chain)
-    if len(e2e_chains_with_graphs) == 0 and not dry_init:
+    if len(e2e_chains_with_graphs) == 0:
       self.log.warn("No SAP - SAP chain were given! All request links will be "
                     "mapped as best effort links!")
+    # These chains are disjoint on the set of links, each has a subgraph
+    # which it should be mapped to.
+    divided_chains_with_graphs = self._divideIntoDisjointSubchains(mode,
+                                                                   e2e_chains_with_graphs,
+                                                                   not_e2e_chains)
 
-    if not dry_init:
-      # These chains are disjoint on the set of links, each has a subgraph
-      # which it should be mapped to.
-      divided_chains_with_graphs = self._divideIntoDisjointSubchains(mode,
-                                                                     e2e_chains_with_graphs,
-                                                                     not_e2e_chains)
+    for vnf, d in self.req_graph.network.nodes_iter(data=True):
+      self.log.debug("Final placement criterion of VNF %s is %s"
+                     % (vnf, d.placement_criteria))
 
-      for vnf, d in self.req_graph.network.nodes_iter(data=True):
-        self.log.debug("Final placement criterion of VNF %s is %s"
-                       % (vnf, d.placement_criteria))
-
-      # After the request graph is divided, the latency and bw reqs of the
-      # divided chains are not valid! because those corresponds to the e2e
-      # chains. Handling this correctly is done by the MappingManager.
-      return self.req_graph, divided_chains_with_graphs
-    else:
-      return self.req_graph, []
+    # After the request graph is divided, the latency and bw reqs of the
+    # divided chains are not valid! because those corresponds to the e2e
+    # chains. Handling this correctly is done by the MappingManager.
+    return self.req_graph, divided_chains_with_graphs
 
   def processNetwork (self, mode, cache_shortest_path, dry_init):
     """
