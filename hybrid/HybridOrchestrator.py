@@ -263,7 +263,10 @@ class HybridOrchestrator():
         online_mapping_thread.join()
         if not self.online_fails.empty():
             error = self.online_fails.get()
-            raise uet.MappingException(error.msg, False)
+            try:
+                raise uet.MappingException(error.msg, False)
+            except:
+                raise uet.MappingException(error.message, False)
 
 
 
