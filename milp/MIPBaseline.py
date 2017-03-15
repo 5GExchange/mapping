@@ -1786,16 +1786,27 @@ class ScenarioSolution(object):
           cumulative_delay = 0
 
           for vedge in vedge_path:
-            delay_of_vedge = self.substrate.get_path_delay(
-              mapping.vedge_to_spath[vedge])
-            if debug_output:
-              print "\t\t vedge {} has pure edge delay of {}".format(vedge,
-                                                                     delay_of_vedge)
-            cumulative_delay += delay_of_vedge
+            if len(mapping.vedge_to_spath[vedge]) == 0:
+              # meaning vedge was collocated onto a single Infra node it still
+              # takes up the latency of the Infra.
+              vtail, vtail_p, vhead_p, vhead, vlinkid = vedge
+              delay_of_collocated_vedge = \
+                self.substrate.node[mapping.vnode_to_snode[vtail]]['delay']
+              if debug_output:
+                print "\t\t collocated vedge {} has delay of {}".\
+                  format(vedge, delay_of_collocated_vedge)
+              cumulative_delay += delay_of_collocated_vedge
+            else:
+              delay_of_vedge = self.substrate.get_path_delay(
+                mapping.vedge_to_spath[vedge])
+              if debug_output:
+                print "\t\t vedge {} has pure edge delay of {}".format(vedge,
+                                                                       delay_of_vedge)
+              cumulative_delay += delay_of_vedge
 
           for vedge in vedge_path:
             vtail, vtail_p, vhead_p, vhead, vlinkid = vedge
-            for index, (stail, stail_p, shead_p, shead) in enumerate(
+            for index, (stail, stail_p, shead_p, shead, slid) in enumerate(
                mapping.vedge_to_spath[vedge]):
               if index == 0:
                 delay_of_tail = self.substrate.node[stail]['delay']

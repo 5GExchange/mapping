@@ -128,8 +128,6 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
   # connected to a SAP
   request = NFFGToolBox.rebind_e2e_req_links(request)
 
-  chainlist = helper.retrieveE2EServiceChainsFromEdgeReqs(request)
-
   net = helper.substituteMissingValues(net)
 
   # create the class of the algorithm
@@ -137,7 +135,8 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
   ############################################################################
   # HACK: We only want to use the algorithm class to generate an NFFG, we will 
   # fill the mapping struct with the one found by MIP
-  alg = CoreAlgorithm(net, request, chainlist,
+  # Path requirements are handled by the MILP
+  alg = CoreAlgorithm(net, request, [],
                       NFFG.MODE_REMAP if reopt else NFFG.MODE_ADD, False,
                       overall_highest_delay, dry_init=True,
                       propagate_e2e_reqs=False, keep_e2e_reqs_in_output=True)
@@ -164,6 +163,11 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
   log.debug("TIMING: %ss has passed with MILP calculation" % (
     time.time() - current_time))
   current_time = time.time()
+
+  # Retrieve the e2e SCs only to remove them from the request after the MILP
+  # has processed them, but they mustn't be in the request for output NFFG
+  # consturction!
+  _ = helper.retrieveE2EServiceChainsFromEdgeReqs(request)
 
   mappedNFFG = NFFG(id="MILP-mapped")
   if mapping_of_req.is_embedded:
