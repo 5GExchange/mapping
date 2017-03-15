@@ -65,7 +65,9 @@ def get_MIP_solution (reqnffgs, netnffg, migration_handler,
                         edge_cost_coeff=edge_cost_coeff)
   if isFeasibleStatus(mc.run_milp()):
     solution = mc.solution
-    solution.validate_solution(debug_output=False)
+    # TODO: throws undeterministic exception on node and link bandwitdth MILP variable checking with check_deviation
+    # instead validate: use calcculate available resource functions on the mappedNFFG
+    # solution.validate_solution(debug_output=False)
     if len(solution.mapping_of_request) > 1:
       raise Exception(
         "MILP shouldn't have produced multiple mappings, because the input "
@@ -284,6 +286,11 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
                                             edge_cost_coeff=edge_cost_coeff,
                                             reopt=optimize_already_mapped_nfs)
   if mappedNFFG is not None:
+    try:
+      mappedNFFG.calculate_available_node_res()
+      mappedNFFG.calculate_available_link_res([])
+    except RuntimeError:
+      raise uet.InternalAlgorithmException("MILP's mapping is invalid!!")
     return mappedNFFG
   else:
     raise uet.MappingException("MILP couldn't map the given service request.",
@@ -292,14 +299,14 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
 
 if __name__ == '__main__':
   req, net = None, None
-  with open('../alg1/nffgs/escape-mn-req-extra.nffg') as f:
+  with open('../alg1/nffgs/escape-mn-req-extra.nffg', "r") as f:
     req = NFFG.parse(f.read())
   with open('../alg1/nffgs/escape-mn-double-mapped.nffg', "r") as f:
     net = NFFG.parse(f.read())
 
-  print "\nMIGRATION-TEST: Simple MILP: \n"
-  with open("simple-milp.nffg", "w") as f:
-    f.write(MAP(req, net, optimize_already_mapped_nfs=False, edge_cost_coeff=1.0).dump())
+  # print "\nMIGRATION-TEST: Simple MILP: \n"
+  # with open("simple-milp.nffg", "w") as f:
+  #   f.write(MAP(req, net, optimize_already_mapped_nfs=False, edge_cost_coeff=1.0).dump())
 
   # print "\nMIGRATION-TEST: Optimize everything MILP: \n"
   # with open("reopt-milp.nffg", "w") as f:
@@ -317,6 +324,6 @@ if __name__ == '__main__':
 
   print "\nMIGRATION-TEST: Optimize everything with composite objective"
   with open("reopt-milp-lb.nffg", "w") as f:
-    f.write(MAP(req, net, optimize_already_mapped_nfs=True, migration_coeff=0.0,
-                load_balance_coeff=1.0, edge_cost_coeff=0.0,
-                migration_handler_name="ConstantMigrationCost", const_cost=24.0).dump())
+    f.write(MAP(req, net, optimize_already_mapped_nfs=True, migration_coeff=1.0,
+                load_balance_coeff=1.0, edge_cost_coeff=1.0,
+                migration_handler_name="ConstantMigrationCost", const_cost=2.0).dump())
