@@ -1692,13 +1692,12 @@ class ScenarioSolution(object):
               snode,
               used_resources - self.substrate.node[snode][resource]))
 
-        # TODO: why does it trow exception sometimes?
-        # check_deviation(
-        #   "Comparison of LP resource allocation of resource {} on node {} and "
-        #   "a posteriori computed allocations do not match.".format(
-        #     resource, snode),
-        #   used_resources,
-        #   self.raw_node_load[snode][resource])
+        check_deviation(
+          "Comparison of LP resource allocation of resource {} on node {} and "
+          "a posteriori computed allocations do not match.".format(
+            resource, snode),
+          used_resources,
+          self.raw_node_load[snode][resource])
 
     # check that bandwidth at nodes is sufficient
 
