@@ -90,19 +90,19 @@ class MappingSolutionFramework():
 
         self.number_of_iter = config['max_number_of_iterations']
         self.dump_freq = int(config['dump_freq'])
-
         self.max_number_of_iterations = int(config['max_number_of_iterations'])
         self.request_arrival_lambda = float(config['request_arrival_lambda'])
         self.wait_all_req_expire = bool(config['wait_all_req_expire'])
         self.__discrete_simulation = bool(config['discrete_simulation'])
         self.request_lifetime_lambda = float(config['request_lifetime_lambda'])
 
-        self.deleted_services = []
         # This stores the request waiting to be mapped
         self.__request_list = request_list
         self.sim_iter = 0
         self.copy_of_rg_network_topology = None
         self.dump_iter = 0
+        self.deleted_services = []
+
         # Resource
         resource_type = config['topology']
         if resource_type == "pico":
@@ -148,8 +148,8 @@ class MappingSolutionFramework():
         self.refused_array = [0]
         self.running_requests = 0
         self.running_array = [0]
-        # Orchestrator
 
+        # Orchestrator
         if self.orchestrator_type == "online":
             self.__orchestrator_adaptor = OnlineOrchestratorAdaptor(
                 self.__network_topology, self.full_log_path)
@@ -159,6 +159,18 @@ class MappingSolutionFramework():
             log.info(" | When to optimize: " + str(config['when_to_optimize']))
             log.info(" | When to optimize parameter: " + str(config['when_to_opt_parameter']))
             log.info(" | Optimize strategy: " + str(config['orchestrator']))
+            log.info(" -----------------------------------------")
+            log.info(" ---- Offline specific configurations -----")
+            log.info(" | Optimize already mapped nfs " + config[
+                'optimize_already_mapped_nfs'])
+            log.info(" | migration_coeff: " + config[
+                'migration_coeff'])
+            log.info(" | load_balance_coeff: " + config[
+                'load_balance_coeff'])
+            log.info(" | edge_cost_coeff: " + config[
+                'edge_cost_coeff'])
+            log.info(" | Migration cost handler given: " + config[
+                'migration_handler_name'] if 'migration_handler_name' in config else "None")
             log.info(" -----------------------------------------")
             self.__orchestrator_adaptor = HybridOrchestratorAdaptor(
                 self.__network_topology, self.deleted_services, self.full_log_path)
@@ -210,10 +222,6 @@ class MappingSolutionFramework():
             self.dump_iter += 1
             if not self.dump_iter % self.dump_freq:
                 self.dump()
-                # log.info("Dump NFFG to file after the " + str(self.dump_iter) + ". NFFG change")
-                # self.__orchestrator_adaptor.dump_mapped_nffg(
-                # sim_iter, "mapping", self.sim_number, self.orchestrator_type)
-
 
         except uet.MappingException as me:
             log.info("Mapping thread: Mapping service_request_" +
@@ -229,7 +237,7 @@ class MappingSolutionFramework():
     def dump(self):
         log.info("Dump NFFG to file after the " + str(self.dump_iter) + ". NFFG change")
         self.__orchestrator_adaptor.dump_mapped_nffg(
-            self.dump_iter, "mapping", self.sim_number, self.orchestrator_type)
+            self.dump_iter, "change", self.sim_number, self.orchestrator_type)
 
     def __del_service(self, service, sim_iter):
         try:
@@ -245,12 +253,6 @@ class MappingSolutionFramework():
             self.dump_iter += 1
             if not self.dump_iter % self.dump_freq:
                 self.dump()
-                # log.info("Dump NFFG to file after the " +
-                #          str(sim_iter) + ". deletion")
-                # self.__orchestrator_adaptor.\
-                #     dump_mapped_nffg(sim_iter, "deletion",
-                #                      self.sim_number, self.orchestrator_type)
-
 
         except uet.MappingException:
             log.error("Mapping thread: Deleting service_request_" +
@@ -288,7 +290,7 @@ class MappingSolutionFramework():
                 # Remove expired service graph requests
                 self.__clean_expired_requests(datetime.datetime.now())
 
-        log.info("End mapping thread")
+        log.info("End mapping thread!")
 
 
     def __clean_expired_requests(self,time):

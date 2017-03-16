@@ -168,18 +168,13 @@ class HybridOrchestrator():
                     j.operation = NFFG.OP_DELETE
             if delete:
               self.__res_offline = online_mapping.MAP(i['SG'],
-                                                      self.__res_offline,
-                                                      enable_shortest_path_cache=True,
-                                                      bw_factor=1, res_factor=1,
-                                                      lat_factor=1,
-                                                      shortest_paths=None,
-                                                      return_dist=False,
-                                                      propagate_e2e_reqs=True,
-                                                      bt_limit=6,
-                                                      bt_branching_factor=3,
-                                                      mode=mode)
-              # TODO: Remove i from sumreq as well
-              # self.deleted_services.remove(i)
+                                                    self.__res_offline,
+                                                    mode=mode)
+              
+              mode = NFFG.MODE_DEL
+              self.SUM_req = online_mapping.MAP(i['SG'],
+                                                self.SUM_req,
+                                                mode=mode)
 
     def set_online_resource_graph(self):
         # Resource sharing strategy

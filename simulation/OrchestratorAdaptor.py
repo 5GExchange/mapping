@@ -69,20 +69,11 @@ class AbstractOrchestratorAdaptor(object):
 
         dump_nffg = self.resource_graph.dump()
 
-        if not os.path.exists('test' + str(i) + orchest_type):
-            os.mkdir('test' + str(i) + orchest_type)
-            self.path = os.path.abspath('test' + str(i) + orchest_type)
-            full_path = os.path.join(self.path, 'dump_nffg_' + str(calls) + "_"
-                                + type + "_" + str(i) + "_" + str(time.ctime()).
-                                     replace(' ', '-').replace(':', '') + '.nffg')
-            with io.FileIO(full_path, "w") as file:
-                file.write(dump_nffg)
-        else:
-            path = os.path.abspath('test' + str(i) + orchest_type)
-            full_path = os.path.join(path, 'dump_nffg_' + str(calls) + "_"
-                                + type + "_" + str(i) + "_" + str(time.ctime()).
-                                     replace(' ', '-').replace(':', '') + '.nffg')
-            with io.FileIO(full_path, "w") as file:
+        path = os.path.abspath('test' + str(i) + orchest_type)
+        full_path = os.path.join(path, 'dump_nffg_' + str(calls) + "_"
+                            + type + "_" + str(i) + "_" + str(time.ctime()).
+                                replace(' ', '-').replace(':', '') + '.nffg')
+        with io.FileIO(full_path, "w") as file:
                 file.write(dump_nffg)
 
 
