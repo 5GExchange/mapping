@@ -140,6 +140,7 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
         self.concrete_hybrid_orchestrator = \
             hybrid_mapping.HybridOrchestrator(resource, "./simulation.cfg", deleted_services)
         self.lock2 = threading.Lock()
+
     def MAP(self, request):
         try:
             self.concrete_hybrid_orchestrator.lock.acquire()

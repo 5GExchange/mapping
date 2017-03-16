@@ -1,3 +1,4 @@
+import copy
 from abc import ABCMeta, abstractmethod
 import alg1.MappingAlgorithms as online_mapping
 try:
@@ -21,16 +22,23 @@ hdlr.setFormatter(formatter)
 log.addHandler(hdlr)
 log.setLevel(logging.DEBUG)
 
-class AbstractResourceSharingStrategy:
+class AbstractResourceSharingStrategy(object):
     __metaclass__ = ABCMeta
 
-    @abstractmethod
-    def share_resource(self, resource_graph, res_online, res_offline):
-        pass
+    def __init__(self, resource_grap):
+      self.bare_resource_graph = resource_grap
 
+    @abstractmethod
+    def get_online_resource(self, res_online, res_offline):
+        raise NotImplementedError("Abstract method")
+
+    @abstractmethod
+    def get_offline_resource(self, res_online, res_offline):
+        raise NotImplementedError("Abstract method")
 
 
 class DynamicMaxOnlineToAll(AbstractResourceSharingStrategy):
+
     def share_resource(self, resource_graph, res_online, res_offline):
         #TODO: dinamikus RG gen
         #return toOffline, toOnline
@@ -39,27 +47,15 @@ class DynamicMaxOnlineToAll(AbstractResourceSharingStrategy):
 
 class DoubleHundred(AbstractResourceSharingStrategy):
 
-    """def del_service(self, what_nffg, from_nffg):
+    def get_offline_resource(self, res_online, res_offline):
+        return copy.deepcopy(res_online)
 
-        mode = NFFG.MODE_DEL
-        self.__res_online = online_mapping.MAP(what_nffg, from_nffg,
-                                                          enable_shortest_path_cache=True,
-                                                          bw_factor=1,
-                                                          res_factor=1,
-                                                          lat_factor=1,
-                                                          shortest_paths=None,
-                                                          return_dist=False,
-                                                          mode=mode)
-        """
-    def share_resource(self, resource_graph, res_online, res_offline):
+    def get_online_resource(self, res_online, res_offline):
         # For first resource sharing
-
-        # az if nem fut le sose mert a OrchAdap-ben van egy iylen:
+        #TODO: az if nem fut le sose mert a OrchAdap-ben van egy iylen:
         # self.concrete_hybrid_orchestrator.res_online = self.resource_graph
         if res_online == None:
-            to_online = resource_graph.copy()
-            to_offline = resource_graph.copy()
-            return to_online, to_offline
-
+            to_online = copy.deepcopy(self.bare_resource_graph)
+            return to_online
         else:
-            return res_online, resource_graph
+            return res_online

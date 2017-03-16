@@ -78,19 +78,19 @@ class HybridOrchestrator():
                                    'fixed_req_count, fixed_time, '
                                    'periodical_model_based, allways')
 
+            # Mapped RG
+            self.resource_graph = RG
             # Resource sharing strategy
             resource_share_strat = config['resource_share_strat']
             if resource_share_strat == "double_hundred":
-                self.__res_sharing_strat = DoubleHundred()
+                self.__res_sharing_strat = DoubleHundred(self.resource_graph)
             elif resource_share_strat == "dynamic":
-                self.__res_sharing_strat = DynamicMaxOnlineToAll()
+                self.__res_sharing_strat = DynamicMaxOnlineToAll(self.resource_graph)
             else:
                 raise ValueError(
                     'Invalid resource_share_strat type! Please choose '
                                    'one of the followings: double_hundred, '
                                    'dynamic')
-            # Mapped RG
-            self.resource_graph = RG
 
             #Queue for online mapping
             self.online_fails = Queue.Queue()
@@ -133,14 +133,13 @@ class HybridOrchestrator():
 
     def do_offline_mapping(self, request):
             try:
-                #Balazs THis variable is NOT read anywhere
                 log.debug("SAP count in request %s and in resource: %s, resource total size: %s"%(len([s for s in request.saps]),
                           len([s for s in self.__res_offline.saps]), len(self.__res_offline)))
-                #Balazs The migration handler should be instantiated in the constructor based on the ConfigObj!
+                #TODO: The migration handler should be instantiated in the constructor based on the ConfigObj!
                 self.__res_offline = offline_mapping.MAP(
                     request, self.__res_offline, True, "ConstantMigrationCost",
-                  migration_coeff=1.0, load_balance_coeff=1.0,
-                  edge_cost_coeff=1.0)
+                    migration_coeff=1.0, load_balance_coeff=1.0,
+                    edge_cost_coeff=1.0)
 
                 log.info("Offline mapping is ready")
 
@@ -175,21 +174,26 @@ class HybridOrchestrator():
                                                       bt_limit=6,
                                                       bt_branching_factor=3,
                                                       mode=mode)
-              self.deleted_services.remove(i)
+              # TODO: Remove i from sumreq as well
+              # self.deleted_services.remove(i)
 
-    def set_resource_graphs(self):
+    def set_online_resource_graph(self):
         # Resource sharing strategy
         try:
             self.lock.acquire()
-            self.res_online, self.__res_offline = self.__res_sharing_strat.\
-                share_resource(self.resource_graph, self.res_online,
-                               self.__res_offline)
+            self.res_online = self.__res_sharing_strat.get_online_resource(self.res_online,
+                                                                           self.__res_offline)
         except Exception as e:
             log.error(e.message)
             log.error("Unhandled Exception catched during resource sharing.")
             raise
         finally:
             self.lock.release()
+
+    def set_offline_resource_graph(self):
+      # Resources sharing startegy
+      self.__res_offline = self.__res_sharing_strat.get_offline_resource(self.res_online,
+                                                                         self.__res_offline)
 
     def merge_online_offline(self):
             try:
@@ -209,7 +213,7 @@ class HybridOrchestrator():
                     # Balazs: Delete requests from res_online, which are possibly migrated
                     # NOTE: if an NF to be deleted doesn't exist in the substrate DEL mode ignores it.
                     possible_reqs_to_migrate = copy.deepcopy(self.reqs_under_optimization)
-                    for nf in possible_reqs_to_migrate:
+                    for nf in possible_reqs_to_migrate.nfs:
                       nf.operation = NFFG.OP_DELETE
                     self.res_online = online_mapping.MAP(possible_reqs_to_migrate,
                                                          self.res_online,
@@ -246,7 +250,7 @@ class HybridOrchestrator():
         self.merge_all_request(self.SUM_req, request)
 
         #if not self.offline_mapping_thread.is_alive():
-        self.set_resource_graphs()
+        self.set_online_resource_graph()
 
         # Start online mapping thread
         online_mapping_thread = threading.Thread(None, self.do_online_mapping,
@@ -269,6 +273,7 @@ class HybridOrchestrator():
         if self.__when_to_opt.need_to_optimize(offline_status, 3):
             self.reqs_under_optimization = self.__what_to_opt.reqs_to_optimize(self.SUM_req)
             try:
+                self.set_offline_resource_graph()
                 self.offline_mapping_thread = threading.Thread(None,
                             self.do_offline_mapping, "Offline mapping thread",
                                                             [self.reqs_under_optimization])
