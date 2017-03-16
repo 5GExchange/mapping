@@ -1,6 +1,5 @@
 import copy
 from abc import ABCMeta, abstractmethod
-import alg1.MappingAlgorithms as online_mapping
 try:
   # runs when mapping files are called from ESCAPE
   from escape.nffg_lib.nffg import NFFG, NFFGToolBox

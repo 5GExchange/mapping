@@ -61,9 +61,8 @@ class MappingSolutionFramework():
             os.mkdir('test' + str(self.sim_number) + self.orchestrator_type)
         self.path = os.path.abspath(
                 'test' + str(self.sim_number) + self.orchestrator_type)
-        self.full_log_path = self.path + '/log_file' + str (time.ctime()) +'.log'
-
-
+        self.full_log_path = self.path + '/log_file' + str (time.ctime()).\
+            replace(' ', '_').replace(':', '-') +'.log'
 
         logging.basicConfig(format='%(levelname)s:%(message)s')
         logging.basicConfig(filename='log_file.log', filemode='w',
@@ -95,7 +94,6 @@ class MappingSolutionFramework():
         self.max_number_of_iterations = int(config['max_number_of_iterations'])
         self.request_arrival_lambda = float(config['request_arrival_lambda'])
         self.wait_all_req_expire = bool(config['wait_all_req_expire'])
-        # Ha a discrete_simulation utan van vmi akkor True-ra ertekelodik ki
         self.__discrete_simulation = bool(config['discrete_simulation'])
         self.request_lifetime_lambda = float(config['request_lifetime_lambda'])
 
@@ -306,6 +304,7 @@ class MappingSolutionFramework():
         log.info("Start request generator thread")
         topology = self.__network_topology
         sim_end = self.max_number_of_iterations
+
         # Simulation cycle
         sim_running = True
         self.sim_iter = 1
