@@ -20,22 +20,27 @@ import milp.milp_solution_in_nffg as offline_mapping
 import alg1.MappingAlgorithms as online_mapping
 import alg1.UnifyExceptionTypes as uet
 import Queue
-
 log = logging.getLogger(" Hybrid Orchestrator")
-log.setLevel(logging.DEBUG)
-logging.basicConfig(format='%(levelname)s:%(message)s')
-logging.basicConfig(filename='log_file.log', filemode='w', level=logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s | Hybrid Orches | %(levelname)s | \t%(message)s')
-hdlr = logging.FileHandler('../log_file.log')
-hdlr.setFormatter(formatter)
-log.addHandler(hdlr)
-log.setLevel(logging.DEBUG)
+
 
 
 class HybridOrchestrator():
 
-    def __init__(self, RG, config_file_path, deleted_services):
+    def __init__(self, RG, config_file_path, deleted_services, full_log_path):
             config = ConfigObj(config_file_path)
+
+
+            log.setLevel(logging.DEBUG)
+            logging.basicConfig(format='%(levelname)s:%(message)s')
+            logging.basicConfig(filename='log_file.log', filemode='w',
+                                level=logging.DEBUG)
+            formatter = logging.Formatter(
+                '%(asctime)s | Hybrid Orches | %(levelname)s | \t%(message)s')
+            hdlr = logging.FileHandler(full_log_path)
+
+            hdlr.setFormatter(formatter)
+            log.addHandler(hdlr)
+            log.setLevel(logging.DEBUG)
 
             # Protects the res_online
             self.lock = threading.Lock()
@@ -62,15 +67,15 @@ class HybridOrchestrator():
             # When to optimize strategy
             when_to_opt_strat = config['when_to_optimize']
             if when_to_opt_strat == "modell_based":
-                self.__when_to_opt = ModelBased()
+                self.__when_to_opt = ModelBased(full_log_path)
             elif when_to_opt_strat == "fixed_req_count":
-                self.__when_to_opt = FixedReqCount()
+                self.__when_to_opt = FixedReqCount(full_log_path)
             elif when_to_opt_strat == "fixed_time":
-                self.__when_to_opt = FixedTime()
+                self.__when_to_opt = FixedTime(full_log_path)
             elif when_to_opt_strat == "periodical_model_based":
-                self.__when_to_opt = PeriodicalModelBased()
+                self.__when_to_opt = PeriodicalModelBased(full_log_path)
             elif when_to_opt_strat == "allways":
-                self.__when_to_opt = Allways()
+                self.__when_to_opt = Allways(full_log_path)
             else:
                 raise ValueError(
                     'Invalid when_to_opt type! Please choose '
@@ -83,9 +88,9 @@ class HybridOrchestrator():
             # Resource sharing strategy
             resource_share_strat = config['resource_share_strat']
             if resource_share_strat == "double_hundred":
-                self.__res_sharing_strat = DoubleHundred(self.resource_graph)
+                self.__res_sharing_strat = DoubleHundred(self.resource_graph, full_log_path)
             elif resource_share_strat == "dynamic":
-                self.__res_sharing_strat = DynamicMaxOnlineToAll(self.resource_graph)
+                self.__res_sharing_strat = DynamicMaxOnlineToAll(self.resource_graph, full_log_path)
             else:
                 raise ValueError(
                     'Invalid resource_share_strat type! Please choose '
@@ -152,7 +157,6 @@ class HybridOrchestrator():
                 log.error(e.msg)
                 log.error("Mapping thread: "
                           "Offline mapping: Unable to mapping offline!")
-                # Balazs: in case the MILP fails with MappingException we can continue working.
 
     def del_exp_reqs_from_SUMreq(self):
         mode = NFFG.MODE_DEL
@@ -212,6 +216,7 @@ class HybridOrchestrator():
 
                     # Balazs: Delete requests from res_online, which are possibly migrated
                     # NOTE: if an NF to be deleted doesn't exist in the substrate DEL mode ignores it.
+
                     possible_reqs_to_migrate = copy.deepcopy(self.reqs_under_optimization)
                     for nf in possible_reqs_to_migrate.nfs:
                       nf.operation = NFFG.OP_DELETE
@@ -238,7 +243,6 @@ class HybridOrchestrator():
                     log.warn("Unable to merge online and offline :(")
             except Exception as e:
                 log.error(e.message)
-                # Balazs: exception is not thrown when acquire didnt succeed, this exception is fatal
                 log.error("Unhandled Exception during merge :(")
                 raise
             finally:
@@ -249,7 +253,7 @@ class HybridOrchestrator():
         # Collect the requests
         self.merge_all_request(self.SUM_req, request)
 
-        #if not self.offline_mapping_thread.is_alive():
+
         self.set_online_resource_graph()
 
         # Start online mapping thread
@@ -264,9 +268,7 @@ class HybridOrchestrator():
             raise # RuntimeError
         try:
             offline_status = self.offline_mapping_thread.is_alive()
-        except Exception as e:
-            log.error("Exception catched when checking for offline mapping "
-                      "is_alive: %s", e.message)
+        except:
             offline_status = False
 
         # Start offline mapping thread
@@ -279,8 +281,6 @@ class HybridOrchestrator():
                                                             [self.reqs_under_optimization])
                 log.info("Start offline optimalization!")
                 self.offline_mapping_thread.start()
-                #Balazs This is not necessary, there would be 2 joins after each other
-                # online_mapping_thread.join()
 
             except Exception as e:
                 log.error(e.message)
@@ -288,8 +288,6 @@ class HybridOrchestrator():
                 #Balazs Why Raise runtime?? why not the same Exception
                 raise # RuntimeError
         else:
-            #Balazs This is not necessary, there would be 2 joins after each other
-            # online_mapping_thread.join()
             log.info("No need to optimize!")
 
         online_mapping_thread.join()
@@ -299,6 +297,7 @@ class HybridOrchestrator():
                 raise uet.MappingException(error.msg, False)
             except:
                 raise uet.MappingException(error.message, False)
+        return self.res_online
 
 
 

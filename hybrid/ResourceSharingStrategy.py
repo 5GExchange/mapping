@@ -13,20 +13,23 @@ except ImportError:
 
 import logging
 log = logging.getLogger(" Resource sharing")
-log.setLevel(logging.DEBUG)
-logging.basicConfig(format='%(levelname)s:%(message)s')
-logging.basicConfig(filename='log_file.log', filemode='w', level=logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s |  Res sharing  | %(levelname)s | \t%(message)s')
-hdlr = logging.FileHandler('../log_file.log')
-hdlr.setFormatter(formatter)
-log.addHandler(hdlr)
-log.setLevel(logging.DEBUG)
+
 
 class AbstractResourceSharingStrategy(object):
     __metaclass__ = ABCMeta
 
-    def __init__(self, resource_grap):
+    def __init__(self, resource_grap, full_log_path):
       self.bare_resource_graph = resource_grap
+      log.setLevel(logging.DEBUG)
+      logging.basicConfig(format='%(levelname)s:%(message)s')
+      logging.basicConfig(filename='log_file.log', filemode='w',
+                          level=logging.DEBUG)
+      formatter = logging.Formatter(
+          '%(asctime)s |  Res sharing  | %(levelname)s | \t%(message)s')
+      hdlr = logging.FileHandler(full_log_path)
+      hdlr.setFormatter(formatter)
+      log.addHandler(hdlr)
+      log.setLevel(logging.DEBUG)
 
     @abstractmethod
     def get_online_resource(self, res_online, res_offline):
@@ -38,10 +41,12 @@ class AbstractResourceSharingStrategy(object):
 
 
 class DynamicMaxOnlineToAll(AbstractResourceSharingStrategy):
+    # TODO: dinamikus RG gen
 
-    def share_resource(self, resource_graph, res_online, res_offline):
-        #TODO: dinamikus RG gen
-        #return toOffline, toOnline
+    def get_offline_resource(self, res_online, res_offline):
+        pass
+
+    def get_online_resource(self, res_online, res_offline):
         pass
 
 
