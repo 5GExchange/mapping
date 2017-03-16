@@ -1,6 +1,8 @@
-import threading
-from configobj import ConfigObj
 import copy
+import threading
+
+from configobj import ConfigObj
+
 try:
   # runs when mapping files are called from ESCAPE
   from escape.nffg_lib.nffg import NFFG, NFFGToolBox
@@ -55,6 +57,7 @@ class HybridOrchestrator():
                 raise ValueError(
                     'Invalid what_to_opt_strat type! Please choose one of the '
                     'followings: all_reqs, reqs_since_last')
+            self.reqs_under_optimization = None
 
             # When to optimize strategy
             when_to_opt_strat = config['when_to_optimize']
@@ -116,36 +119,37 @@ class HybridOrchestrator():
             log.warning(error.msg)
             self.res_online = temp_res_online
             self.online_fails.put(error)
+            # Balazs: an online failure due to mapping is natural, we continue working.
 
         except Exception as e:
+            # Balazs: exception is not thrown when acquire didnt succeed, this exception is fatal
             log.error(str(e.message) + str(e.__class__))
             log.error("do_online_mapping : "
                       "Can not acquire res_online or cant online mapping :( ")
+            raise
         finally:
             self.lock.release()
 
     def do_offline_mapping(self, request):
             try:
+                #Balazs THis variable is NOT read anywhere
                 self.offline_status = True
                 log.debug("SAP count in request %s and in resource: %s, resource total size: %s"%(len([s for s in request.saps]),
                           len([s for s in self.__res_offline.saps]), len(self.__res_offline)))
+                #Balazs The migration handler should be instantiated in the constructor based on the ConfigObj!
                 self.__res_offline = offline_mapping.MAP(
                     request, self.__res_offline, True, "ConstantMigrationCost",
                   migration_coeff=1.0, load_balance_coeff=1.0,
                   edge_cost_coeff=1.0)
                 log.info("Offline mapping is done")
-                try:
-                    log.info("Try to merge online and offline")
-                    self.merge_online_offline()
-                except Exception as e:
-                    log.error(e.message)
-                    log.error("Unable to merge online and offline")
+                log.info("Try to merge online and offline")
+                self.merge_online_offline()
             except uet.MappingException as e:
                 log.error(e.msg)
                 log.error("Mapping thread: "
                           "Offline mapping: Unable to mapping offline!")
                 self.offline_status = False
-
+                # Balazs: in case the MILP fails with MappingException we can continue working.
 
     def set_resource_graphs(self):
         # Resource sharing strategy
@@ -156,30 +160,61 @@ class HybridOrchestrator():
                                self.__res_offline)
         except Exception as e:
             log.error(e.message)
-            log.error("set_resource_graphs: Can not acquire res_online")
+            log.error("Unhandled Exception catched during resource sharing.")
+            raise
         finally:
             self.lock.release()
-
 
     def merge_online_offline(self):
             try:
                 self.lock.acquire()
                 before_merge = copy.deepcopy(self.res_online)
                 try:
-                    self.res_online = NFFGToolBox().merge_nffgs(self.res_online,
-                                                            self.__res_offline)
+                    # Balazs: Delete requests from res_offline which have been expired since the optimization started
+                    _, expired_reqs = NFFGToolBox.generate_difference_of_nffgs(self.__res_offline,
+                                                                               self.res_online,
+                                                                               ignore_infras=True)
+                    self.__res_offline = online_mapping.MAP(expired_reqs, self.__res_offline,
+                                                            propagate_e2e_reqs=False,
+                                                            mode=NFFG.MODE_DEL)
+
+                    # Balazs: Delete requests from res_online, which are possibly migrated
+                    # NOTE: if an NF to be deleted doesn't exist in the substrate DEL mode ignores it.
+                    possible_reqs_to_migrate = copy.deepcopy(self.reqs_under_optimization)
+                    for nf in possible_reqs_to_migrate:
+                      nf.operation = NFFG.OP_DELETE
+                    self.res_online = online_mapping.MAP(possible_reqs_to_migrate,
+                                                         self.res_online,
+                                                         propagate_e2e_reqs=False,
+                                                         mode=NFFG.MODE_DEL)
+
+                    self.res_online = NFFGToolBox.merge_nffgs(self.res_online,
+                                                              self.__res_offline)
+                    # Checking whether the merge was in fact successful according to resources.
                     self.res_online.calculate_available_node_res()
                     self.res_online.calculate_available_link_res([])
                     log.info("merge_online_offline : "
                              "Lock res_online, optimalization enforce :)")
-                except Exception as e:
+
+                # Balazs: if mapping delete fails, it makes no sense to merge
+                except uet.UnifyException as ue:
+                  log.error("Merge failed due to UnifyException catched during NF deletion for "
+                            "possible migration! type: %s, message %s" % (
+                            ue, ue.msg))
+                  # Balazs: does it make sense to continue working, if not the Exception branch would be enough
+                #Balazs The calc res functions throw only RuntimeError if it is
+                # failed due to resource reservation collision!
+                except RuntimeError as e:
                     self.res_online = before_merge
                     log.error(e.message)
                     log.error("Unable to merge online and offline")
+                    # We continue to work from this stage, we can try optimization again
 
             except Exception as e:
                 log.error(e.message)
+                # Balazs: exception is not thrown when acquire didnt succeed, this exception is fatal
                 log.error("merge_online_offline: Can not accuire res_online :(")
+                raise
             finally:
                 self.lock.release()
 
@@ -199,30 +234,36 @@ class HybridOrchestrator():
         except Exception as e:
             log.error(e.message)
             log.error("Failed to start online thread")
-            raise RuntimeError
+            #Balazs Why Raise runtime?? why not the same Exception
+            raise # RuntimeError
         try:
             offline_status = self.offline_mapping_thread.is_alive()
-        except:
+        except Exception as e:
+            log.error("Exception catched when checking for offline mapping "
+                      "is_alive: %s", e.message)
             offline_status = False
 
         # Start offline mapping thread
         if self.__when_to_opt.need_to_optimize(offline_status, 3):
-            requestToOpt = self.__what_to_opt.reqs_to_optimize(self.SUM_req)
+            self.reqs_under_optimization = self.__what_to_opt.reqs_to_optimize(self.SUM_req)
             try:
                 self.offline_mapping_thread = threading.Thread(None,
                             self.do_offline_mapping, "Offline mapping thread",
-                                                            [requestToOpt])
+                                                            [self.reqs_under_optimization])
                 log.info("Start offline optimalization!")
                 self.offline_mapping_thread.start()
-                online_mapping_thread.join()
+                #Balazs This is not necessary, there would be 2 joins after each other
+                # online_mapping_thread.join()
 
             except Exception as e:
                 log.error(e.message)
                 log.error("Failed to start offline thread")
-                raise RuntimeError
+                #Balazs Why Raise runtime?? why not the same Exception
+                raise # RuntimeError
 
         elif not self.__when_to_opt.need_to_optimize(offline_status, 3):
-            online_mapping_thread.join()
+            #Balazs This is not necessary, there would be 2 joins after each other
+            # online_mapping_thread.join()
             log.info("No need to optimize!")
         else:
             log.error("Failed to start offline")
