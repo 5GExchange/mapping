@@ -56,7 +56,8 @@ log.setLevel(logging.DEBUG)
 
 class MappingSolutionFramework():
 
-    def __init__(self, config_file_path, request_list):
+    def __init__(self, config_file_path, request_list
+                 ):
         config = ConfigObj(config_file_path)
 
         log.info(" Start simulation")
@@ -83,6 +84,7 @@ class MappingSolutionFramework():
         self.__discrete_simulation = bool(config['discrete_simulation'])
         self.request_lifetime_lambda = float(config['request_lifetime_lambda'])
 
+        self.deleted_services = []
         # This stores the request waiting to be mapped
         self.__request_list = request_list
         self.sim_iter = 0
@@ -126,14 +128,13 @@ class MappingSolutionFramework():
                 "Invalid 'request_type' in the simulation.cfg file! "
                 "Please choose one of the followings: test, simple, multi")
 
-        self.__remaining_request_lifetimes = list()
+        self.__remaining_request_lifetimes = []
         self.mapped_requests = 0
         self.mapped_array = [0]
         self.refused_requests = 0
         self.refused_array = [0]
         self.running_requests = 0
         self.running_array = [0]
-
         # Orchestrator
         self.orchestrator_type = config['orchestrator']
         if self.orchestrator_type == "online":
@@ -147,7 +148,7 @@ class MappingSolutionFramework():
             log.info(" | Optimize strategy: " + str(config['orchestrator']))
             log.info(" -----------------------------------------")
             self.__orchestrator_adaptor = HybridOrchestratorAdaptor(
-                self.__network_topology)
+                self.__network_topology, self.deleted_services)
         elif self.orchestrator_type == "offline":
             log.info(" ---- Offline specific configurations -----")
             log.info(" | Optimize already mapped nfs " + config['optimize_already_mapped_nfs'])
@@ -202,7 +203,7 @@ class MappingSolutionFramework():
 
         except uet.MappingException as me:
             log.info("Mapping thread: Mapping service_request_" +
-                     str(sim_iter) + " unsuccessful\n message: %s"%me.msg)
+                     str(sim_iter) + " unsuccessful\n%s"%me.msg)
             self.refused_requests += 1
             self.refused_array.append(self.refused_requests)
             # TRY TO SET IT BACK TO THE STATE BEFORE UNSUCCESSFUL MAPPING
@@ -222,12 +223,14 @@ class MappingSolutionFramework():
                      str(sim_iter) + " successful -")
             self.__remaining_request_lifetimes.remove(service)
 
+            """""
             if not sim_iter % self.dump_freq:
                 log.info("Dump NFFG to file after the " +
                          str(sim_iter) + ". deletion")
                 self.__orchestrator_adaptor.\
                     dump_mapped_nffg(sim_iter, "deletion",
                                      self.sim_number, self.orchestrator_type)
+            """
 
         except uet.MappingException:
             log.error("Mapping thread: Deleting service_request_" +
@@ -273,6 +276,7 @@ class MappingSolutionFramework():
         for service in self.__remaining_request_lifetimes:
             if service['dead_time'] < time:
                self.__del_service(service, service['req_num'])
+               self.deleted_services.append(service)
                self.running_requests -= 1
 
 
@@ -314,6 +318,7 @@ class MappingSolutionFramework():
 
 if __name__ == "__main__":
     request_list = Queue.Queue()
+
     test = MappingSolutionFramework('simulation.cfg', request_list)
     try:
         req_gen_thread = threading.Thread(None, test.create_request,

@@ -33,10 +33,13 @@ def main(argv):
         elif opt in ("--offline_file"):
             offlinefile = arg
 
+    x = []
     try:
         with open(hybridfile) as data_file:
             hybrid_requests = json.load(data_file)
             hybrid = True
+            for i in xrange(0, len(hybrid_requests['running_requests'])):
+                x.append(i)
     except:
         pass
 
@@ -44,6 +47,9 @@ def main(argv):
         with open(onlinefile) as data_file:
             online_requests = json.load(data_file)
             online = True
+            x = []
+            for i in xrange(0, len(online_requests['running_requests'])):
+                x.append(i)
     except:
         pass
 
@@ -51,14 +57,13 @@ def main(argv):
         with open(offlinefile) as data_file:
             offline_requests = json.load(data_file)
             offline = True
+            x = []
+            for i in xrange(0, len(offline_requests['running_requests'])):
+                x.append(i)
     except:
         pass
 
     #Create mapped picture
-
-    x=[]
-    for i in xrange(0,len(hybrid_requests['running_requests'])):
-        x.append(i)
 
     if hybrid:
         plt.plot(x, hybrid_requests['running_requests'],label="hybrid")
@@ -77,9 +82,6 @@ def main(argv):
     plt.clf()
 
     #Create Running picture
-    x=[]
-    for i in xrange(0,len(hybrid_requests['running_requests'])):
-        x.append(i)
 
     if hybrid:
         plt.plot(x, hybrid_requests['running_requests'],label="hybrid")
@@ -90,7 +92,6 @@ def main(argv):
     if offline:
         plt.plot(x, offline_requests['running_requests'],label="offline")
 
-    plt.plot(x,hybrid_requests['running_requests'])
     plt.title('Currently running (mapped) requests in the NFFG')
     plt.ylabel('Mapped requests count')
     plt.xlabel('Incoming requests')
@@ -100,9 +101,6 @@ def main(argv):
 
 
     #Create refused picture
-    x=[]
-    for i in xrange(0,len(hybrid_requests['refused_requests'])):
-        x.append(i)
 
     if hybrid:
         plt.plot(x, hybrid_requests['refused_requests'],label="hybrid")
@@ -113,7 +111,6 @@ def main(argv):
     if offline:
         plt.plot(x, offline_requests['refused_requests'],label="offline")
 
-    plt.plot(x,hybrid_requests['refused_requests'])
     plt.title('Refused requests during the simulation')
     plt.ylabel('Refused requests count')
     plt.xlabel('Incoming requests')

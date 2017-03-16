@@ -17,6 +17,7 @@ import os
 import time
 import copy
 from abc import ABCMeta, abstractmethod
+import threading
 
 log = logging.getLogger(" Orchestrator ")
 log.setLevel(logging.DEBUG)
@@ -52,6 +53,8 @@ class AbstractOrchestratorAdaptor(object):
     def get_copy_of_rg(self):
         pass
 
+    #todo: a del service-t meg kell hivni a SUM_requesten mert igy az offline feleleszti a hallott kereseket is
+    @abstractmethod
     def del_service(self, request):
         mode = NFFG.MODE_DEL
         for i in request.nfs:
@@ -66,6 +69,7 @@ class AbstractOrchestratorAdaptor(object):
                                                  bt_limit=6,
                                                  bt_branching_factor=3,
                                                  mode=mode)
+
 
     @abstractmethod
     def MAP(self, request):
@@ -113,21 +117,62 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
     def get_copy_of_rg(self):
         return copy.deepcopy(self.resource_graph)
 
+    def del_service(self, request):
+        mode = NFFG.MODE_DEL
+        for i in request.nfs:
+            i.operation = NFFG.OP_DELETE
+        self.resource_graph = online_mapping.MAP(request, self.resource_graph,
+                                                 enable_shortest_path_cache=True,
+                                                 bw_factor=1, res_factor=1,
+                                                 lat_factor=1,
+                                                 shortest_paths=None,
+                                                 return_dist=False,
+                                                 propagate_e2e_reqs=True,
+                                                 bt_limit=6,
+                                                 bt_branching_factor=3,
+                                                 mode=mode)
+
+
 class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
-    def __init__(self, resource):
+    def __init__(self, resource, deleted_services):
         super(HybridOrchestratorAdaptor, self).__init__(resource, "hybrid")
         self.concrete_hybrid_orchestrator = \
-            hybrid_mapping.HybridOrchestrator(resource, "./simulation.cfg")
-
+            hybrid_mapping.HybridOrchestrator(resource, "./simulation.cfg", deleted_services)
+        self.lock2 = threading.Lock()
     def MAP(self, request):
-        mode = NFFG.MODE_ADD
-        # a torles miatt kell ez:
-        self.concrete_hybrid_orchestrator.res_online = self.resource_graph
-        #self.concrete_hybrid_orchestrator.res_online = self.get_copy_of_rg()
-        self.concrete_hybrid_orchestrator.MAP(request)
+        try:
+            self.concrete_hybrid_orchestrator.lock.acquire()
+            self.concrete_hybrid_orchestrator.res_online = self.resource_graph
+        finally:
+            self.concrete_hybrid_orchestrator.lock.release()
 
+        self.concrete_hybrid_orchestrator.MAP(request)
         self.resource_graph = self.concrete_hybrid_orchestrator.res_online
+
+    def del_service(self, request):
+        mode = NFFG.MODE_DEL
+        for i in request.nfs:
+            i.operation = NFFG.OP_DELETE
+        try:
+            self.concrete_hybrid_orchestrator.lock.acquire()
+
+            self.resource_graph = online_mapping.MAP\
+                                                (request,
+                                                self.resource_graph,
+                                                enable_shortest_path_cache=True,
+                                                bw_factor=1, res_factor=1,
+                                                lat_factor=1,
+                                                shortest_paths=None,
+                                                return_dist=False,
+                                                propagate_e2e_reqs=True,
+                                                bt_limit=6,
+                                                bt_branching_factor=3,
+                                                mode=mode)
+        finally:
+            self.concrete_hybrid_orchestrator.lock.release()
+            #self.lock2.release()
+
 
 
     def get_copy_of_rg(self):
