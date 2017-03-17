@@ -15,6 +15,7 @@ import io
 import os
 import time
 import copy
+from configobj import ConfigObj
 from abc import ABCMeta, abstractmethod
 
 try:
@@ -49,14 +50,6 @@ class AbstractOrchestratorAdaptor(object):
         for i in request.nfs:
             i.operation = NFFG.OP_DELETE
         self.resource_graph = online_mapping.MAP(request, self.resource_graph,
-                                                 enable_shortest_path_cache=True,
-                                                 bw_factor=1, res_factor=1,
-                                                 lat_factor=1,
-                                                 shortest_paths=None,
-                                                 return_dist=False,
-                                                 propagate_e2e_reqs=True,
-                                                 bt_limit=6,
-                                                 bt_branching_factor=3,
                                                  mode=mode)
 
 
@@ -81,17 +74,20 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
     def __init__(self, resource, deleted_services, full_log_path, config_file_path):
         super(OnlineOrchestratorAdaptor, self).__init__(resource, "online")
-
+        self.config = ConfigObj(config_file_path)
     def MAP(self, request):
         mode = NFFG.MODE_ADD
         self.resource_graph = online_mapping.MAP(request, self.resource_graph,
-                                             enable_shortest_path_cache=True,
-                                             bw_factor=1, res_factor=1,
-                                             lat_factor=1,
-                                             shortest_paths=None,
-                                             return_dist=False, mode=mode,
-                                             bt_limit=6,
-                                             bt_branching_factor=3)
+                                    bool(self.config['enable_shortest_path_cache']),
+                                    int(self.config['bw_factor']),
+                                    int(self.config['res_factor']),
+                                    int(self.config['lat_factor']),
+                                    None,
+                                    bool(self.config['return_dist']),
+                                    bool(self.config['propagate_e2e_reqs']),
+                                    int(self.config['bt_limit']),
+                                    int(self.config['bt_branching_factor']),
+                                    mode=mode)
 
     def get_copy_of_rg(self):
         return copy.deepcopy(self.resource_graph)
@@ -101,15 +97,7 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
         for i in request.nfs:
             i.operation = NFFG.OP_DELETE
         self.resource_graph = online_mapping.MAP(request, self.resource_graph,
-                                                 enable_shortest_path_cache=True,
-                                                 bw_factor=1, res_factor=1,
-                                                 lat_factor=1,
-                                                 shortest_paths=None,
-                                                 return_dist=False,
-                                                 propagate_e2e_reqs=True,
-                                                 bt_limit=6,
-                                                 bt_branching_factor=3,
-                                                 mode=mode)
+                                                    mode=mode)
 
 
 class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
@@ -138,14 +126,6 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
             self.resource_graph = online_mapping.MAP\
                                                 (request,
                                                 self.resource_graph,
-                                                enable_shortest_path_cache=True,
-                                                bw_factor=1, res_factor=1,
-                                                lat_factor=1,
-                                                shortest_paths=None,
-                                                return_dist=False,
-                                                propagate_e2e_reqs=True,
-                                                bt_limit=6,
-                                                bt_branching_factor=3,
                                                 mode=mode)
         finally:
             self.concrete_hybrid_orchestrator.lock.release()
