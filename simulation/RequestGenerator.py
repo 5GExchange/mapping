@@ -163,6 +163,7 @@ class SimpleReqGen(AbstractRequestGenerator):
         vnf_sharing_same_sg = 0.0
         sc_count = 1
         max_bw = 1.0
+        current_sg_link_cnt = 1
 
         while len(all_saps_ending) > sc_count and len(all_saps_beginning) > sc_count:
             nffg = NFFG(id='Benchmark-Req-' + str(test_lvl) + '-Piece')
@@ -199,13 +200,17 @@ class SimpleReqGen(AbstractRequestGenerator):
                         vnf_added = True
                     if vnf_added:
                         nfs_this_sc.append(nf)
-                        newport = nf.add_port()
-                        sglink = nffg.add_sglink(last_req_port, newport)
+                        newport = nf.add_port(id=1)
+                        sg_link_id = ".".join(("sghop",str(test_lvl),str(current_sg_link_cnt)))
+                        sglink = nffg.add_sglink(last_req_port, newport, id=sg_link_id)
+                        current_sg_link_cnt += 1
                         sg_path.append(sglink.id)
-                        last_req_port = nf.add_port()
+                        last_req_port = nf.add_port(id=2)
 
                 sap2port = sap2.add_port()
-                sglink = nffg.add_sglink(last_req_port, sap2port)
+                sg_link_id = ".".join(("sghop",str(test_lvl),str(current_sg_link_cnt)))
+                sglink = nffg.add_sglink(last_req_port, sap2port, id=sg_link_id)
+                current_sg_link_cnt += 1
                 sg_path.append(sglink.id)
                 minlat = self.min_lat
                 maxlat = self.max_lat
