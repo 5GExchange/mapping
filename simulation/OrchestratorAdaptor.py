@@ -139,7 +139,6 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
         super(HybridOrchestratorAdaptor, self).__init__(resource, "hybrid")
         self.concrete_hybrid_orchestrator = \
             hybrid_mapping.HybridOrchestrator(resource, "./simulation.cfg", deleted_services)
-        self.lock2 = threading.Lock()
 
     def MAP(self, request):
         # try:
@@ -155,8 +154,7 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
         for i in request.nfs:
             i.operation = NFFG.OP_DELETE
         try:
-            # TODO: if we need to wait because of Offline Merge, either the reoptimization or the deletion will not take place!!
-            self.concrete_hybrid_orchestrator.lock.acquire()
+            self.concrete_hybrid_orchestrator.res_online_protector.start_writing_res_nffg("Deleting expired request")
 
             self.resource_graph = online_mapping.MAP\
                                                 (request,
@@ -171,15 +169,12 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
                                                 bt_branching_factor=3,
                                                 mode=mode)
         finally:
-            self.concrete_hybrid_orchestrator.lock.release()
-            #self.lock2.release()
-
-
+            self.concrete_hybrid_orchestrator.res_online_protector.finish_writing_res_nffg("Deleted exired request")
 
     def get_copy_of_rg(self):
-        self.concrete_hybrid_orchestrator.lock.acquire()
+        self.concrete_hybrid_orchestrator.res_online_protector.start_reading_res_nffg("Getting a copy")
         network_topology = copy.deepcopy(self.resource_graph)
-        self.concrete_hybrid_orchestrator.lock.release()
+        self.concrete_hybrid_orchestrator.res_online_protector.finish_reading_res_nffg("Got a copy")
         return network_topology
 
 

@@ -25,8 +25,8 @@ log.setLevel(logging.DEBUG)
 class AbstractResourceSharingStrategy(object):
     __metaclass__ = ABCMeta
 
-    def __init__(self, resource_grap):
-      self.bare_resource_graph = resource_grap
+    def __init__(self, resource_graph):
+      self.bare_resource_graph = resource_graph
 
     @abstractmethod
     def get_online_resource(self, res_online, res_offline):
@@ -52,10 +52,8 @@ class DoubleHundred(AbstractResourceSharingStrategy):
 
     def get_online_resource(self, res_online, res_offline):
         # For first resource sharing
-        #TODO: az if nem fut le sose mert a OrchAdap-ben van egy iylen:
-        # self.concrete_hybrid_orchestrator.res_online = self.resource_graph
         if res_online == None:
-            to_online = copy.deepcopy(self.bare_resource_graph)
+            to_online = copy.deepcopy(res_online)
             return to_online
         else:
             return res_online
