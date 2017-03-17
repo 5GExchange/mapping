@@ -1,6 +1,4 @@
-import copy
 import threading
-
 from configobj import ConfigObj
 
 try:
@@ -289,7 +287,7 @@ class HybridOrchestrator():
                                                      mode=NFFG.MODE_DEL)
                 log.debug("merge_online_offline: Applying offline optimization...")
                 self.reoptimized_resource = NFFGToolBox.merge_nffgs(self.res_online,
-                                                                        self.__res_offline)
+                                                                    self.__res_offline)
                 try:
                   # Checking whether the merge was in fact successful according to resources.
                     self.reoptimized_resource.calculate_available_node_res()

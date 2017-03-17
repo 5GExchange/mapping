@@ -235,7 +235,7 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
   # Make heuristic and MILP even in number of large object deepcopies
   # This would also be required for correct behaviour (Maybe the mapping
   # shouldn't change the input NFFG)
-  request = copy.deepcopy(request)
+  # request = copy.deepcopy(request) - should receive a copy, it wants to modify it!
   resource = copy.deepcopy(resource)
 
   migration_handler = None
