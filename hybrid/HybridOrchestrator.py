@@ -34,17 +34,23 @@ log.setLevel(logging.DEBUG)
 
 class HybridOrchestrator():
 
+    OFFLINE_STATE_INIT = 0
+    OFFLINE_STATE_RUNNING = 1
+    OFFLINE_STATE_FINISHED = 2
+
     def __init__(self, RG, config_file_path, deleted_services):
             config = ConfigObj(config_file_path)
 
             # Protects the res_online
             self.lock = threading.Lock()
             self.res_online = None
-            self.__res_offline = RG.copy()
+            self.__res_offline = copy.deepcopy(RG)
             self.deleted_services = deleted_services
             # All request in one NFFG
             self.SUM_req = NFFG()
             self.offline_mapping_thread = None
+            self.offline_status = HybridOrchestrator.OFFLINE_STATE_INIT
+            self.reoptimized_resource = None
             self.when_to_opt_param = config['when_to_opt_parameter']
 
             # What to optimize strategy
@@ -126,7 +132,7 @@ class HybridOrchestrator():
             # Balazs: exception is not thrown when acquire didnt succeed, this exception is fatal
             log.error(str(e.message) + str(e.__class__))
             log.error("do_online_mapping : "
-                      "Can not acquire res_online or cant online mapping :( ")
+                      "Unhandled exception cought during online mapping :( ")
             raise
         finally:
             self.lock.release()
@@ -135,6 +141,7 @@ class HybridOrchestrator():
             try:
                 log.debug("SAP count in request %s and in resource: %s, resource total size: %s"%(len([s for s in request.saps]),
                           len([s for s in self.__res_offline.saps]), len(self.__res_offline)))
+                self.offline_status = HybridOrchestrator.OFFLINE_STATE_RUNNING
                 #TODO: The migration handler should be instantiated in the constructor based on the ConfigObj!
                 self.__res_offline = offline_mapping.MAP(
                     request, self.__res_offline, True, "ConstantMigrationCost",
@@ -153,16 +160,20 @@ class HybridOrchestrator():
                 log.error("Mapping thread: "
                           "Offline mapping: Unable to mapping offline!")
                 # Balazs: in case the MILP fails with MappingException we can continue working.
+            finally:
+              self.offline_mapping_thread = HybridOrchestrator.OFFLINE_STATE_FINISHED
 
     def del_exp_reqs_from_SUMreq(self):
         mode = NFFG.MODE_DEL
         for i in self.deleted_services:
             delete = False
             for j in i['SG'].nfs:
-                if j in self.__res_offline.nfs:
+                if j.id in [nf.id for nf in self.__res_offline.nfs]:
                     delete = True
                     j.operation = NFFG.OP_DELETE
             if delete:
+              log.debug("Deleting NFs from res_offline due to expiration during the "
+                        "offline optimization: %s"%i['SG'].network.nodes())
               self.__res_offline = online_mapping.MAP(i['SG'],
                                                       self.__res_offline,
                                                       enable_shortest_path_cache=True,
@@ -177,12 +188,21 @@ class HybridOrchestrator():
               # TODO: Remove i from sumreq as well
               # self.deleted_services.remove(i)
 
-    def set_online_resource_graph(self):
+    def set_online_resource_graph(self, resource):
         # Resource sharing strategy
         try:
-            self.lock.acquire()
-            self.res_online = self.__res_sharing_strat.get_online_resource(self.res_online,
-                                                                           self.__res_offline)
+            if self.offline_status == HybridOrchestrator.OFFLINE_STATE_RUNNING or \
+                  self.offline_status == HybridOrchestrator.OFFLINE_STATE_INIT:
+              # The online_res may be under merge OR offline reoptimization is idle because it was not needed.
+              self.lock.acquire()
+              self.res_online = self.__res_sharing_strat.get_online_resource(resource,
+                                                                             self.__res_offline)
+            elif self.offline_status == HybridOrchestrator.OFFLINE_STATE_FINISHED:
+              # we need to set res_online based on the reoptimized resource not the one handled by our caller
+              # lock is not needed because offline is terminated.
+              self.res_online = self.__res_sharing_strat.get_online_resource(self.reoptimized_resource,
+                                                                             self.__res_offline)
+              self.offline_status = HybridOrchestrator.OFFLINE_STATE_INIT
         except Exception as e:
             log.error(e.message)
             log.error("Unhandled Exception catched during resource sharing.")
@@ -212,6 +232,8 @@ class HybridOrchestrator():
 
                     # Balazs: Delete requests from res_online, which are possibly migrated
                     # NOTE: if an NF to be deleted doesn't exist in the substrate DEL mode ignores it.
+                    log.debug("merge_online_offline: Removing NFs to be migrated from "
+                              "res_online: %s"%self.reqs_under_optimization.network.nodes())
                     possible_reqs_to_migrate = copy.deepcopy(self.reqs_under_optimization)
                     for nf in possible_reqs_to_migrate.nfs:
                       nf.operation = NFFG.OP_DELETE
@@ -219,14 +241,14 @@ class HybridOrchestrator():
                                                          self.res_online,
                                                          propagate_e2e_reqs=False,
                                                          mode=NFFG.MODE_DEL)
-
-                    self.res_online = NFFGToolBox.merge_nffgs(self.res_online,
-                                                              self.__res_offline)
+                    log.debug("merge_online_offline: Applying offline optimization...")
                     # Checking whether the merge was in fact successful according to resources.
                     self.res_online.calculate_available_node_res()
                     self.res_online.calculate_available_link_res([])
+                    self.reoptimized_resource = NFFGToolBox.merge_nffgs(self.res_online,
+                                                                        self.__res_offline)
                     log.info("merge_online_offline : "
-                             "Lock res_online, optimalization enforce :)")
+                             "Optimization applied successfully :)")
 
                 # Balazs: if mapping delete fails, it makes no sense to merge
                 # Balazs The calc res functions throw only RuntimeError if it is
@@ -244,33 +266,29 @@ class HybridOrchestrator():
             finally:
                 self.lock.release()
 
-    def MAP(self, request):
+    def MAP(self, request, resource):
 
         # Collect the requests
         self.merge_all_request(self.SUM_req, request)
 
         #if not self.offline_mapping_thread.is_alive():
-        self.set_online_resource_graph()
+        self.set_online_resource_graph(resource)
 
         # Start online mapping thread
         online_mapping_thread = threading.Thread(None, self.do_online_mapping,
                         "Online mapping thread", (request, self.res_online))
         try:
+            log.info("Start online mapping!")
             online_mapping_thread.start()
         except Exception as e:
             log.error(e.message)
             log.error("Failed to start online thread")
             #Balazs Why Raise runtime?? why not the same Exception
             raise # RuntimeError
-        try:
-            offline_status = self.offline_mapping_thread.is_alive()
-        except Exception as e:
-            log.error("Exception catched when checking for offline mapping "
-                      "is_alive: %s", e.message)
-            offline_status = False
 
         # Start offline mapping thread
-        if self.__when_to_opt.need_to_optimize(offline_status, 3):
+        if self.__when_to_opt.need_to_optimize(self.offline_status==HybridOrchestrator.OFFLINE_STATE_RUNNING, 3) \
+           and len([n for n in self.res_online.nfs]) > 0:
             self.reqs_under_optimization = self.__what_to_opt.reqs_to_optimize(self.SUM_req)
             try:
                 self.set_offline_resource_graph()
@@ -299,6 +317,8 @@ class HybridOrchestrator():
                 raise uet.MappingException(error.msg, False)
             except:
                 raise uet.MappingException(error.message, False)
+
+        return self.res_online
 
 
 

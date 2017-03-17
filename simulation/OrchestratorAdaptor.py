@@ -142,20 +142,20 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
         self.lock2 = threading.Lock()
 
     def MAP(self, request):
-        try:
-            self.concrete_hybrid_orchestrator.lock.acquire()
-            self.concrete_hybrid_orchestrator.res_online = self.resource_graph
-        finally:
-            self.concrete_hybrid_orchestrator.lock.release()
-
-        self.concrete_hybrid_orchestrator.MAP(request)
-        self.resource_graph = self.concrete_hybrid_orchestrator.res_online
+        # try:
+        #     self.concrete_hybrid_orchestrator.lock.acquire()
+        #     self.concrete_hybrid_orchestrator.res_online = self.resource_graph
+        # finally:
+        #     self.concrete_hybrid_orchestrator.lock.release()
+        self.resource_graph = self.concrete_hybrid_orchestrator.MAP(request,
+                                                                    self.resource_graph)
 
     def del_service(self, request):
         mode = NFFG.MODE_DEL
         for i in request.nfs:
             i.operation = NFFG.OP_DELETE
         try:
+            # TODO: if we need to wait because of Offline Merge, either the reoptimization or the deletion will not take place!!
             self.concrete_hybrid_orchestrator.lock.acquire()
 
             self.resource_graph = online_mapping.MAP\
