@@ -29,15 +29,9 @@ class HybridOrchestrator():
     def __init__(self, RG, config_file_path, deleted_services, full_log_path):
             config = ConfigObj(config_file_path)
 
-
-            log.setLevel(logging.DEBUG)
-            logging.basicConfig(format='%(levelname)s:%(message)s')
-            logging.basicConfig(filename='log_file.log', filemode='w',
-                                level=logging.DEBUG)
             formatter = logging.Formatter(
                 '%(asctime)s | Hybrid Orches | %(levelname)s | \t%(message)s')
             hdlr = logging.FileHandler(full_log_path)
-
             hdlr.setFormatter(formatter)
             log.addHandler(hdlr)
             log.setLevel(logging.DEBUG)
@@ -97,8 +91,15 @@ class HybridOrchestrator():
                                    'one of the followings: double_hundred, '
                                    'dynamic')
 
-            #Queue for online mapping
+            # Queue for online mapping
             self.online_fails = Queue.Queue()
+
+            # Set offline mapping parameters
+            self.mig_handler = config['migration_handler_name']
+            self.optimize_already_mapped_nfs = bool(config['optimize_already_mapped_nfs'])
+            self.migration_coeff = float(config['migration_coeff'])
+            self.load_balance_coeff = float(config['load_balance_coeff'])
+            self.edge_cost_coeff = float(config['edge_cost_coeff'])
 
     def merge_all_request(self, sum, request):
         sum = NFFGToolBox.merge_nffgs(sum, request)
@@ -140,11 +141,11 @@ class HybridOrchestrator():
             try:
                 log.debug("SAP count in request %s and in resource: %s, resource total size: %s"%(len([s for s in request.saps]),
                           len([s for s in self.__res_offline.saps]), len(self.__res_offline)))
-                #TODO: The migration handler should be instantiated in the constructor based on the ConfigObj!
+
                 self.__res_offline = offline_mapping.MAP(
-                    request, self.__res_offline, True, "ConstantMigrationCost",
-                    migration_coeff=1.0, load_balance_coeff=1.0,
-                    edge_cost_coeff=1.0)
+                    request, self.__res_offline, self.optimize_already_mapped_nfs, "ConstantMigrationCost",
+                    self.migration_coeff, self.load_balance_coeff,
+                    self.edge_cost_coeff)
 
                 log.info("Offline mapping is ready")
 
@@ -170,7 +171,7 @@ class HybridOrchestrator():
               self.__res_offline = online_mapping.MAP(i['SG'],
                                                     self.__res_offline,
                                                     mode=mode)
-              
+
               mode = NFFG.MODE_DEL
               self.SUM_req = online_mapping.MAP(i['SG'],
                                                 self.SUM_req,

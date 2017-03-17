@@ -43,7 +43,6 @@ class AbstractOrchestratorAdaptor(object):
     def get_copy_of_rg(self):
         pass
 
-    #todo: a del service-t meg kell hivni a SUM_requesten mert igy az offline feleleszti a hallott kereseket is
     @abstractmethod
     def del_service(self, request):
         mode = NFFG.MODE_DEL
@@ -80,7 +79,7 @@ class AbstractOrchestratorAdaptor(object):
 
 class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
-    def __init__(self, resource, full_log_path):
+    def __init__(self, resource, deleted_services, full_log_path, config_file_path):
         super(OnlineOrchestratorAdaptor, self).__init__(resource, "online")
 
     def MAP(self, request):
@@ -115,10 +114,10 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
 class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
-    def __init__(self, resource, deleted_services, full_log_path):
+    def __init__(self, resource, deleted_services, full_log_path, config_file_path):
         super(HybridOrchestratorAdaptor, self).__init__(resource, "hybrid")
         self.concrete_hybrid_orchestrator = \
-            hybrid_mapping.HybridOrchestrator(resource, "./simulation.cfg",
+            hybrid_mapping.HybridOrchestrator(resource, config_file_path,
                                               deleted_services, full_log_path)
 
     def MAP(self, request):
@@ -160,7 +159,8 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
 class OfflineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
-    def __init__(self, resource, full_log_path, optimize_already_mapped_nfs,
+    def __init__(self, resource, deleted_services, full_log_path,
+                 config_file_path, optimize_already_mapped_nfs,
                  migration_handler_name, migration_coeff,
                  load_balance_coeff, edge_cost_coeff,
                  **migration_handler_kwargs):

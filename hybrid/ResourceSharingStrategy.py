@@ -42,11 +42,21 @@ class AbstractResourceSharingStrategy(object):
 class DynamicMaxOnlineToAll(AbstractResourceSharingStrategy):
     # TODO: dinamikus RG gen
 
-    def get_offline_resource(self, res_online, res_offline):
+    def get_rg_max_node(self, rg):
         pass
 
-    def get_online_resource(self, res_online, res_offline):
+    def get_rg_max_link(self, rg):
         pass
+
+    def get_offline_resource(self, res_online, res_offline):
+        max_node = self.get_rg_max_node(res_online)
+        max_link = self.get_rg_max_link(res_online)
+
+
+
+
+    def get_online_resource(self, res_online, res_offline):
+        return res_online
 
 
 class DoubleHundred(AbstractResourceSharingStrategy):
@@ -55,11 +65,8 @@ class DoubleHundred(AbstractResourceSharingStrategy):
         return copy.deepcopy(res_online)
 
     def get_online_resource(self, res_online, res_offline):
-        # For first resource sharing
-        #TODO: az if nem fut le sose mert a OrchAdap-ben van egy iylen:
-        # self.concrete_hybrid_orchestrator.res_online = self.resource_graph
-        if res_online == None:
-            to_online = copy.deepcopy(self.bare_resource_graph)
-            return to_online
-        else:
-            return res_online
+        # if res_online == None:
+        #     to_online = copy.deepcopy(self.bare_resource_graph)
+        #     return to_online
+        # else:
+        return res_online
