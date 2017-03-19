@@ -34,7 +34,7 @@ except ImportError:
 log = logging.getLogger("mapping")
 # Default log level
 # Change this constant to set logging level outside of ESCAPE
-DEFAULT_LOG_LEVEL = logging.DEBUG
+DEFAULT_LOG_LEVEL = logging.WARNING
 # print "effective level", log.getEffectiveLevel()
 # print "log level", log.level
 # ESCAPE uses INFO and DEBUG levels. The default level of a logger is WARNING.

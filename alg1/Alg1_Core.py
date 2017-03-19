@@ -1341,6 +1341,8 @@ class CoreAlgorithm(object):
                          "output NFFG" % vnf)
           hosting_infra = next(nffg.infra_neighbors(vnf))
           for dyn_link in nffg.network[vnf][hosting_infra.id].itervalues():
+            self.log.debug("Deleting port %s from Infra %s"%(dyn_link.dst.id,
+                                                             hosting_infra))
             hosting_infra.del_port(dyn_link.dst.id)
           nffg.del_node(vnf)
 
