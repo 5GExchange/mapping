@@ -1,6 +1,5 @@
 import copy
 from abc import ABCMeta, abstractmethod
-import alg1.MappingAlgorithms as online_mapping
 try:
   # runs when mapping files are called from ESCAPE
   from escape.nffg_lib.nffg import NFFG, NFFGToolBox
@@ -13,20 +12,23 @@ except ImportError:
 
 import logging
 log = logging.getLogger(" Resource sharing")
-log.setLevel(logging.DEBUG)
-logging.basicConfig(format='%(levelname)s:%(message)s')
-logging.basicConfig(filename='log_file.log', filemode='w', level=logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s |  Res sharing  | %(levelname)s | \t%(message)s')
-hdlr = logging.FileHandler('../log_file.log')
-hdlr.setFormatter(formatter)
-log.addHandler(hdlr)
-log.setLevel(logging.DEBUG)
+
 
 class AbstractResourceSharingStrategy(object):
     __metaclass__ = ABCMeta
 
-    def __init__(self, resource_graph):
-      self.bare_resource_graph = resource_graph
+    def __init__(self, resource_grap, full_log_path):
+      self.bare_resource_graph = resource_grap
+      log.setLevel(logging.DEBUG)
+      logging.basicConfig(format='%(levelname)s:%(message)s')
+      logging.basicConfig(filename='log_file.log', filemode='w',
+                          level=logging.DEBUG)
+      formatter = logging.Formatter(
+          '%(asctime)s |  Res sharing  | %(levelname)s | \t%(message)s')
+      hdlr = logging.FileHandler(full_log_path)
+      hdlr.setFormatter(formatter)
+      log.addHandler(hdlr)
+      log.setLevel(logging.DEBUG)
 
     @abstractmethod
     def get_online_resource(self, res_online, res_offline):
@@ -38,11 +40,20 @@ class AbstractResourceSharingStrategy(object):
 
 
 class DynamicMaxOnlineToAll(AbstractResourceSharingStrategy):
+    # TODO: dinamikus RG gen
 
-    def share_resource(self, resource_graph, res_online, res_offline):
-        #TODO: dinamikus RG gen
-        #return toOffline, toOnline
+    def get_rg_max_node(self, rg):
         pass
+
+    def get_rg_max_link(self, rg):
+        pass
+
+    def get_offline_resource(self, res_online, res_offline):
+        max_node = self.get_rg_max_node(res_online)
+        max_link = self.get_rg_max_link(res_online)
+
+    def get_online_resource(self, res_online, res_offline):
+        return res_online
 
 
 class DoubleHundred(AbstractResourceSharingStrategy):

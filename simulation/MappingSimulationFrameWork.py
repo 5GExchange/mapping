@@ -17,7 +17,7 @@ import time
 import shutil
 import logging
 import threading
-import time
+import sys
 import json
 import copy
 import os
@@ -36,30 +36,39 @@ except ImportError:
   from nffg_lib.nffg import NFFG, NFFGToolBox
 
 import alg1.UnifyExceptionTypes as uet
-import matplotlib.pyplot as plt
 from OrchestratorAdaptor import *
 from RequestGenerator import MultiReqGen
 from RequestGenerator import SimpleReqGen
 from RequestGenerator import TestReqGen
 from ResourceGetter import *
 
-
 log = logging.getLogger(" Simulator")
-logging.basicConfig(format='%(levelname)s:%(message)s')
-logging.basicConfig(filename='log_file.log', filemode='w', level=logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s |   Simulator   | %(levelname)s | \t%(message)s')
-hdlr = logging.FileHandler('../log_file.log')
-hdlr.setFormatter(formatter)
-log.addHandler(hdlr)
-log.setLevel(logging.DEBUG)
-
 
 class MappingSolutionFramework():
 
-    def __init__(self, config_file_path, request_list
-                 ):
+    def __init__(self, config_file_path, request_list):
         config = ConfigObj(config_file_path)
 
+        self.sim_number = int(config['simulation_number'])
+        self.orchestrator_type = config['orchestrator']
+
+        if not os.path.exists('test' + str(self.sim_number) +
+                                      self.orchestrator_type):
+            os.mkdir('test' + str(self.sim_number) + self.orchestrator_type)
+        self.path = os.path.abspath(
+                'test' + str(self.sim_number) + self.orchestrator_type)
+        self.full_log_path = self.path + '/log_file' + str (time.ctime()).\
+            replace(' ', '_').replace(':', '-') +'.log'
+
+        formatter = logging.Formatter(
+            '%(asctime)s |   Simulator   | %(levelname)s | \t%(message)s')
+        hdlr = logging.FileHandler(self.full_log_path)
+        hdlr.setFormatter(formatter)
+        log.addHandler(hdlr)
+        log.setLevel(logging.DEBUG)
+
+        log.info("Configuration file: " + str(config_file_path))
+        log.info(" ----------------------------------------")
         log.info(" Start simulation")
         log.info(" ------ Simulation configurations -------")
         log.info(" | Simulation number: " + str(config['simulation_number']))
@@ -76,19 +85,18 @@ class MappingSolutionFramework():
 
         self.number_of_iter = config['max_number_of_iterations']
         self.dump_freq = int(config['dump_freq'])
-        self.sim_number = int(config['simulation_number'])
         self.max_number_of_iterations = int(config['max_number_of_iterations'])
         self.request_arrival_lambda = float(config['request_arrival_lambda'])
         self.wait_all_req_expire = bool(config['wait_all_req_expire'])
-        # Ha a discrete_simulation utan van vmi akkor True-ra ertekelodik ki
         self.__discrete_simulation = bool(config['discrete_simulation'])
         self.request_lifetime_lambda = float(config['request_lifetime_lambda'])
 
-        self.deleted_services = []
         # This stores the request waiting to be mapped
         self.__request_list = request_list
         self.sim_iter = 0
         self.copy_of_rg_network_topology = None
+        self.dump_iter = 0
+        self.deleted_services = []
 
         # Resource
         resource_type = config['topology']
@@ -135,11 +143,14 @@ class MappingSolutionFramework():
         self.refused_array = [0]
         self.running_requests = 0
         self.running_array = [0]
+
         # Orchestrator
-        self.orchestrator_type = config['orchestrator']
         if self.orchestrator_type == "online":
             self.__orchestrator_adaptor = OnlineOrchestratorAdaptor(
-                self.__network_topology)
+                                            self.__network_topology,
+                                            self.deleted_services,
+                                            self.full_log_path,
+                                            config_file_path)
         elif self.orchestrator_type == "hybrid":
             log.info(" ---- Hybrid specific configurations -----")
             log.info(" | What to optimize: " + str(config['what_to_optimize']))
@@ -147,8 +158,23 @@ class MappingSolutionFramework():
             log.info(" | When to optimize parameter: " + str(config['when_to_opt_parameter']))
             log.info(" | Optimize strategy: " + str(config['orchestrator']))
             log.info(" -----------------------------------------")
+            log.info(" ---- Offline specific configurations -----")
+            log.info(" | Optimize already mapped nfs " + config[
+                'optimize_already_mapped_nfs'])
+            log.info(" | migration_coeff: " + config[
+                'migration_coeff'])
+            log.info(" | load_balance_coeff: " + config[
+                'load_balance_coeff'])
+            log.info(" | edge_cost_coeff: " + config[
+                'edge_cost_coeff'])
+            log.info(" | Migration cost handler given: " + config[
+                'migration_handler_name'] if 'migration_handler_name' in config else "None")
+            log.info(" -----------------------------------------")
             self.__orchestrator_adaptor = HybridOrchestratorAdaptor(
-                self.__network_topology, self.deleted_services)
+                                            self.__network_topology,
+                                            self.deleted_services,
+                                            self.full_log_path,
+                                            config_file_path)
         elif self.orchestrator_type == "offline":
             log.info(" ---- Offline specific configurations -----")
             log.info(" | Optimize already mapped nfs " + config['optimize_already_mapped_nfs'])
@@ -163,6 +189,9 @@ class MappingSolutionFramework():
 
             self.__orchestrator_adaptor = OfflineOrchestratorAdaptor(
                 self.__network_topology,
+                self.deleted_services,
+                self.full_log_path,
+                config_file_path,
                 bool(config['optimize_already_mapped_nfs']),
                 config['migration_handler_name'], config['migration_coeff'],
                 config['load_balance_coeff'], config['edge_cost_coeff'],
@@ -179,7 +208,6 @@ class MappingSolutionFramework():
             log.debug("# of VNFs in resource graph: %s" % len(
                 [n for n in self.__orchestrator_adaptor.resource_graph.nfs]))
 
-            # TRY TO SET IT BACK TO THE STATE BEFORE UNSUCCESSFUL MAPPING
             self.copy_of_rg_network_topology = self.__orchestrator_adaptor.get_copy_of_rg()
 
             orchestrator_adaptor.MAP(service_graph)
@@ -194,23 +222,24 @@ class MappingSolutionFramework():
             self.running_requests += 1
             self.mapped_array.append(self.mapped_requests)
             self.refused_array.append(self.refused_requests)
-
-            if not sim_iter % self.dump_freq:
-                log.info("Dump NFFG to file after the " + str(sim_iter) + ". mapping")
-                self.__orchestrator_adaptor.dump_mapped_nffg(
-                sim_iter, "mapping", self.sim_number, self.orchestrator_type)
-
+            self.dump_iter += 1
+            if not self.dump_iter % self.dump_freq:
+                self.dump()
 
         except uet.MappingException as me:
             log.info("Mapping thread: Mapping service_request_" +
                      str(sim_iter) + " unsuccessful\n%s"%me.msg)
             self.refused_requests += 1
             self.refused_array.append(self.refused_requests)
-            # TRY TO SET IT BACK TO THE STATE BEFORE UNSUCCESSFUL MAPPING
             orchestrator_adaptor.resource_graph = self.copy_of_rg_network_topology
         except Exception as e:
             log.error("Mapping failed: %s", e)
             raise
+
+    def dump(self):
+        log.info("Dump NFFG to file after the " + str(self.dump_iter) + ". NFFG change")
+        self.__orchestrator_adaptor.dump_mapped_nffg(
+            self.dump_iter, "change", self.sim_number, self.orchestrator_type)
 
     def __del_service(self, service, sim_iter):
         try:
@@ -223,14 +252,9 @@ class MappingSolutionFramework():
                      str(sim_iter) + " successful -")
             self.__remaining_request_lifetimes.remove(service)
 
-            """""
-            if not sim_iter % self.dump_freq:
-                log.info("Dump NFFG to file after the " +
-                         str(sim_iter) + ". deletion")
-                self.__orchestrator_adaptor.\
-                    dump_mapped_nffg(sim_iter, "deletion",
-                                     self.sim_number, self.orchestrator_type)
-            """
+            self.dump_iter += 1
+            if not self.dump_iter % self.dump_freq:
+                self.dump()
 
         except uet.MappingException:
             log.error("Mapping thread: Deleting service_request_" +
@@ -268,7 +292,7 @@ class MappingSolutionFramework():
                 # Remove expired service graph requests
                 self.__clean_expired_requests(datetime.datetime.now())
 
-        log.info("End mapping thread")
+        log.info("End mapping thread!")
 
 
     def __clean_expired_requests(self,time):
@@ -284,6 +308,7 @@ class MappingSolutionFramework():
         log.info("Start request generator thread")
         topology = self.__network_topology
         sim_end = self.max_number_of_iterations
+
         # Simulation cycle
         sim_running = True
         self.sim_iter = 1
@@ -319,53 +344,45 @@ class MappingSolutionFramework():
 if __name__ == "__main__":
     request_list = Queue.Queue()
 
-    test = MappingSolutionFramework('simulation.cfg', request_list)
-    try:
-        req_gen_thread = threading.Thread(None, test.create_request,
-                                        "request_generator_thread_T1")
+    if len(sys.argv) > 2:
+        log.error("Too many input parameters!")
+    elif len(sys.argv) < 2:
+        log.error("Too few input parameters!")
+    elif not os.path.isfile(sys.argv[1]):
+        log.error("Configuration file does not exist!")
+    else:
+        test = MappingSolutionFramework(sys.argv[1], request_list)
 
-        mapping_thread = threading.Thread(None, test.make_mapping,
-                                          "mapping_thread_T2")
-        req_gen_thread.start()
-        mapping_thread.start()
-
-        req_gen_thread.join()
-
-        mapping_thread.join()
-
-        # Create JSON files
-        requests = {"mapped_requests": test.mapped_array,
-                    "running_requests": test.running_array,
-                    "refused_requests": test.refused_array}
-
-        if not os.path.exists('test' + str(test.sim_number) + test.orchestrator_type):
-            os.mkdir('test' + str(test.sim_number) + test.orchestrator_type)
-
-        path = os.path.abspath(
-            'test' + str(test.sim_number) + str(test.orchestrator_type))
-        full_path = os.path.join(path, "requests" + str(time.ctime()) + ".json")
-        with open(full_path, 'w') as outfile:
-            json.dump(requests, outfile)
-
-    except threading.ThreadError:
-        log.error(" Unable to start threads")
-    except Exception as e:
-        log.error("Exception in simulation: %s", e)
-        raise
-
-    finally:
         # Copy simulation.cfg to testXY dir
-        shutil.copy('simulation.cfg', path)
+        shutil.copy(sys.argv[1], test.path)
 
         try:
-            # Move log_file.log to testXY dir and rename
-            log_path_new = os.path.join(path,
-                                    "log_file_" + str(time.ctime()) + ".log")
-            log_path_old = os.path.join(path, "log_file.log")
-            shutil.move('../log_file.log', path)
-            os.rename(log_path_old, log_path_new)
-        except IOError as io:
-            log.error(io)
+            req_gen_thread = threading.Thread(None, test.create_request,
+                                            "request_generator_thread_T1")
+
+            mapping_thread = threading.Thread(None, test.make_mapping,
+                                              "mapping_thread_T2")
+            req_gen_thread.start()
+            mapping_thread.start()
+
+            req_gen_thread.join()
+            mapping_thread.join()
+
+        except threading.ThreadError:
+            log.error(" Unable to start threads")
+        except Exception as e:
+            log.error("Exception in simulation: %s", e)
+            raise
+        finally:
+            # Create JSON files
+            requests = {"mapped_requests": test.mapped_array,
+                        "running_requests": test.running_array,
+                        "refused_requests": test.refused_array}
+            full_path_json = os.path.join(test.path,
+                                          "requests" + str(time.ctime()) + ".json")
+            with open(full_path_json, 'w') as outfile:
+                json.dump(requests, outfile)
+
 
 
 

@@ -12,22 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import io
-import logging
 import os
 import time
 import copy
+from configobj import ConfigObj
 from abc import ABCMeta, abstractmethod
-import threading
 
-log = logging.getLogger(" Orchestrator ")
-log.setLevel(logging.DEBUG)
-logging.basicConfig(format='%(levelname)s:%(message)s')
-logging.basicConfig(filename='log_file.log', filemode='w', level=logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s | Orchestrator | %(levelname)s |  \t%(message)s')
-hdlr = logging.FileHandler('../log_file.log')
-hdlr.setFormatter(formatter)
-log.addHandler(hdlr)
-log.setLevel(logging.DEBUG)
 try:
   # runs when mapping files are called from ESCAPE
   from escape.nffg_lib.nffg import NFFG, NFFGToolBox
@@ -48,26 +38,18 @@ class AbstractOrchestratorAdaptor(object):
     def __init__(self, resource, suffix):
       self.resource_graph = resource
       self.dump_suffix = suffix
+      self.path = None
 
     @abstractmethod
     def get_copy_of_rg(self):
         pass
 
-    #todo: a del service-t meg kell hivni a SUM_requesten mert igy az offline feleleszti a hallott kereseket is
     @abstractmethod
     def del_service(self, request):
         mode = NFFG.MODE_DEL
         for i in request.nfs:
             i.operation = NFFG.OP_DELETE
         self.resource_graph = online_mapping.MAP(request, self.resource_graph,
-                                                 enable_shortest_path_cache=True,
-                                                 bw_factor=1, res_factor=1,
-                                                 lat_factor=1,
-                                                 shortest_paths=None,
-                                                 return_dist=False,
-                                                 propagate_e2e_reqs=True,
-                                                 bt_limit=6,
-                                                 bt_branching_factor=3,
                                                  mode=mode)
 
 
@@ -75,44 +57,37 @@ class AbstractOrchestratorAdaptor(object):
     def MAP(self, request):
         raise NotImplemented()
 
-    def dump_mapped_nffg(self, calls, type, sim_number, orchest_type):
+    def dump_mapped_nffg(self, calls, type, i, orchest_type):
 
         dump_nffg = self.resource_graph.dump()
 
-        i = sim_number
-        if not os.path.exists('test' + str(i) + orchest_type):
-            os.mkdir('test' + str(i) + orchest_type)
-            path = os.path.abspath('test' + str(i) + orchest_type)
-            full_path = os.path.join(path, 'dump_nffg_' + str(calls) + "_"
-                                + type + "_" + str(i) + "_" + str(time.ctime()).
-                                     replace(' ', '-').replace(':', '') + '.nffg')
-            with io.FileIO(full_path, "w") as file:
-                file.write(dump_nffg)
-        else:
-            path = os.path.abspath('test' + str(i) + orchest_type)
-            full_path = os.path.join(path, 'dump_nffg_' + str(calls) + "_"
-                                + type + "_" + str(i) + "_" + str(time.ctime()).
-                                     replace(' ', '-').replace(':', '') + '.nffg')
-            with io.FileIO(full_path, "w") as file:
+        path = os.path.abspath('test' + str(i) + orchest_type)
+        full_path = os.path.join(path, 'dump_nffg_' + str(calls) + "_"
+                            + type + "_" + str(i) + "_" + str(time.ctime()).
+                                replace(' ', '-').replace(':', '') + '.nffg')
+        with io.FileIO(full_path, "w") as file:
                 file.write(dump_nffg)
 
 
 
 class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
-    def __init__(self, resource):
+    def __init__(self, resource, deleted_services, full_log_path, config_file_path):
         super(OnlineOrchestratorAdaptor, self).__init__(resource, "online")
-
+        self.config = ConfigObj(config_file_path)
     def MAP(self, request):
         mode = NFFG.MODE_ADD
         self.resource_graph = online_mapping.MAP(request, self.resource_graph,
-                                             enable_shortest_path_cache=True,
-                                             bw_factor=1, res_factor=1,
-                                             lat_factor=1,
-                                             shortest_paths=None,
-                                             return_dist=False, mode=mode,
-                                             bt_limit=6,
-                                             bt_branching_factor=3)
+                                    bool(self.config['enable_shortest_path_cache']),
+                                    int(self.config['bw_factor']),
+                                    int(self.config['res_factor']),
+                                    int(self.config['lat_factor']),
+                                    None,
+                                    bool(self.config['return_dist']),
+                                    bool(self.config['propagate_e2e_reqs']),
+                                    int(self.config['bt_limit']),
+                                    int(self.config['bt_branching_factor']),
+                                    mode=mode)
 
     def get_copy_of_rg(self):
         return copy.deepcopy(self.resource_graph)
@@ -122,30 +97,18 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
         for i in request.nfs:
             i.operation = NFFG.OP_DELETE
         self.resource_graph = online_mapping.MAP(request, self.resource_graph,
-                                                 enable_shortest_path_cache=True,
-                                                 bw_factor=1, res_factor=1,
-                                                 lat_factor=1,
-                                                 shortest_paths=None,
-                                                 return_dist=False,
-                                                 propagate_e2e_reqs=True,
-                                                 bt_limit=6,
-                                                 bt_branching_factor=3,
-                                                 mode=mode)
+                                                    mode=mode)
 
 
 class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
-    def __init__(self, resource, deleted_services):
+    def __init__(self, resource, deleted_services, full_log_path, config_file_path):
         super(HybridOrchestratorAdaptor, self).__init__(resource, "hybrid")
         self.concrete_hybrid_orchestrator = \
-            hybrid_mapping.HybridOrchestrator(resource, "./simulation.cfg", deleted_services)
+          hybrid_mapping.HybridOrchestrator(resource, config_file_path,
+                                            deleted_services, full_log_path)
 
     def MAP(self, request):
-        # try:
-        #     self.concrete_hybrid_orchestrator.lock.acquire()
-        #     self.concrete_hybrid_orchestrator.res_online = self.resource_graph
-        # finally:
-        #     self.concrete_hybrid_orchestrator.lock.release()
         self.resource_graph = self.concrete_hybrid_orchestrator.MAP(request,
                                                                     self.resource_graph)
 
@@ -159,14 +122,6 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
             self.resource_graph = online_mapping.MAP\
                                                 (request,
                                                 self.resource_graph,
-                                                enable_shortest_path_cache=True,
-                                                bw_factor=1, res_factor=1,
-                                                lat_factor=1,
-                                                shortest_paths=None,
-                                                return_dist=False,
-                                                propagate_e2e_reqs=True,
-                                                bt_limit=6,
-                                                bt_branching_factor=3,
                                                 mode=mode)
         finally:
             self.concrete_hybrid_orchestrator.res_online_protector.finish_writing_res_nffg("Deleted exired request")
@@ -180,7 +135,8 @@ class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
 class OfflineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
-    def __init__(self, resource, optimize_already_mapped_nfs,
+    def __init__(self, resource, deleted_services, full_log_path,
+                 config_file_path, optimize_already_mapped_nfs,
                  migration_handler_name, migration_coeff,
                  load_balance_coeff, edge_cost_coeff,
                  **migration_handler_kwargs):
