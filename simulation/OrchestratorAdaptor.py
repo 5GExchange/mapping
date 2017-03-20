@@ -32,34 +32,27 @@ import alg1.MappingAlgorithms as online_mapping
 import hybrid.HybridOrchestrator as hybrid_mapping
 import milp.milp_solution_in_nffg as offline_mapping
 
+
 class AbstractOrchestratorAdaptor(object):
     __metaclass__ = ABCMeta
 
-    def __init__(self, resource, suffix):
-      self.resource_graph = resource
+    def __init__(self, suffix):
       self.dump_suffix = suffix
       self.path = None
 
-    @abstractmethod
-    def get_copy_of_rg(self):
-        pass
-
-    @abstractmethod
-    def del_service(self, request):
+    def del_service(self, request, resource):
         mode = NFFG.MODE_DEL
         for i in request.nfs:
             i.operation = NFFG.OP_DELETE
-        self.resource_graph = online_mapping.MAP(request, self.resource_graph,
-                                                 mode=mode)
-
+        return online_mapping.MAP(request, resource, mode=mode)
 
     @abstractmethod
-    def MAP(self, request):
+    def MAP(self, request, resource):
         raise NotImplemented()
 
-    def dump_mapped_nffg(self, calls, type, i, orchest_type):
+    def dump_mapped_nffg(self, calls, type, i, orchest_type, resource):
 
-        dump_nffg = self.resource_graph.dump()
+        dump_nffg = resource.dump()
 
         path = os.path.abspath('test' + str(i) + orchest_type)
         full_path = os.path.join(path, 'dump_nffg_' + str(calls) + "_"
@@ -69,19 +62,19 @@ class AbstractOrchestratorAdaptor(object):
                 file.write(dump_nffg)
 
 
-
 class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
-    def __init__(self, resource, deleted_services, full_log_path, config_file_path):
-        super(OnlineOrchestratorAdaptor, self).__init__(resource, "online")
+    def __init__(self, deleted_services, full_log_path, config_file_path):
+        super(OnlineOrchestratorAdaptor, self).__init__("online")
         self.config = ConfigObj(config_file_path)
-    def MAP(self, request):
+
+    def MAP(self, request, resource):
         mode = NFFG.MODE_ADD
-        self.resource_graph = online_mapping.MAP(request, self.resource_graph,
+        return online_mapping.MAP(request, resource,
                                     bool(self.config['enable_shortest_path_cache']),
-                                    int(self.config['bw_factor']),
-                                    int(self.config['res_factor']),
-                                    int(self.config['lat_factor']),
+                                    float(self.config['bw_factor']),
+                                    float(self.config['res_factor']),
+                                    float(self.config['lat_factor']),
                                     None,
                                     bool(self.config['return_dist']),
                                     bool(self.config['propagate_e2e_reqs']),
@@ -89,58 +82,27 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
                                     int(self.config['bt_branching_factor']),
                                     mode=mode)
 
-    def get_copy_of_rg(self):
-        return copy.deepcopy(self.resource_graph)
-
-    def del_service(self, request):
-        mode = NFFG.MODE_DEL
-        for i in request.nfs:
-            i.operation = NFFG.OP_DELETE
-        self.resource_graph = online_mapping.MAP(request, self.resource_graph,
-                                                    mode=mode)
-
 
 class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
     def __init__(self, resource, deleted_services, full_log_path, config_file_path):
-        super(HybridOrchestratorAdaptor, self).__init__(resource, "hybrid")
+        super(HybridOrchestratorAdaptor, self).__init__("hybrid")
         self.concrete_hybrid_orchestrator = \
           hybrid_mapping.HybridOrchestrator(resource, config_file_path,
                                             deleted_services, full_log_path)
 
-    def MAP(self, request):
-        self.resource_graph = self.concrete_hybrid_orchestrator.MAP(request,
-                                                                    self.resource_graph)
-
-    def del_service(self, request):
-        mode = NFFG.MODE_DEL
-        for i in request.nfs:
-            i.operation = NFFG.OP_DELETE
-        try:
-            self.concrete_hybrid_orchestrator.res_online_protector.start_writing_res_nffg("Deleting expired request")
-
-            self.resource_graph = online_mapping.MAP\
-                                                (request,
-                                                self.resource_graph,
-                                                mode=mode)
-        finally:
-            self.concrete_hybrid_orchestrator.res_online_protector.finish_writing_res_nffg("Deleted exired request")
-
-    def get_copy_of_rg(self):
-        self.concrete_hybrid_orchestrator.res_online_protector.start_reading_res_nffg("Getting a copy")
-        network_topology = copy.deepcopy(self.resource_graph)
-        self.concrete_hybrid_orchestrator.res_online_protector.finish_reading_res_nffg("Got a copy")
-        return network_topology
+    def MAP(self, request, resource):
+        return self.concrete_hybrid_orchestrator.MAP(request, resource)
 
 
 class OfflineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
-    def __init__(self, resource, deleted_services, full_log_path,
+    def __init__(self, deleted_services, full_log_path,
                  config_file_path, optimize_already_mapped_nfs,
                  migration_handler_name, migration_coeff,
                  load_balance_coeff, edge_cost_coeff,
                  **migration_handler_kwargs):
-        super(OfflineOrchestratorAdaptor, self).__init__(resource, "offline")
+        super(OfflineOrchestratorAdaptor, self).__init__("offline")
         self.optimize_already_mapped_nfs = optimize_already_mapped_nfs
         self.migration_handler_name = migration_handler_name
         self.migration_handler_kwargs = migration_handler_kwargs
@@ -148,15 +110,12 @@ class OfflineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
         self.load_balance_coeff = float(load_balance_coeff)
         self.edge_cost_coeff = float(edge_cost_coeff)
 
-    def MAP (self, request):
-      self.resource_graph = offline_mapping.MAP(
-        request, self.resource_graph,
-        optimize_already_mapped_nfs=self.optimize_already_mapped_nfs,
-        migration_handler_name=self.migration_handler_name,
-        migration_coeff=self.migration_coeff,
-        load_balance_coeff=self.load_balance_coeff,
-        edge_cost_coeff=self.edge_cost_coeff,
-        **self.migration_handler_kwargs)
-
-    def get_copy_of_rg(self):
-        return copy.deepcopy(self.resource_graph)
+    def MAP(self, request, resource):
+        return offline_mapping.MAP(
+            request, resource,
+            optimize_already_mapped_nfs=self.optimize_already_mapped_nfs,
+            migration_handler_name=self.migration_handler_name,
+            migration_coeff=self.migration_coeff,
+            load_balance_coeff=self.load_balance_coeff,
+            edge_cost_coeff=self.edge_cost_coeff,
+            **self.migration_handler_kwargs)

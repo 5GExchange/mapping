@@ -18,17 +18,20 @@ class AbstractResourceSharingStrategy(object):
     __metaclass__ = ABCMeta
 
     def __init__(self, resource_grap, full_log_path):
-      self.bare_resource_graph = resource_grap
-      log.setLevel(logging.DEBUG)
-      logging.basicConfig(format='%(levelname)s:%(message)s')
-      logging.basicConfig(filename='log_file.log', filemode='w',
-                          level=logging.DEBUG)
-      formatter = logging.Formatter(
-          '%(asctime)s |  Res sharing  | %(levelname)s | \t%(message)s')
-      hdlr = logging.FileHandler(full_log_path)
-      hdlr.setFormatter(formatter)
-      log.addHandler(hdlr)
-      log.setLevel(logging.DEBUG)
+        self.bare_resource_graph = resource_grap
+        log.setLevel(logging.DEBUG)
+        logging.basicConfig(format='%(levelname)s:%(message)s')
+        logging.basicConfig(filename='log_file.log', filemode='w',
+                      level=logging.DEBUG)
+        formatter = logging.Formatter(
+        '%(asctime)s |  Res sharing  | %(levelname)s | \t%(message)s')
+        hdlr = logging.FileHandler(full_log_path)
+        hdlr.setFormatter(formatter)
+        log.addHandler(hdlr)
+        log.setLevel(logging.DEBUG)
+        # All strategies shall return a copy for the very first time it is
+        # called (maybe other times too if it is necessary)
+        self.called_for_first_time = True
 
     @abstractmethod
     def get_online_resource(self, res_online, res_offline):
@@ -63,8 +66,9 @@ class DoubleHundred(AbstractResourceSharingStrategy):
 
     def get_online_resource(self, res_online, res_offline):
         # For first resource sharing
-        if res_online == None:
+        if self.called_for_first_time:
             to_online = copy.deepcopy(res_online)
+            self.called_for_first_time = False
             return to_online
         else:
             return res_online

@@ -112,7 +112,8 @@ class MappingSolutionFramework():
                 "Invalid 'topology' in the simulation.cfg file! "
                 "Please choose one of the followings: pico, gwin, carrier")
 
-        self.__network_topology = self.__resource_getter.GetNFFG()
+        self.__network_topology_bare = self.__resource_getter.GetNFFG()
+        self.__network_topology = copy.deepcopy(self.__network_topology_bare)
 
         # Request
         request_type = config['request_type']
@@ -158,7 +159,6 @@ class MappingSolutionFramework():
             log.info(" | bt_branching_factor: " + str(config['bt_branching_factor']))
             log.info(" -----------------------------------------")
             self.__orchestrator_adaptor = OnlineOrchestratorAdaptor(
-                                            self.__network_topology,
                                             self.deleted_services,
                                             self.full_log_path,
                                             config_file_path)
@@ -196,7 +196,7 @@ class MappingSolutionFramework():
                 'migration_handler_name'] if 'migration_handler_name' in config else "None")
             log.info(" -----------------------------------------")
             self.__orchestrator_adaptor = HybridOrchestratorAdaptor(
-                                            self.__network_topology,
+                                            self.__network_topology_bare,
                                             self.deleted_services,
                                             self.full_log_path,
                                             config_file_path)
@@ -213,7 +213,6 @@ class MappingSolutionFramework():
                 'migration_handler_name'] if 'migration_handler_name' in config else "None")
 
             self.__orchestrator_adaptor = OfflineOrchestratorAdaptor(
-                self.__network_topology,
                 self.deleted_services,
                 self.full_log_path,
                 config_file_path,
@@ -228,14 +227,14 @@ class MappingSolutionFramework():
                 "Please choose one of the followings: online, hybrid, offline")
 
 
-    def __mapping(self, service_graph, life_time, orchestrator_adaptor, time, sim_iter):
+    def __mapping(self, service_graph, life_time, time, sim_iter):
         try:
             log.debug("# of VNFs in resource graph: %s" % len(
-                [n for n in self.__orchestrator_adaptor.resource_graph.nfs]))
+                [n for n in self.__network_topology.nfs]))
 
-            self.copy_of_rg_network_topology = self.__orchestrator_adaptor.get_copy_of_rg()
-
-            orchestrator_adaptor.MAP(service_graph)
+            # Give a copy for the mapping, so in case it fails, we dont have to
+            # reset the prerocessed/modified resource
+            self.__network_topology = self.__orchestrator_adaptor.MAP(service_graph, self.__network_topology)
             # Adding successfully mapped request to the remaining_request_lifetimes
             service_life_element = {"dead_time": time +
                             life_time, "SG": service_graph, "req_num": sim_iter}
@@ -256,7 +255,7 @@ class MappingSolutionFramework():
                      str(sim_iter) + " unsuccessful\n%s"%me.msg)
             self.refused_requests += 1
             self.refused_array.append(self.refused_requests)
-            orchestrator_adaptor.resource_graph = self.copy_of_rg_network_topology
+            # we continue working, the __network_topology is in the last valid state
         except Exception as e:
             log.error("Mapping failed: %s", e)
             raise
@@ -264,15 +263,17 @@ class MappingSolutionFramework():
     def dump(self):
         log.info("Dump NFFG to file after the " + str(self.dump_iter) + ". NFFG change")
         self.__orchestrator_adaptor.dump_mapped_nffg(
-            self.dump_iter, "change", self.sim_number, self.orchestrator_type)
+            self.dump_iter, "change", self.sim_number, self.orchestrator_type,
+            self.__network_topology)
 
     def __del_service(self, service, sim_iter):
         try:
             log.debug("# of VNFs in resource graph: %s" % len(
-                [n for n in self.__orchestrator_adaptor.resource_graph.nfs]))
+                [n for n in self.__network_topology.nfs]))
 
             log.info("Try to delete " + str(sim_iter) + ". sc")
-            self.__orchestrator_adaptor.del_service(service['SG'])
+            self.__network_topology = self.__orchestrator_adaptor.del_service(service['SG'],
+                                                      self.__network_topology)
             log.info("Mapping thread: Deleting service_request_" +
                      str(sim_iter) + " successful -")
             self.__remaining_request_lifetimes.remove(service)
@@ -284,10 +285,10 @@ class MappingSolutionFramework():
         except uet.MappingException:
             log.error("Mapping thread: Deleting service_request_" +
                       str(sim_iter) + " unsuccessful")
+            raise
         except Exception as e:
             log.error("Delete failed: %s", e)
             raise
-
 
     def make_mapping(self):
         log.info("Start mapping thread")
@@ -301,15 +302,14 @@ class MappingSolutionFramework():
                 self.__request_list.task_done()
 
                 self.__mapping(request, datetime.timedelta(0, life_time),
-                               self.__orchestrator_adaptor,
                                datetime.datetime.now(),
                                req_num)
 
+                # TODO: remove expired requests even when mapping didn't happen!
                 # Remove expired service graph requests
                 self.__clean_expired_requests(datetime.datetime.now())
 
                 self.running_array.append(self.running_requests)
-
 
         if self.wait_all_req_expire:
             # Wait for all request to expire
@@ -331,7 +331,6 @@ class MappingSolutionFramework():
 
     def create_request(self):
         log.info("Start request generator thread")
-        topology = self.__network_topology
         sim_end = self.max_number_of_iterations
 
         # Simulation cycle
@@ -341,7 +340,7 @@ class MappingSolutionFramework():
 
             # Get request
             service_graph, life_time = \
-                self.__request_generator.get_request(topology, self.sim_iter)
+                self.__request_generator.get_request(self.__network_topology_bare, self.sim_iter)
 
             # Discrete working
             if self.__discrete_simulation:

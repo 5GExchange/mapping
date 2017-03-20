@@ -21,7 +21,6 @@ import Queue
 log = logging.getLogger(" Hybrid Orchestrator")
 
 
-
 class ResNFFGProtector(object):
 
   def __init__(self, do_logging=False):
@@ -80,14 +79,14 @@ class HybridOrchestrator():
             log.setLevel(logging.DEBUG)
 
             # Protects the res_online
-            self.res_online_protector = ResNFFGProtector()
+            self.res_online_protector = ResNFFGProtector(True)
             self.res_online = None
             self.__res_offline = copy.deepcopy(RG)
             self.deleted_services = deleted_services
             # All request in one NFFG
             # The sum of reqs needs to be accessed from Offline optimization to determine
             # what to opt and online mapping have to gather all requests there
-            self.sum_req_protector = ResNFFGProtector()
+            self.sum_req_protector = ResNFFGProtector(True)
             self.SUM_req = NFFG()
             self.offline_mapping_thread = None
             self.offline_status = HybridOrchestrator.OFFLINE_STATE_INIT
@@ -155,8 +154,9 @@ class HybridOrchestrator():
         self.sum_req_protector.finish_writing_res_nffg("New request %s appended to sum req" % request)
         return sum
 
-    def do_online_mapping(self, request):
+    def do_online_mapping(self, request, resource):
         self.res_online_protector.start_writing_res_nffg("Map a request in an online manner")
+        self.set_online_resource_graph(resource)
         temp_res_online = copy.deepcopy(self.res_online)
         try:
             mode = NFFG.MODE_ADD
@@ -261,9 +261,8 @@ class HybridOrchestrator():
     def set_online_resource_graph(self, resource):
         # Resource sharing strategy
         try:
-            self.res_online_protector.start_writing_res_nffg(
-              "Setting online resource for sharing between "
-              "online and offline resources")
+            log.debug("Setting online resource for sharing between "
+                      "online and offline resources")
             if self.offline_status == HybridOrchestrator.OFFLINE_STATE_RUNNING or \
                   self.offline_status == HybridOrchestrator.OFFLINE_STATE_INIT:
               # The online_res may be under merge OR offline reoptimization is idle because it was not needed.
@@ -283,8 +282,7 @@ class HybridOrchestrator():
             log.error(e.message)
             log.error("Unhandled Exception catched during resource sharing.")
             raise
-        finally:
-          self.res_online_protector.finish_writing_res_nffg("Setting online resource")
+        log.debug("Setting online resource")
 
     def set_offline_resource_graph(self):
       # Resources sharing startegy
@@ -345,11 +343,9 @@ class HybridOrchestrator():
         # Collect the requests
         self.merge_all_request(self.SUM_req, request)
 
-        self.set_online_resource_graph(resource)
-
         # Start online mapping thread
         online_mapping_thread = threading.Thread(None, self.do_online_mapping,
-                        "Online mapping thread", [request])
+                        "Online mapping thread", [request, resource])
         try:
             log.info("Start online mapping!")
             online_mapping_thread.start()
@@ -364,7 +360,7 @@ class HybridOrchestrator():
         self.res_online_protector.start_reading_res_nffg("Check if there is anything to optimize")
         if len([n for n in self.res_online.nfs]) > 0:
           self.res_online_protector.finish_reading_res_nffg("Checking if there was anything to optimize (yes)")
-          if self.__when_to_opt.need_to_optimize(self.offline_status==HybridOrchestrator.OFFLINE_STATE_RUNNING, 3):
+          if self.__when_to_opt.need_to_optimize(self.offline_status==HybridOrchestrator.OFFLINE_STATE_INIT, 3):
               try:
                   self.set_offline_resource_graph()
                   self.offline_mapping_thread = threading.Thread(None,
@@ -392,7 +388,10 @@ class HybridOrchestrator():
             error = self.online_fails.get()
             raise uet.MappingException(error.msg, False)
 
-        return self.res_online
+        self.res_online_protector.start_reading_res_nffg("Returning independent copy of res_online")
+        res_online_to_return = copy.deepcopy(self.res_online)
+        self.res_online_protector.finish_reading_res_nffg("Got independent copy for return")
+        return res_online_to_return
 
 
 
