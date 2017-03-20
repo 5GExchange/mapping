@@ -234,7 +234,8 @@ class MappingSolutionFramework():
 
             # Give a copy for the mapping, so in case it fails, we dont have to
             # reset the prerocessed/modified resource
-            self.__network_topology = self.__orchestrator_adaptor.MAP(service_graph, self.__network_topology)
+            self.__network_topology = self.__orchestrator_adaptor.MAP(
+                service_graph, copy.deepcopy(self.__network_topology))
             # Adding successfully mapped request to the remaining_request_lifetimes
             service_life_element = {"dead_time": time +
                             life_time, "SG": service_graph, "req_num": sim_iter}
