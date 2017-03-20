@@ -358,7 +358,7 @@ class HybridOrchestrator():
         self.res_online_protector.start_reading_res_nffg("Check if there is anything to optimize")
         if len([n for n in self.res_online.nfs]) > 0:
           self.res_online_protector.finish_reading_res_nffg("Checking if there was anything to optimize (yes)")
-          if self.__when_to_opt.need_to_optimize(self.offline_status==HybridOrchestrator.OFFLINE_STATE_INIT, 3):
+          if self.__when_to_opt.need_to_optimize(not self.offline_status==HybridOrchestrator.OFFLINE_STATE_INIT, 3):
               try:
                   self.set_offline_resource_graph()
                   self.offline_mapping_thread = threading.Thread(None,
