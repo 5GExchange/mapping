@@ -146,6 +146,17 @@ class MappingSolutionFramework():
 
         # Orchestrator
         if self.orchestrator_type == "online":
+            log.info(" ---- Online specific configurations -----")
+            log.info(" | Enable shortest path cache: " + str(config['enable_shortest_path_cache']))
+            log.info(" | bw_factor: " + str(config['bw_factor']))
+            log.info(" | res_factor: " + str(config['res_factor']))
+            log.info(" | lat_factor: " + str(config['lat_factor']))
+            log.info(" | shortest_paths: " + str(config['shortest_paths']))
+            log.info(" | return_dist: " + str(config['return_dist']))
+            log.info(" | propagate_e2e_reqs: " + str(config['propagate_e2e_reqs']))
+            log.info(" | bt_limit: " + str(config['bt_limit']))
+            log.info(" | bt_branching_factor: " + str(config['bt_branching_factor']))
+            log.info(" -----------------------------------------")
             self.__orchestrator_adaptor = OnlineOrchestratorAdaptor(
                                             self.__network_topology,
                                             self.deleted_services,
@@ -157,6 +168,20 @@ class MappingSolutionFramework():
             log.info(" | When to optimize: " + str(config['when_to_optimize']))
             log.info(" | When to optimize parameter: " + str(config['when_to_opt_parameter']))
             log.info(" | Optimize strategy: " + str(config['orchestrator']))
+            log.info(" -----------------------------------------")
+            log.info(" ---- Online specific configurations -----")
+            log.info(" | Enable shortest path cache: " + str(
+                config['enable_shortest_path_cache']))
+            log.info(" | bw_factor: " + str(config['bw_factor']))
+            log.info(" | res_factor: " + str(config['res_factor']))
+            log.info(" | lat_factor: " + str(config['lat_factor']))
+            log.info(" | shortest_paths: " + str(config['shortest_paths']))
+            log.info(" | return_dist: " + str(config['return_dist']))
+            log.info(
+                " | propagate_e2e_reqs: " + str(config['propagate_e2e_reqs']))
+            log.info(" | bt_limit: " + str(config['bt_limit']))
+            log.info(
+                " | bt_branching_factor: " + str(config['bt_branching_factor']))
             log.info(" -----------------------------------------")
             log.info(" ---- Offline specific configurations -----")
             log.info(" | Optimize already mapped nfs " + config[
