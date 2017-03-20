@@ -257,7 +257,6 @@ class HybridOrchestrator():
           self.sum_req_protector.finish_writing_res_nffg("Removed or failed during expired "
                                                          "request deletion from sum_req")
 
-
     def set_online_resource_graph(self, resource):
         # Resource sharing strategy
         try:
@@ -293,18 +292,17 @@ class HybridOrchestrator():
 
     def merge_online_offline(self):
             try:
-                self.res_online_protector.start_reading_res_nffg("Saving state before merge")
+                self.res_online_protector.start_writing_res_nffg("Removing SC-s which are possibly migrated and merging")
                 before_merge = copy.deepcopy(self.res_online)
-                self.res_online_protector.finish_reading_res_nffg("Saved state before merge")
                 # Balazs: Delete requests from res_online, which are possibly migrated
                 # NOTE: if an NF to be deleted doesn't exist in the substrate DEL mode ignores it.
-                self.res_online_protector.start_writing_res_nffg("Removing SC-s which are possibly migrated and merging")
                 log.debug("merge_online_offline: Removing NFs to be migrated from "
                           "res_online: %s"%self.reqs_under_optimization.network.nodes())
                 possible_reqs_to_migrate = copy.deepcopy(self.reqs_under_optimization)
                 for nf in possible_reqs_to_migrate.nfs:
                   nf.operation = NFFG.OP_DELETE
                 # if there is NF which is not in res_online anymore, DEL mode ignores it
+                # TODO: should we make another copy of res_online and delete the expired reqs from that copy? Otherwise returning with a copy of res_online may return with the "possible reqs to migratate" deleted
                 self.res_online = online_mapping.MAP(possible_reqs_to_migrate,
                                                      self.res_online,
                                                      propagate_e2e_reqs=False,
