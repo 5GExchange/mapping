@@ -301,13 +301,13 @@ class MappingSolutionFramework():
                 req_num = request_list_element['req_num']
                 self.__request_list.task_done()
 
-                self.__mapping(request, datetime.timedelta(0, life_time),
-                               datetime.datetime.now(),
-                               req_num)
-
                 # TODO: remove expired requests even when mapping didn't happen!
                 # Remove expired service graph requests
                 self.__clean_expired_requests(datetime.datetime.now())
+
+                self.__mapping(request, datetime.timedelta(0, life_time),
+                               datetime.datetime.now(),
+                               req_num)
 
                 self.running_array.append(self.running_requests)
 
