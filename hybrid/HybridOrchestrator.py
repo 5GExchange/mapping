@@ -171,7 +171,8 @@ class HybridOrchestrator():
                                             propagate_e2e_reqs=False,
                                             bt_limit=6,
                                             bt_branching_factor=3, mode=NFFG.MODE_ADD,
-                                            keep_e2e_reqs_in_output=True)
+                                            keep_e2e_reqs_in_output=True,
+                                            keep_input_unchanged=True)
             log.info("do_online_mapping : Successful online mapping :)")
         except uet.MappingException as error:
             log.warning("do_online_mapping : Unsuccessful online mapping :( ")
@@ -249,7 +250,8 @@ class HybridOrchestrator():
                   log.debug("Deleting E2E requirement from offline_resource on path %s"%req.sg_path)
                 self.__res_offline = online_mapping.MAP(i['SG'],
                                                         self.__res_offline,
-                                                        mode=NFFG.MODE_DEL)
+                                                        mode=NFFG.MODE_DEL,
+                                                        keep_input_unchanged=True)
                 # The MAP function removed from NFFGs which represent mappings,
                 # removal from an SG collection is much easier.
                 for nf in i['SG'].nfs:
@@ -322,7 +324,8 @@ class HybridOrchestrator():
                 # TODO: should we make another copy of res_online and delete the expired reqs from that copy? Otherwise returning with a copy of res_online may return with the "possible reqs to migratate" deleted
                 self.res_online = online_mapping.MAP(possible_reqs_to_migrate,
                                                      self.res_online,
-                                                     mode=NFFG.MODE_DEL)
+                                                     mode=NFFG.MODE_DEL,
+                                                     keep_input_unchanged=True)
                 log.debug("merge_online_offline: Applying offline optimization...")
                 self.reoptimized_resource = NFFGToolBox.merge_nffgs(self.res_online,
                                                                     self.__res_offline)

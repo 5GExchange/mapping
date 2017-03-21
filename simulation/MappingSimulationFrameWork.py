@@ -96,6 +96,7 @@ class MappingSolutionFramework():
         self.sim_iter = 0
         self.copy_of_rg_network_topology = None
         self.dump_iter = 0
+        # This is used to let the orchestrators know which SGs have been expired.
         self.deleted_services = []
 
         # Resource

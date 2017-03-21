@@ -41,12 +41,12 @@ class AbstractOrchestratorAdaptor(object):
       self.path = None
 
     def del_service(self, request, resource):
-        mode = NFFG.MODE_DEL
         for i in request.nfs:
             i.operation = NFFG.OP_DELETE
         for req in request.reqs:
           resource.del_edge(req.src.node.id, req.dst.node.id, id=req.id)
-        return online_mapping.MAP(request, resource, mode=mode)
+        return online_mapping.MAP(request, resource, mode=NFFG.MODE_DEL,
+                                  keep_input_unchanged=True)
 
     @abstractmethod
     def MAP(self, request, resource):

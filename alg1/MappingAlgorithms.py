@@ -21,7 +21,6 @@ NOTE: Currently only SAP-to-SAP EdgeReqs, or link-local (which are parallel
 with an SGLink) EdgeReqs are supported. After generating the service chains
 from the EdgeReqs, all SG links must be in one of the subchains. 
 """
-import copy
 import sys
 import traceback
 from pprint import pformat
@@ -35,7 +34,7 @@ from Alg1_Helper import NFFG, NFFGToolBox
 alg = None
 
 def MAP (request, network, enable_shortest_path_cache=False,
-         bw_factor=1, res_factor=1, lat_factor=1,
+         bw_factor=1, res_factor=1, lat_factor=1, keep_input_unchanged=False,
          shortest_paths=None, return_dist=False, propagate_e2e_reqs=True,
          bt_limit=6, bt_branching_factor=3, mode=NFFG.MODE_ADD, **kwargs):
   """
@@ -54,7 +53,6 @@ def MAP (request, network, enable_shortest_path_cache=False,
   """
 
   # possible values are NFFG.MODE_ADD, NFFG.MODE_DELETE, NFFG.MODE_REMAP
-  request = copy.deepcopy(request)
   if mode is None:
     raise uet.BadInputException("Mapping operation mode should always be set",
                                 "No mode specified for mapping operation!")
@@ -74,6 +72,11 @@ def MAP (request, network, enable_shortest_path_cache=False,
       sg_hops_retrieved = True
     except StopIteration:
       sg_hops_retrieved = False
+
+  if keep_input_unchanged:
+    import copy
+    request = copy.deepcopy(request)
+    network = copy.deepcopy((network))
 
   # recreate SGHops in case they were not added before giving the substrate
   # NFFG to the mapping
