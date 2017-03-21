@@ -86,7 +86,7 @@ class HybridOrchestrator():
             # All request in one NFFG
             # The sum of reqs needs to be accessed from Offline optimization to determine
             # what to opt and online mapping have to gather all requests there
-            self.sum_req_protector = ResNFFGProtector(True)
+            self.sum_req_protector = ResNFFGProtector()
             self.SUM_req = NFFG()
             self.offline_mapping_thread = None
             self.offline_status = HybridOrchestrator.OFFLINE_STATE_INIT
@@ -202,8 +202,9 @@ class HybridOrchestrator():
                           len([s for s in self.__res_offline.saps]), len(self.__res_offline)))
                 self.offline_status = HybridOrchestrator.OFFLINE_STATE_RUNNING
 
+                # set mapped NF reoptimization False, because it is what_to_opt's choice!
                 self.__res_offline = offline_mapping.MAP(
-                    self.reqs_under_optimization, self.__res_offline, self.optimize_already_mapped_nfs,
+                    self.reqs_under_optimization, self.__res_offline, False,
                     self.mig_handler, self.migration_coeff, self.load_balance_coeff,
                     self.edge_cost_coeff)
 
@@ -234,7 +235,6 @@ class HybridOrchestrator():
         # offline-online RG merging over the online mapping
         self.sum_req_protector.start_writing_res_nffg("Removing expired request from sum_req")
         try:
-          # TODO: something is wrong with the propagation of deletion due to expiration to the Hybrid orchestrator!
           for i in self.deleted_services:
               delete = False
               for j in i['SG'].nfs:

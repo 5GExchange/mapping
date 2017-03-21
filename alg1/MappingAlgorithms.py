@@ -21,7 +21,7 @@ NOTE: Currently only SAP-to-SAP EdgeReqs, or link-local (which are parallel
 with an SGLink) EdgeReqs are supported. After generating the service chains
 from the EdgeReqs, all SG links must be in one of the subchains. 
 """
-
+import copy
 import sys
 import traceback
 from pprint import pformat
@@ -54,6 +54,7 @@ def MAP (request, network, enable_shortest_path_cache=False,
   """
 
   # possible values are NFFG.MODE_ADD, NFFG.MODE_DELETE, NFFG.MODE_REMAP
+  request = copy.deepcopy(request)
   if mode is None:
     raise uet.BadInputException("Mapping operation mode should always be set",
                                 "No mode specified for mapping operation!")
