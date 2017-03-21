@@ -71,18 +71,16 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
         self.config = ConfigObj(config_file_path)
 
     def MAP(self, request, resource):
-        mode = NFFG.MODE_ADD
         return online_mapping.MAP(request, resource,
-                                    bool(self.config['enable_shortest_path_cache']),
-                                    float(self.config['bw_factor']),
-                                    float(self.config['res_factor']),
-                                    float(self.config['lat_factor']),
-                                    None,
-                                    bool(self.config['return_dist']),
-                                    bool(self.config['propagate_e2e_reqs']),
-                                    int(self.config['bt_limit']),
-                                    int(self.config['bt_branching_factor']),
-                                    mode=mode)
+                                    enable_shortest_path_cache=bool(self.config['enable_shortest_path_cache']),
+                                    bw_factor=float(self.config['bw_factor']),
+                                    res_factor=float(self.config['res_factor']),
+                                    lat_factor=float(self.config['lat_factor']),
+                                    return_dist=bool(self.config['return_dist']),
+                                      propagate_e2e_reqs=bool(self.config['propagate_e2e_reqs']),
+                                    bt_limit=int(self.config['bt_limit']),
+                                    bt_branching_factor=int(self.config['bt_branching_factor']),
+                                    mode=NFFG.MODE_ADD)
 
 
 class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
