@@ -1290,7 +1290,7 @@ class CoreAlgorithm(object):
       # Add the exact same E2E requirements to the output. Maybe needed if a
       # reoptimization is possible, in this case the requirements must be
       # preserved!
-      for _, _, req in self.req.edges_iter(data=True):
+      for req in self.req0.reqs:
         if req.type == NFFG.TYPE_LINK_REQUIREMENT:
           # All SAPs are already checked in the substrate graph
           nffg.add_req(req.src, req.dst, req=req)
