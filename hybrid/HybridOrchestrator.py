@@ -79,7 +79,7 @@ class HybridOrchestrator():
             log.setLevel(logging.DEBUG)
 
             # Protects the res_online
-            self.res_online_protector = ResNFFGProtector(True)
+            self.res_online_protector = ResNFFGProtector()
             self.res_online = None
             self.__res_offline = copy.deepcopy(RG)
             self.deleted_services = deleted_services
@@ -148,28 +148,30 @@ class HybridOrchestrator():
             self.load_balance_coeff = float(config['load_balance_coeff'])
             self.edge_cost_coeff = float(config['edge_cost_coeff'])
 
-    def merge_all_request(self, sum, request):
+    def merge_all_request(self, request):
         self.sum_req_protector.start_writing_res_nffg("Appending new request to the sum of requests")
-        sum = NFFGToolBox.merge_nffgs(sum, request)
+        self.SUM_req = NFFGToolBox.merge_nffgs(self.SUM_req, request)
+        log.debug("Requests in SUM_req: %s"%[r.sg_path for r in self.SUM_req.reqs])
         self.sum_req_protector.finish_writing_res_nffg("New request %s appended to sum req" % request)
-        return sum
 
     def do_online_mapping(self, request, resource):
         self.res_online_protector.start_writing_res_nffg("Map a request in an online manner")
         self.set_online_resource_graph(resource)
         temp_res_online = copy.deepcopy(self.res_online)
         try:
-            mode = NFFG.MODE_ADD
-            
+            # propagate_e2e_reqs must be turned False (so they are not tried to
+            # be splitted and the e2e versions removed!) We want to keep them in
+            # the res_online, so reoptimization wouldn't hurt violate them!
             self.res_online = online_mapping.MAP(request, self.res_online,
                                             enable_shortest_path_cache=True,
                                             bw_factor=1, res_factor=1,
                                             lat_factor=1,
                                             shortest_paths=None,
                                             return_dist=False,
-                                            propagate_e2e_reqs=True,
+                                            propagate_e2e_reqs=False,
                                             bt_limit=6,
-                                            bt_branching_factor=3, mode=mode)
+                                            bt_branching_factor=3, mode=NFFG.MODE_ADD,
+                                            keep_e2e_reqs_in_output=True)
             log.info("do_online_mapping : Successful online mapping :)")
         except uet.MappingException as error:
             log.warning("do_online_mapping : Unsuccessful online mapping :( ")
@@ -190,6 +192,9 @@ class HybridOrchestrator():
     def do_offline_mapping(self):
             try:
                 self.sum_req_protector.start_reading_res_nffg("Determine set of requests to optimize")
+                # the res_online and the sum_req must not be modified to determine what
+                # reqs on what resource should the offline algorithm reoptimize!
+                self.set_offline_resource_graph()
                 self.reqs_under_optimization = self.__what_to_opt.reqs_to_optimize(self.SUM_req)
                 self.sum_req_protector.finish_reading_res_nffg("Got requests to optimize")
                 log.debug("SAP count in request %s and in resource: %s, resource total size: %s"%
@@ -205,7 +210,7 @@ class HybridOrchestrator():
                 log.info("Offline mapping is ready")
 
                 log.info("Delete expired requests from the request summary")
-                self.del_exp_reqs_from_SUMreq()
+                self.del_exp_reqs_from_SUMreq_and_res_offline()
                 log.info("Try to merge online and offline")
                 # the merge MUST set the state before releasing the writeing lock
                 self.merge_online_offline()
@@ -215,13 +220,21 @@ class HybridOrchestrator():
                           "Offline mapping: Unable to mapping offline!")
                 # Balazs: in case the MILP fails with MappingException we can continue working.
                 self.offline_status = HybridOrchestrator.OFFLINE_STATE_INIT
+            except Exception as e:
+                if hasattr(e, 'msg'):
+                  msg = e.msg
+                else:
+                  msg = e.message
+                log.error("Offline mapping failed: with exception %s, message: %s"%(e,msg))
+                raise
 
-    def del_exp_reqs_from_SUMreq(self):
-        mode = NFFG.MODE_DEL
+
+    def del_exp_reqs_from_SUMreq_and_res_offline(self):
         # We had better lock sum_req for the whole function to give some priority for the
         # offline-online RG merging over the online mapping
         self.sum_req_protector.start_writing_res_nffg("Removing expired request from sum_req")
         try:
+          # TODO: something is wrong with the propagation of deletion due to expiration to the Hybrid orchestrator!
           for i in self.deleted_services:
               delete = False
               for j in i['SG'].nfs:
@@ -231,21 +244,23 @@ class HybridOrchestrator():
               if delete:
                 log.debug("Deleting NFs from res_offline due to expiration during the "
                           "offline optimization: %s"%i['SG'].network.nodes())
+                for req in i['SG'].reqs:
+                  self.__res_offline.del_edge(req.src.node.id, req.dst.node.id, id=req.id)
+                  log.debug("Deleting E2E requirement from offline_resource on path %s"%req.sg_path)
                 self.__res_offline = online_mapping.MAP(i['SG'],
                                                         self.__res_offline,
-                                                        enable_shortest_path_cache=True,
-                                                        bw_factor=1, res_factor=1,
-                                                        lat_factor=1,
-                                                        shortest_paths=None,
-                                                        return_dist=False,
-                                                        propagate_e2e_reqs=True,
-                                                        bt_limit=6,
-                                                        bt_branching_factor=3,
-                                                        mode=mode)
+                                                        mode=NFFG.MODE_DEL)
+                # The MAP function removed from NFFGs which represent mappings,
+                # removal from an SG collection is much easier.
+                for nf in i['SG'].nfs:
+                  self.SUM_req.del_node(nf.id)
+                for req in i['SG'].reqs:
+                  self.SUM_req.del_edge(req.src.node.id, req.dst.node.id, id=req.id)
+                for sap in i['SG'].saps:
+                  if self.SUM_req.network.out_degree(sap.id) + \
+                     self.SUM_req.network.in_degree(sap.id) == 0:
+                    self.SUM_req.del_node(sap.id)
 
-                self.SUM_req = online_mapping.MAP(i['SG'],
-                                                  self.SUM_req,
-                                                  mode=mode)
         except uet.UnifyException as ue:
           log.error("UnifyException catched during deleting expired requests from sum_req")
           log.error(ue.msg)
@@ -302,10 +317,11 @@ class HybridOrchestrator():
                 for nf in possible_reqs_to_migrate.nfs:
                   nf.operation = NFFG.OP_DELETE
                 # if there is NF which is not in res_online anymore, DEL mode ignores it
+                for req in possible_reqs_to_migrate.reqs:
+                  self.res_online.del_edge(req.src.node.id, req.dst.node.id, id=req.id)
                 # TODO: should we make another copy of res_online and delete the expired reqs from that copy? Otherwise returning with a copy of res_online may return with the "possible reqs to migratate" deleted
                 self.res_online = online_mapping.MAP(possible_reqs_to_migrate,
                                                      self.res_online,
-                                                     propagate_e2e_reqs=False,
                                                      mode=NFFG.MODE_DEL)
                 log.debug("merge_online_offline: Applying offline optimization...")
                 self.reoptimized_resource = NFFGToolBox.merge_nffgs(self.res_online,
@@ -339,7 +355,7 @@ class HybridOrchestrator():
     def MAP(self, request, resource):
 
         # Collect the requests
-        self.merge_all_request(self.SUM_req, request)
+        self.merge_all_request(request)
 
         # Start online mapping thread
         online_mapping_thread = threading.Thread(None, self.do_online_mapping,
@@ -360,7 +376,6 @@ class HybridOrchestrator():
           self.res_online_protector.finish_reading_res_nffg("Checking if there was anything to optimize (yes)")
           if self.__when_to_opt.need_to_optimize(not self.offline_status==HybridOrchestrator.OFFLINE_STATE_INIT, 3):
               try:
-                  self.set_offline_resource_graph()
                   self.offline_mapping_thread = threading.Thread(None,
                               self.do_offline_mapping, "Offline mapping thread", [])
                   log.info("Start offline optimalization!")

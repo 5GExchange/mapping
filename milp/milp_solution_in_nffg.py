@@ -261,8 +261,12 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
     # reqs in the substrate (requirements satisfied by earlier mapping) needs
     #  to be respected by the reoptimization, and mogration can only be done
     # if it is not violated!
+    log.debug("e2e reqs in request:%s, e2e reqs in resource: %s"%([r.sg_path for r in request.reqs],
+                                                                  [r.sg_path for r in resource.reqs]))
     for req in resource.reqs:
       # all possible SAPs are added already!
+      log.debug("Adding requirement link on path %s to request to preserve it "
+                "during reoptimization"%req.sg_path)
       request.add_req(req.src, req.dst, req=req)
 
     # We have to deal with migration in this case only.

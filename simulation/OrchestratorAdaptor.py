@@ -44,6 +44,8 @@ class AbstractOrchestratorAdaptor(object):
         mode = NFFG.MODE_DEL
         for i in request.nfs:
             i.operation = NFFG.OP_DELETE
+        for req in request.reqs:
+          resource.del_edge(req.src.node.id, req.dst.node.id, id=req.id)
         return online_mapping.MAP(request, resource, mode=mode)
 
     @abstractmethod
