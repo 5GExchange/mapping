@@ -163,7 +163,6 @@ class HybridOrchestrator():
             # be splitted and the e2e versions removed!) We want to keep them in
             # the res_online, so reoptimization wouldn't hurt violate them!
             self.res_online = online_mapping.MAP(request, self.res_online,
-                                            enable_shortest_path_cache=True,
                                             bw_factor=1, res_factor=1,
                                             lat_factor=1,
                                             shortest_paths=None,
@@ -173,6 +172,7 @@ class HybridOrchestrator():
                                             bt_branching_factor=3, mode=NFFG.MODE_ADD,
                                             keep_e2e_reqs_in_output=True,
                                             keep_input_unchanged=True)
+
             log.info("do_online_mapping : Successful online mapping :)")
         except uet.MappingException as error:
             log.warning("do_online_mapping : Unsuccessful online mapping :( ")

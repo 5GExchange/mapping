@@ -72,12 +72,11 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
     def MAP(self, request, resource):
         return online_mapping.MAP(request, resource,
-                                    enable_shortest_path_cache=bool(self.config['enable_shortest_path_cache']),
                                     bw_factor=float(self.config['bw_factor']),
                                     res_factor=float(self.config['res_factor']),
                                     lat_factor=float(self.config['lat_factor']),
                                     return_dist=bool(self.config['return_dist']),
-                                      propagate_e2e_reqs=bool(self.config['propagate_e2e_reqs']),
+                                    propagate_e2e_reqs=bool(self.config['propagate_e2e_reqs']),
                                     bt_limit=int(self.config['bt_limit']),
                                     bt_branching_factor=int(self.config['bt_branching_factor']),
                                     mode=NFFG.MODE_ADD)
