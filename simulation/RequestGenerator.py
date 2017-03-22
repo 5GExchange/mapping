@@ -11,15 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from abc import ABCMeta, abstractmethod
 import math
-import threading
-import time
 import random
 import string
-import random
+from abc import ABCMeta, abstractmethod
 from collections import OrderedDict
+
 import numpy as N
+from scipy.stats import norm
 
 try:
   # runs when mapping files are called from ESCAPE
@@ -307,3 +306,153 @@ class MultiReqGen(AbstractRequestGenerator):
                 life_time = exp_time
 
                 return nffg, life_time
+
+
+class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
+    """
+    Creates a sequence of lifetime rates so that the number of most probably
+    alive requests are around the given parameter. A small radius (measured
+    in alive request numbers) around this request count has significant
+    probability, the other states are with small probability. Basically
+    simulates the following stationary distribution of requests generated:
+    """
+
+    def __init__ (self, request_lifetime_lambda, nf_type_count, seed,
+                  min_lat, max_lat, most_probable_req_count):
+        super(SimpleReqGenKeepActiveReqsFixed, self).__init__(request_lifetime_lambda,
+                                                              nf_type_count, seed)
+        self.min_lat = min_lat
+        self.max_lat = max_lat
+        self.most_probable_req_count = most_probable_req_count
+        # significant probability around the most_probable_req_count
+        self.cone_radius = 7
+        # After max_req_count a fix very small expected lifetime is returned
+        self.max_req_count = int((self.most_probable_req_count +
+                                  self.cone_radius ) * 1.2)
+        # TODO: isn't it too small or big? (big: slow convergence to most_probable_req_count)
+        self.epsilon = 1e-3 / self.max_req_count
+        # where should we start to divide normal distribution intervals
+        # NOTE: isf = inverse of (1 - cdf)
+        x1_epsilon_norm = -1.0 * norm.isf((self.most_probable_req_count -
+                                           self.cone_radius) * self.epsilon)
+        # where should we finish to divide normal distribution intervals
+        x2_epsilon_norm = norm.isf((self.max_req_count - self.most_probable_req_count
+                                    - self.cone_radius) * self.epsilon)
+        self.gauss_interval = (x2_epsilon_norm - x1_epsilon_norm) / \
+                              (2.0*self.cone_radius + 1)
+
+    def get_stationary_probability(self, k):
+        if self.most_probable_req_count - self.cone_radius <= k <= \
+                self.most_probable_req_count + self.cone_radius:
+            # generate probabilities based on normal standard distribution
+            # scale to significant interval
+            k_prime = k - self.most_probable_req_count - 0.5
+            return norm.cdf((k_prime+1) * self.gauss_interval) -\
+                   norm.cdf(k_prime * self.gauss_interval)
+        elif 0 <= k <= self.max_req_count:
+            return self.epsilon
+        elif k < 0:
+            raise RuntimeError("Stationary probability of negative request "
+                               "cound doesn't exist!")
+        else:
+            # after max_req_count we don't want to increase the number of
+            # requests in the network. This is neglected from summing up to 1.0
+            return 1e-10
+
+    def get_request (self, resource_graph, test_lvl):
+        all_saps_ending = [s.id for s in resource_graph.saps]
+        all_saps_beginning = [s.id for s in resource_graph.saps]
+        running_nfs = OrderedDict()
+        multiSC = False
+        chain_maxlen = 8
+        loops = False
+        use_saps_once = False
+        vnf_sharing_probabilty = 0.0
+        sc_count = 1
+        max_bw = 1.0
+        current_sg_link_cnt = 1
+
+        while len(all_saps_ending) > sc_count and len(
+           all_saps_beginning) > sc_count:
+            nffg = NFFG(id='Benchmark-Req-' + str(test_lvl) + '-Piece')
+            current_nfs = []
+            for scid in xrange(0, sc_count):
+                nfs_this_sc = []
+                sap1 = nffg.add_sap(
+                    id=all_saps_beginning.pop() if use_saps_once else
+                    self.rnd.choice(
+                        all_saps_beginning))
+                sap2 = None
+                if loops:
+                    sap2 = sap1
+                else:
+                    tmpid = all_saps_ending.pop() if use_saps_once else \
+                        self.rnd.choice(
+                        all_saps_ending)
+                    while True:
+                        if tmpid != sap1.id:
+                            sap2 = nffg.add_sap(id=tmpid)
+                            break
+                        else:
+                            tmpid = all_saps_ending.pop() if use_saps_once \
+                                else self.rnd.choice(
+                                all_saps_ending)
+
+                sg_path = []
+                sap1port = sap1.add_port()
+                last_req_port = sap1port
+                vnf_cnt = next(self.gen_seq()) % chain_maxlen + 1
+                for vnf in xrange(0, vnf_cnt):
+                    vnf_added = False
+                    p = self.rnd.random()
+                    if self.rnd.random() < vnf_sharing_probabilty and len(
+                       running_nfs) > 0 and not multiSC:
+                        vnf_added, nf = self._shareVNFFromEarlierSG(nffg,
+                                                                    running_nfs,
+                                                                    nfs_this_sc,
+                                                                    p)
+                    else:
+                        nf = nffg.add_nf(id='-'.join(
+                            ('Test', str(test_lvl), 'SC', str(scid), 'VNF',
+                             str(vnf))), func_type=self.rnd.choice(
+                            self.nf_types),
+                                         cpu=self.rnd.randint(1, 2),
+                                         mem=self.rnd.random() * 800,
+                                         storage=self.rnd.random() * 3)
+                        vnf_added = True
+                    if vnf_added:
+                        nfs_this_sc.append(nf)
+                        newport = nf.add_port(id=1)
+                        sg_link_id = ".".join(
+                            ("sghop", str(test_lvl), str(current_sg_link_cnt)))
+                        sglink = nffg.add_sglink(last_req_port, newport,
+                                                 id=sg_link_id)
+                        current_sg_link_cnt += 1
+                        sg_path.append(sglink.id)
+                        last_req_port = nf.add_port(id=2)
+
+                sap2port = sap2.add_port()
+                sg_link_id = ".".join(
+                    ("sghop", str(test_lvl), str(current_sg_link_cnt)))
+                sglink = nffg.add_sglink(last_req_port, sap2port, id=sg_link_id)
+                current_sg_link_cnt += 1
+                sg_path.append(sglink.id)
+                minlat = self.min_lat
+                maxlat = self.max_lat
+                nffg.add_req(sap1port, sap2port,
+                             delay=self.rnd.uniform(minlat, maxlat),
+                             bandwidth=self.rnd.random() * max_bw,
+                             sg_path=sg_path)
+                new_nfs = [vnf for vnf in nfs_this_sc if vnf not in current_nfs]
+                for tmp in xrange(0, scid + 1):
+                    current_nfs.extend(new_nfs)
+                scale_radius = (1 / self.request_lifetime_lambda)
+                exp_time = N.random.exponential(scale_radius)
+                life_time = exp_time
+
+                return nffg, life_time
+
+
+if __name__ == '__main__':
+    srgkarf = SimpleReqGenKeepActiveReqsFixed(1,1,1,1,1,400)
+    print [srgkarf.get_stationary_probability(i) for i in xrange(390,410)]
