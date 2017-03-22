@@ -293,7 +293,8 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
     try:
       mappedNFFG.calculate_available_node_res()
       mappedNFFG.calculate_available_link_res([])
-    except RuntimeError:
+    except RuntimeError as re:
+      log.error("MILP's resulting NFFG is invalid: %s"%re.message)
       raise uet.InternalAlgorithmException("MILP's mapping is invalid!!")
     return mappedNFFG
   else:

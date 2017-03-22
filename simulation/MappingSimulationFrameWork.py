@@ -13,7 +13,6 @@
 # limitations under the License.
 import Queue
 import datetime
-import time
 import shutil
 import logging
 import threading
@@ -235,8 +234,11 @@ class MappingSolutionFramework():
 
             # Give a copy for the mapping, so in case it fails, we dont have to
             # reset the prerocessed/modified resource
+            current_time = datetime.datetime.now()
             self.__network_topology = self.__orchestrator_adaptor.MAP(
                 service_graph, copy.deepcopy(self.__network_topology))
+            log.info("Time passed with one mapping response: %s s"%
+                     (datetime.datetime.now() - current_time))
             # Adding successfully mapped request to the remaining_request_lifetimes
             service_life_element = {"dead_time": time +
                             life_time, "SG": service_graph, "req_num": sim_iter}
