@@ -16,6 +16,7 @@ import random
 import string
 from abc import ABCMeta, abstractmethod
 from collections import OrderedDict
+from pprint import pformat
 
 import numpy as N
 from scipy.stats import norm
@@ -389,7 +390,7 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
             # below/above cutoff)
             return self.epsilon
 
-    def get_request_lifetime_rate(self, k):
+    def _calc_request_lifetime_rate(self, k):
         """
         Calculates the rate of lifetimes of the generated request when there
         are "k" requests running in the system, to achieve the desired
@@ -417,8 +418,24 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
                     self.request_arrival_lambda * \
                     self.get_stationary_probability(k-1) / \
                     self.get_stationary_probability(k) - \
-                    sum((self.get_request_lifetime_rate(i) for i in xrange(1,k)))
+                    sum((self._calc_request_lifetime_rate(i) for i in xrange(1,k)))
                 return self.request_lifetime_lambda_cache[k]
+
+    def get_request_lifetime_rate(self, k):
+        """
+        Handles the singular values when the rate would be negative because
+        of transition between insignificant and significant stationary
+        probabilites.
+        :param k:
+        :return:
+        """
+        if k not in self.request_lifetime_lambda_cache:
+            self._calc_request_lifetime_rate(k)
+        if self.request_lifetime_lambda_cache[k] < 0:
+            # return a neutral value, which doesn't really changes anything.
+            return self.request_arrival_lambda
+        else:
+            return self.request_lifetime_lambda_cache[k]
 
     def get_request (self, resource_graph, test_lvl, requests_alive):
         all_saps_ending = [s.id for s in resource_graph.saps]
@@ -515,7 +532,10 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
 
 if __name__ == '__main__':
     # for cr in xrange(7, 50, 3):
-        cr = 14
-        for eps in xrange(1,20):
-            srgkarf = SimpleReqGenKeepActiveReqsFixed(1,1,1,1,1,400,7.0,equilibrium_radius=cr, epsilon_sum=0.9 + eps*0.005)
-            print 0.9 + eps*0.005, [(i, srgkarf.get_request_lifetime_rate(i)) for i in xrange(395-cr, 406+cr)]
+    # cr = 14
+    # for eps in xrange(1,20):
+    #     print 0.9 + eps*0.005, [(i, srgkarf.get_request_lifetime_rate(i)) for i in xrange(395-cr, 406+cr)]
+    srgkarf = SimpleReqGenKeepActiveReqsFixed(1, 1, 1, 1, 1, 400, 7.0, epsilon_sum=0.5)
+    print pformat([(i, srgkarf.get_stationary_probability(i)) for i in xrange(380, 440)])
+    print pformat([(i, srgkarf.get_request_lifetime_rate(i)) for i in xrange(380, 440)])
+    print pformat([(i, 1.0 / srgkarf.get_request_lifetime_rate(i)) for i in xrange(380, 440)])
