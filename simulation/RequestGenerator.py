@@ -318,19 +318,20 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
     """
 
     def __init__ (self, request_lifetime_lambda, nf_type_count, seed,
-                  min_lat, max_lat, most_probable_req_count):
+                  min_lat, max_lat, most_probable_req_count, cone_radius=7,
+                  epsilon_sum=1e-2):
         super(SimpleReqGenKeepActiveReqsFixed, self).__init__(request_lifetime_lambda,
                                                               nf_type_count, seed)
         self.min_lat = min_lat
         self.max_lat = max_lat
         self.most_probable_req_count = most_probable_req_count
         # significant probability around the most_probable_req_count
-        self.cone_radius = 7
+        self.cone_radius = cone_radius
         # After max_req_count a fix very small expected lifetime is returned
         self.max_req_count = int((self.most_probable_req_count +
                                   self.cone_radius ) * 1.2)
         # TODO: isn't it too small or big? (big: slow convergence to most_probable_req_count)
-        self.epsilon = 1e-3 / self.max_req_count
+        self.epsilon = epsilon_sum / self.max_req_count
         # where should we start to divide normal distribution intervals
         # NOTE: isf = inverse of (1 - cdf)
         x1_epsilon_norm = -1.0 * norm.isf((self.most_probable_req_count -
@@ -340,6 +341,9 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
                                     - self.cone_radius) * self.epsilon)
         self.gauss_interval = (x2_epsilon_norm - x1_epsilon_norm) / \
                               (2.0*self.cone_radius + 1)
+        # CDF offset to ensure summing up to 1.0
+        self.cdf_offset = x1_epsilon_norm + \
+                          (self.cone_radius+0.5)*self.gauss_interval
 
     def get_stationary_probability(self, k):
         if self.most_probable_req_count - self.cone_radius <= k <= \
@@ -347,8 +351,8 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
             # generate probabilities based on normal standard distribution
             # scale to significant interval
             k_prime = k - self.most_probable_req_count - 0.5
-            return norm.cdf((k_prime+1) * self.gauss_interval) -\
-                   norm.cdf(k_prime * self.gauss_interval)
+            return norm.cdf((k_prime+1) * self.gauss_interval + self.cdf_offset)-\
+                   norm.cdf(k_prime * self.gauss_interval + self.cdf_offset)
         elif 0 <= k <= self.max_req_count:
             return self.epsilon
         elif k < 0:
