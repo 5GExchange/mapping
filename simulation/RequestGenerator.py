@@ -40,7 +40,7 @@ class AbstractRequestGenerator:
         self.rnd.seed(seed)
 
     @abstractmethod
-    def get_request(self, resource_graph, test_lvl):
+    def get_request(self, resource_graph, test_lvl, requests_alive):
         pass
 
     def _shareVNFFromEarlierSG(self, nffg, running_nfs, nfs_this_sc, p):
@@ -73,7 +73,7 @@ class TestReqGen(AbstractRequestGenerator):
     def __init__(self, request_lifetime_lambda, nf_type_count, seed):
         super(TestReqGen, self).__init__(request_lifetime_lambda, nf_type_count, seed)
 
-    def get_request(self, resource_graph, test_lvl):
+    def get_request(self, resource_graph, test_lvl, requests_alive):
         all_saps_ending = [s.id for s in resource_graph.saps]
         all_saps_beginning = [s.id for s in resource_graph.saps]
         running_nfs = OrderedDict()
@@ -150,7 +150,7 @@ class SimpleReqGen(AbstractRequestGenerator):
         self.min_lat = min_lat
         self.max_lat = max_lat
 
-    def get_request(self, resource_graph, test_lvl):
+    def get_request(self, resource_graph, test_lvl, requests_alive):
         all_saps_ending = [s.id for s in resource_graph.saps]
         all_saps_beginning = [s.id for s in resource_graph.saps]
         running_nfs = OrderedDict()
@@ -230,7 +230,7 @@ class MultiReqGen(AbstractRequestGenerator):
     def __init__(self, request_lifetime_lambda, nf_type_count, seed):
         super(MultiReqGen, self).__init__(request_lifetime_lambda, nf_type_count, seed)
 
-    def get_request(self, resource_graph, test_lvl):
+    def get_request(self, resource_graph, test_lvl, requests_alive):
         all_saps_ending = [s.id for s in resource_graph.saps]
         all_saps_beginning = [s.id for s in resource_graph.saps]
         running_nfs = OrderedDict()
@@ -318,20 +318,23 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
     """
 
     def __init__ (self, request_lifetime_lambda, nf_type_count, seed,
-                  min_lat, max_lat, most_probable_req_count, cone_radius=7,
-                  epsilon_sum=1e-2):
+                  min_lat, max_lat, equilibrium, request_arrival_lambda,
+                  equilibrium_radius=7, epsilon_sum=1e-2):
         super(SimpleReqGenKeepActiveReqsFixed, self).__init__(request_lifetime_lambda,
                                                               nf_type_count, seed)
         self.min_lat = min_lat
         self.max_lat = max_lat
-        self.most_probable_req_count = most_probable_req_count
+        self.request_arrival_lambda = request_arrival_lambda
+        self.most_probable_req_count = equilibrium
         # significant probability around the most_probable_req_count
-        self.cone_radius = cone_radius
+        self.cone_radius = equilibrium_radius
         # After max_req_count a fix very small expected lifetime is returned
         self.max_req_count = int((self.most_probable_req_count +
                                   self.cone_radius ) * 1.2)
-        # TODO: isn't it too small or big? (big: slow convergence to most_probable_req_count)
         self.epsilon = epsilon_sum / self.max_req_count
+        # a positive number used to cutoff standard normal distribution to a
+        # symmetric interval around zero.
+        self.x_epsilon_cutoff = norm.isf(self.epsilon)
         # where should we start to divide normal distribution intervals
         # NOTE: isf = inverse of (1 - cdf)
         x1_epsilon_norm = -1.0 * norm.isf((self.most_probable_req_count -
@@ -339,31 +342,85 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
         # where should we finish to divide normal distribution intervals
         x2_epsilon_norm = norm.isf((self.max_req_count - self.most_probable_req_count
                                     - self.cone_radius) * self.epsilon)
+        if x1_epsilon_norm < -1.0 * self.x_epsilon_cutoff or x2_epsilon_norm \
+                > self.x_epsilon_cutoff:
+            raise RuntimeError("Bad parameter setting of stationary probability "
+                               "of alive requests in the system.")
         self.gauss_interval = (x2_epsilon_norm - x1_epsilon_norm) / \
                               (2.0*self.cone_radius + 1)
+        self.gauss_interval_below = (x1_epsilon_norm - (-1.0*self.x_epsilon_cutoff)) / \
+                                    (self.most_probable_req_count - self.cone_radius)
+        self.gauss_interval_above = (self.x_epsilon_cutoff - x2_epsilon_norm) / \
+                                    (self.max_req_count - self.most_probable_req_count
+                                    - self.cone_radius)
         # CDF offset to ensure summing up to 1.0
         self.cdf_offset = x1_epsilon_norm + \
                           (self.cone_radius+0.5)*self.gauss_interval
+        self.request_lifetime_lambda_cache = {}
 
     def get_stationary_probability(self, k):
-        if self.most_probable_req_count - self.cone_radius <= k <= \
+        """
+        Calculates the desired statiorary probability of having k requests
+        alive in the system for the given distribution parameters.
+        :param k:
+        :return:
+        """
+        if 0 <= k < self.most_probable_req_count - self.cone_radius:
+            return norm.cdf((k+1)*self.gauss_interval_below - self.x_epsilon_cutoff) -\
+                   norm.cdf(k*self.gauss_interval_below - self.x_epsilon_cutoff)
+        elif self.most_probable_req_count - self.cone_radius <= k <= \
                 self.most_probable_req_count + self.cone_radius:
             # generate probabilities based on normal standard distribution
             # scale to significant interval
             k_prime = k - self.most_probable_req_count - 0.5
             return norm.cdf((k_prime+1) * self.gauss_interval + self.cdf_offset)-\
                    norm.cdf(k_prime * self.gauss_interval + self.cdf_offset)
-        elif 0 <= k <= self.max_req_count:
-            return self.epsilon
+        elif self.most_probable_req_count + self.cone_radius < k <= self.max_req_count:
+            k_prime = k - self.most_probable_req_count - self.cone_radius - 1
+            return norm.cdf((k_prime+1)*self.gauss_interval_above + self.x_epsilon_cutoff) -\
+                   norm.cdf(k_prime*self.gauss_interval_above + self.x_epsilon_cutoff)
         elif k < 0:
             raise RuntimeError("Stationary probability of negative request "
-                               "cound doesn't exist!")
+                               "count doesn't exist!")
         else:
             # after max_req_count we don't want to increase the number of
             # requests in the network. This is neglected from summing up to 1.0
-            return 1e-10
+            # but also, 2*self.epsilon was missing from 1.0 (from the two sides
+            # below/above cutoff)
+            return self.epsilon
 
-    def get_request (self, resource_graph, test_lvl):
+    def get_request_lifetime_rate(self, k):
+        """
+        Calculates the rate of lifetimes of the generated request when there
+        are "k" requests running in the system, to achieve the desired
+        stationary distribution of alive requests.
+        :param k:
+        :return:
+        """
+        try:
+            int(k)
+        except TypeError:
+            raise RuntimeError("Number of requests in the network must be integer!")
+        if k < 0:
+            raise RuntimeError("Negative number of requests in the network?!")
+        # initially we ask for request lifetime when there is no requests yet
+        #  running, but we can terminate the recursion at state 1.
+        if k == 1 or k == 0:
+            return self.request_arrival_lambda * \
+                   self.get_stationary_probability(0) / \
+                   self.get_stationary_probability(1)
+        else:
+            if k in self.request_lifetime_lambda_cache:
+                return self.request_lifetime_lambda_cache[k]
+            else:
+                self.request_lifetime_lambda_cache[k] = \
+                    self.request_arrival_lambda * \
+                    self.get_stationary_probability(k-1) / \
+                    self.get_stationary_probability(k) - \
+                    sum((self.get_request_lifetime_rate(i) for i in xrange(1,k)))
+                return self.request_lifetime_lambda_cache[k]
+
+    def get_request (self, resource_graph, test_lvl, requests_alive):
         all_saps_ending = [s.id for s in resource_graph.saps]
         all_saps_beginning = [s.id for s in resource_graph.saps]
         running_nfs = OrderedDict()
@@ -450,13 +507,15 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
                 new_nfs = [vnf for vnf in nfs_this_sc if vnf not in current_nfs]
                 for tmp in xrange(0, scid + 1):
                     current_nfs.extend(new_nfs)
-                scale_radius = (1 / self.request_lifetime_lambda)
+                scale_radius = (1.0 / self.get_request_lifetime_rate(requests_alive))
                 exp_time = N.random.exponential(scale_radius)
-                life_time = exp_time
 
-                return nffg, life_time
+                return nffg, exp_time
 
 
 if __name__ == '__main__':
-    srgkarf = SimpleReqGenKeepActiveReqsFixed(1,1,1,1,1,400)
-    print [srgkarf.get_stationary_probability(i) for i in xrange(390,410)]
+    # for cr in xrange(7, 50, 3):
+        cr = 14
+        for eps in xrange(1,20):
+            srgkarf = SimpleReqGenKeepActiveReqsFixed(1,1,1,1,1,400,7.0,equilibrium_radius=cr, epsilon_sum=0.9 + eps*0.005)
+            print 0.9 + eps*0.005, [(i, srgkarf.get_request_lifetime_rate(i)) for i in xrange(395-cr, 406+cr)]
