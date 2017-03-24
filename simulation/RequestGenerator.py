@@ -320,7 +320,7 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
 
     def __init__ (self, request_lifetime_lambda, nf_type_count, seed,
                   min_lat, max_lat, equilibrium, request_arrival_lambda,
-                  equilibrium_radius=7, epsilon_sum=1e-2):
+                  equilibrium_radius=7, cutoff_epsilon=1e-5):
         super(SimpleReqGenKeepActiveReqsFixed, self).__init__(request_lifetime_lambda,
                                                               nf_type_count, seed)
         self.min_lat = min_lat
@@ -332,7 +332,7 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
         # After max_req_count a fix very small expected lifetime is returned
         self.max_req_count = int((self.most_probable_req_count +
                                   self.cone_radius ) * 1.2)
-        self.epsilon = epsilon_sum / self.max_req_count
+        self.epsilon = cutoff_epsilon
         # a positive number used to cutoff standard normal distribution to a
         # symmetric interval around zero.
         self.x_epsilon_cutoff = norm.isf(self.epsilon)
@@ -343,10 +343,27 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
         # where should we finish to divide normal distribution intervals
         self.x2_epsilon_norm = norm.isf((self.max_req_count - self.most_probable_req_count
                                     - self.cone_radius) * self.epsilon)
+        print x1_epsilon_norm, self.x2_epsilon_norm
         if x1_epsilon_norm < -1.0 * self.x_epsilon_cutoff or self.x2_epsilon_norm \
                 > self.x_epsilon_cutoff:
             raise RuntimeError("Bad parameter setting of stationary probability "
-                               "of alive requests in the system.")
+                               "of alive requests in the system: Intervals overlap!x1_eps: "
+                               "%s, x2_eps: %s"%
+                               (x1_epsilon_norm, self.x2_epsilon_norm))
+        if norm.cdf(self.x2_epsilon_norm) - norm.cdf(x1_epsilon_norm) < 0.66:
+            raise RuntimeError("Bad parameter setting of stionary probability of "
+                               "alive requests in the system: Too small probability"
+                               " around equilibrium! x1_eps: %s, x2_eps: %s, probability: %s"%
+                               (x1_epsilon_norm, self.x2_epsilon_norm,
+                                norm.cdf(self.x2_epsilon_norm) - norm.cdf(x1_epsilon_norm)))
+        if not (0.8 <= math.fabs(x1_epsilon_norm / self.x2_epsilon_norm) <= 1.2) or \
+            not (0.8 <= math.fabs(x1_epsilon_norm / self.x2_epsilon_norm) <= 1.2):
+            raise RuntimeError(
+                "Bad parameter setting of stionary probability of "
+                "alive requests in the system: Interval is not symmetric "
+                "around equilibrium!x1_eps: %s, x2_eps: %s, ratio: %s"%
+                               (x1_epsilon_norm, self.x2_epsilon_norm,
+                                x1_epsilon_norm / self.x2_epsilon_norm))
         self.gauss_interval = (self.x2_epsilon_norm - x1_epsilon_norm) / \
                               (2.0*self.cone_radius + 1)
         self.gauss_interval_below = (x1_epsilon_norm - (-1.0*self.x_epsilon_cutoff)) / \
@@ -535,11 +552,12 @@ if __name__ == '__main__':
     # cr = 14
     # for eps in xrange(1,20):
     #     print 0.9 + eps*0.005, [(i, srgkarf.get_request_lifetime_rate(i)) for i in xrange(395-cr, 406+cr)]
-    er = 7
+    er = 15
     eq = 400
     srgkarf = SimpleReqGenKeepActiveReqsFixed(1, 1, 1, 1, 1, equilibrium=eq, request_arrival_lambda=1/7.0,
-                                              epsilon_sum=0.5, equilibrium_radius=er)
+                                              equilibrium_radius=er)
     print pformat([(i, srgkarf.get_stationary_probability(i)) for i in xrange(eq-er-20, eq+er+30)]), srgkarf.epsilon
-    print sum([srgkarf.get_stationary_probability(i) for i in xrange(0, srgkarf.max_req_count+1)]) + srgkarf.epsilon
+    print sum([srgkarf.get_stationary_probability(i) for i in xrange(0, srgkarf.max_req_count+1)]) + 2*srgkarf.epsilon
     print pformat([(i, srgkarf.get_request_lifetime_rate(i)) for i in xrange(eq-er-20, eq+er+30)])
     print pformat([(i, 1.0 / srgkarf.get_request_lifetime_rate(i)) for i in xrange(eq-er-20, eq+er+30)])
+    # print pformat(srgkarf.request_lifetime_lambda_cache)
