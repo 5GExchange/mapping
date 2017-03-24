@@ -423,20 +423,20 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
             raise RuntimeError("Negative number of requests in the network?!")
         # initially we ask for request lifetime when there is no requests yet
         #  running, but we can terminate the recursion at state 1.
-        if k == 1 or k == 0:
-            return self.request_arrival_lambda * \
-                   self.get_stationary_probability(0) / \
-                   self.get_stationary_probability(1)
+        if k in self.request_lifetime_lambda_cache:
+            return self.request_lifetime_lambda_cache[k]
+        elif k == 1 or k == 0:
+            self.request_lifetime_lambda_cache[k] = \
+                self.request_arrival_lambda * self.get_stationary_probability(0) / \
+                self.get_stationary_probability(1)
+            return self.request_lifetime_lambda_cache[k]
         else:
-            if k in self.request_lifetime_lambda_cache:
-                return self.request_lifetime_lambda_cache[k]
-            else:
-                self.request_lifetime_lambda_cache[k] = \
-                    self.request_arrival_lambda * \
-                    self.get_stationary_probability(k-1) / \
-                    self.get_stationary_probability(k) - \
-                    sum((self._calc_request_lifetime_rate(i) for i in xrange(1,k)))
-                return self.request_lifetime_lambda_cache[k]
+            self.request_lifetime_lambda_cache[k] = \
+                self.request_arrival_lambda * \
+                self.get_stationary_probability(k-1) / \
+                self.get_stationary_probability(k) - \
+                sum((self._calc_request_lifetime_rate(i) for i in xrange(1,k)))
+            return self.request_lifetime_lambda_cache[k]
 
     def get_request_lifetime_rate(self, k):
         """
@@ -553,7 +553,7 @@ if __name__ == '__main__':
     # for eps in xrange(1,20):
     #     print 0.9 + eps*0.005, [(i, srgkarf.get_request_lifetime_rate(i)) for i in xrange(395-cr, 406+cr)]
     er = 15
-    eq = 400
+    eq = 390
     srgkarf = SimpleReqGenKeepActiveReqsFixed(1, 1, 1, 1, 1, equilibrium=eq, request_arrival_lambda=1/7.0,
                                               equilibrium_radius=er)
     print pformat([(i, srgkarf.get_stationary_probability(i)) for i in xrange(eq-er-20, eq+er+30)]), srgkarf.epsilon

@@ -36,9 +36,7 @@ except ImportError:
 
 import alg1.UnifyExceptionTypes as uet
 from OrchestratorAdaptor import *
-from RequestGenerator import MultiReqGen
-from RequestGenerator import SimpleReqGen
-from RequestGenerator import TestReqGen
+from RequestGenerator import *
 from ResourceGetter import *
 
 log = logging.getLogger(" Simulator")
@@ -131,6 +129,20 @@ class MappingSolutionFramework():
                 self.__request_generator = SimpleReqGen(self.request_lifetime_lambda, nf_type_count, request_seed)
         elif request_type == "multi":
             self.__request_generator = MultiReqGen(self.request_lifetime_lambda, nf_type_count, request_seed)
+        elif request_type == "simple_equilibrium":
+            minlat = float(config['request_min_lat'])
+            maxlat = float(config['request_max_lat'])
+            # optional arguments which may never be modified
+            opt_params = {}
+            if 'equilibrium_radius' in config:
+                opt_params['equilibrium_radius'] = int(config['equilibrium_radius'])
+            if 'cutoff_epsilon' in config:
+                opt_params['cutoff_epsilon'] = float(config['cutoff_epsilon'])
+            self.__request_generator = SimpleReqGenKeepActiveReqsFixed(
+                self.request_lifetime_lambda, nf_type_count,
+                request_seed, minlat, maxlat,
+                int(config['equilibrium']), self.request_arrival_lambda,
+                **opt_params)
         else:
             log.error("Invalid 'request_type' in the simulation.cfg file!")
             raise RuntimeError(
@@ -344,7 +356,8 @@ class MappingSolutionFramework():
 
             # Get request
             service_graph, life_time = \
-                self.__request_generator.get_request(self.__network_topology_bare, self.sim_iter)
+                self.__request_generator.get_request(self.__network_topology_bare,
+                                                     self.sim_iter, self.running_requests)
 
             # Discrete working
             if self.__discrete_simulation:
