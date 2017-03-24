@@ -341,17 +341,17 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
         x1_epsilon_norm = -1.0 * norm.isf((self.most_probable_req_count -
                                            self.cone_radius) * self.epsilon)
         # where should we finish to divide normal distribution intervals
-        x2_epsilon_norm = norm.isf((self.max_req_count - self.most_probable_req_count
+        self.x2_epsilon_norm = norm.isf((self.max_req_count - self.most_probable_req_count
                                     - self.cone_radius) * self.epsilon)
-        if x1_epsilon_norm < -1.0 * self.x_epsilon_cutoff or x2_epsilon_norm \
+        if x1_epsilon_norm < -1.0 * self.x_epsilon_cutoff or self.x2_epsilon_norm \
                 > self.x_epsilon_cutoff:
             raise RuntimeError("Bad parameter setting of stationary probability "
                                "of alive requests in the system.")
-        self.gauss_interval = (x2_epsilon_norm - x1_epsilon_norm) / \
+        self.gauss_interval = (self.x2_epsilon_norm - x1_epsilon_norm) / \
                               (2.0*self.cone_radius + 1)
         self.gauss_interval_below = (x1_epsilon_norm - (-1.0*self.x_epsilon_cutoff)) / \
                                     (self.most_probable_req_count - self.cone_radius)
-        self.gauss_interval_above = (self.x_epsilon_cutoff - x2_epsilon_norm) / \
+        self.gauss_interval_above = (self.x_epsilon_cutoff - self.x2_epsilon_norm) / \
                                     (self.max_req_count - self.most_probable_req_count
                                     - self.cone_radius)
         # CDF offset to ensure summing up to 1.0
@@ -378,8 +378,8 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
                    norm.cdf(k_prime * self.gauss_interval + self.cdf_offset)
         elif self.most_probable_req_count + self.cone_radius < k <= self.max_req_count:
             k_prime = k - self.most_probable_req_count - self.cone_radius - 1
-            return norm.cdf((k_prime+1)*self.gauss_interval_above + self.x_epsilon_cutoff) -\
-                   norm.cdf(k_prime*self.gauss_interval_above + self.x_epsilon_cutoff)
+            return norm.cdf((k_prime+1)*self.gauss_interval_above + self.x2_epsilon_norm) -\
+                   norm.cdf(k_prime*self.gauss_interval_above + self.x2_epsilon_norm)
         elif k < 0:
             raise RuntimeError("Stationary probability of negative request "
                                "count doesn't exist!")
@@ -535,7 +535,11 @@ if __name__ == '__main__':
     # cr = 14
     # for eps in xrange(1,20):
     #     print 0.9 + eps*0.005, [(i, srgkarf.get_request_lifetime_rate(i)) for i in xrange(395-cr, 406+cr)]
-    srgkarf = SimpleReqGenKeepActiveReqsFixed(1, 1, 1, 1, 1, 400, 7.0, epsilon_sum=0.5)
-    print pformat([(i, srgkarf.get_stationary_probability(i)) for i in xrange(380, 440)])
-    print pformat([(i, srgkarf.get_request_lifetime_rate(i)) for i in xrange(380, 440)])
-    print pformat([(i, 1.0 / srgkarf.get_request_lifetime_rate(i)) for i in xrange(380, 440)])
+    er = 7
+    eq = 400
+    srgkarf = SimpleReqGenKeepActiveReqsFixed(1, 1, 1, 1, 1, equilibrium=eq, request_arrival_lambda=1/7.0,
+                                              epsilon_sum=0.5, equilibrium_radius=er)
+    print pformat([(i, srgkarf.get_stationary_probability(i)) for i in xrange(eq-er-20, eq+er+30)]), srgkarf.epsilon
+    print sum([srgkarf.get_stationary_probability(i) for i in xrange(0, srgkarf.max_req_count+1)]) + srgkarf.epsilon
+    print pformat([(i, srgkarf.get_request_lifetime_rate(i)) for i in xrange(eq-er-20, eq+er+30)])
+    print pformat([(i, 1.0 / srgkarf.get_request_lifetime_rate(i)) for i in xrange(eq-er-20, eq+er+30)])
