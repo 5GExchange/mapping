@@ -20,6 +20,7 @@ import sys
 import json
 import copy
 import os
+from time import sleep
 
 import numpy as N
 from configobj import ConfigObj
@@ -138,6 +139,8 @@ class MappingSolutionFramework():
                 opt_params['equilibrium_radius'] = int(config['equilibrium_radius'])
             if 'cutoff_epsilon' in config:
                 opt_params['cutoff_epsilon'] = float(config['cutoff_epsilon'])
+            if 'convergence_speedup_factor' in config:
+                opt_params['convergence_speedup_factor'] = float(config['convergence_speedup_factor'])
             self.__request_generator = SimpleReqGenKeepActiveReqsFixed(
                 self.request_lifetime_lambda, nf_type_count,
                 request_seed, minlat, maxlat,
@@ -382,6 +385,28 @@ class MappingSolutionFramework():
                 log.info("Stop request generator thread")
 
 
+def test_sg_consumer(test, request_list, consumption_time, maxiter):
+    running_reqs = []
+    for i in xrange(0,maxiter):
+        request_list_element = request_list.get()
+        request = request_list_element['request']
+        life_time = request_list_element['life_time']
+        req_num = request_list_element['req_num']
+        request_list.task_done()
+
+        test.running_requests = len(running_reqs)
+        log.debug("TEST: Number of requests in the system: %s"%test.running_requests)
+        sleep(consumption_time)
+        current_time = time.time()
+        running_reqs.append((current_time+life_time, req_num))
+
+        expired_reqs = []
+        for death_time, req_num in running_reqs:
+            if death_time < current_time:
+                expired_reqs.append(req_num)
+        running_reqs = filter(lambda x: x[1] not in expired_reqs, running_reqs)
+
+
 if __name__ == "__main__":
     request_list = Queue.Queue()
 
@@ -403,10 +428,17 @@ if __name__ == "__main__":
 
             mapping_thread = threading.Thread(None, test.make_mapping,
                                               "mapping_thread_T2")
+
+            # This tests the equilibrium state, consums SG-s in a constant rate
+            # test_sg_consumer_thread = threading.Thread(None, test_sg_consumer,
+            #                                            "test_sg_consumer",
+            #                                            [test, request_list, 0.01, 300000])
             req_gen_thread.start()
+            # test_sg_consumer_thread.start()
             mapping_thread.start()
 
             req_gen_thread.join()
+            # test_sg_consumer_thread.join()
             mapping_thread.join()
 
         except threading.ThreadError:

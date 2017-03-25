@@ -320,13 +320,15 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
 
     def __init__ (self, request_lifetime_lambda, nf_type_count, seed,
                   min_lat, max_lat, equilibrium, request_arrival_lambda,
-                  equilibrium_radius=7, cutoff_epsilon=1e-5):
+                  equilibrium_radius=7, cutoff_epsilon=1e-5,
+                  convergence_speedup_factor=1):
         super(SimpleReqGenKeepActiveReqsFixed, self).__init__(request_lifetime_lambda,
                                                               nf_type_count, seed)
         self.min_lat = min_lat
         self.max_lat = max_lat
         self.request_arrival_lambda = request_arrival_lambda
         self.most_probable_req_count = equilibrium
+        self.convergence_speedup_factor = convergence_speedup_factor
         # significant probability around the most_probable_req_count
         self.cone_radius = equilibrium_radius
         # After max_req_count a fix very small expected lifetime is returned
@@ -343,7 +345,6 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
         # where should we finish to divide normal distribution intervals
         self.x2_epsilon_norm = norm.isf((self.max_req_count - self.most_probable_req_count
                                     - self.cone_radius) * self.epsilon)
-        print x1_epsilon_norm, self.x2_epsilon_norm
         if x1_epsilon_norm < -1.0 * self.x_epsilon_cutoff or self.x2_epsilon_norm \
                 > self.x_epsilon_cutoff:
             raise RuntimeError("Bad parameter setting of stationary probability "
@@ -421,8 +422,7 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
             raise RuntimeError("Number of requests in the network must be integer!")
         if k < 0:
             raise RuntimeError("Negative number of requests in the network?!")
-        # initially we ask for request lifetime when there is no requests yet
-        #  running, but we can terminate the recursion at state 1.
+
         if k in self.request_lifetime_lambda_cache:
             return self.request_lifetime_lambda_cache[k]
         elif k == 1 or k == 0:
@@ -438,6 +438,26 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
                 sum((self._calc_request_lifetime_rate(i) for i in xrange(1,k)))
             return self.request_lifetime_lambda_cache[k]
 
+    def _calc_request_lifetime_rate_easier(self, k):
+      try:
+        int(k)
+      except TypeError:
+        raise RuntimeError("Number of requests in the network must be integer!")
+      if k < 0:
+        raise RuntimeError("Negative number of requests in the network?!")
+      if k in self.request_lifetime_lambda_cache:
+        return self.request_lifetime_lambda_cache[k]
+      elif k == 1 or k == 0:
+        self.request_lifetime_lambda_cache[k] = \
+          self.request_arrival_lambda * self.get_stationary_probability(0) / \
+          self.get_stationary_probability(1)
+        return self.request_lifetime_lambda_cache[k]
+      else:
+        self.request_lifetime_lambda_cache[k] = self.request_arrival_lambda * \
+          (self.get_stationary_probability(k-1) / self.get_stationary_probability(k) -
+           self.get_stationary_probability(k-2) / self.get_stationary_probability(k-1))
+        return self.request_lifetime_lambda_cache[k]
+
     def get_request_lifetime_rate(self, k):
         """
         Handles the singular values when the rate would be negative because
@@ -446,11 +466,24 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
         :param k:
         :return:
         """
+        # initially we ask for request lifetime when there is no requests yet
+        #  running, but we can terminate the recursion at state 1, beacuse
+        # death rate in state 0 doesn't exist! So give +1 offset for the states.
+        k += 1
+        if k > self.most_probable_req_count + self.cone_radius:
+            # make an artificial barrier not to leave behind the top of the
+            # cone radius. According to the calculations these rates should
+            # be a fairly small value, which makes the number of requests
+            # increase in a hight rate
+            # Big lifetime rate means low expected lifetime!
+            return 1e2 * self.request_arrival_lambda
         if k not in self.request_lifetime_lambda_cache:
-            self._calc_request_lifetime_rate(k)
+            self._calc_request_lifetime_rate_easier(k)
         if self.request_lifetime_lambda_cache[k] < 0:
             # return a neutral value, which doesn't really changes anything.
             return self.request_arrival_lambda
+        elif k <= self.most_probable_req_count - self.cone_radius:
+            return self.request_lifetime_lambda_cache[k] / self.convergence_speedup_factor
         else:
             return self.request_lifetime_lambda_cache[k]
 
@@ -542,6 +575,7 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
                 for tmp in xrange(0, scid + 1):
                     current_nfs.extend(new_nfs)
                 scale_radius = (1.0 / self.get_request_lifetime_rate(requests_alive))
+                # meaning: the scale_radius is the expected value of the exponential distribution
                 exp_time = N.random.exponential(scale_radius)
 
                 return nffg, exp_time
@@ -553,11 +587,11 @@ if __name__ == '__main__':
     # for eps in xrange(1,20):
     #     print 0.9 + eps*0.005, [(i, srgkarf.get_request_lifetime_rate(i)) for i in xrange(395-cr, 406+cr)]
     er = 15
-    eq = 390
-    srgkarf = SimpleReqGenKeepActiveReqsFixed(1, 1, 1, 1, 1, equilibrium=eq, request_arrival_lambda=1/7.0,
-                                              equilibrium_radius=er)
-    print pformat([(i, srgkarf.get_stationary_probability(i)) for i in xrange(eq-er-20, eq+er+30)]), srgkarf.epsilon
+    eq = 300
+    srgkarf = SimpleReqGenKeepActiveReqsFixed(1, 1, 1, 1, 1, equilibrium=eq, request_arrival_lambda=0.3333,
+                                              equilibrium_radius=er, cutoff_epsilon=1e-7, convergence_speedup_factor=1)
+    print "probability", pformat([(i, srgkarf.get_stationary_probability(i)) for i in xrange(0, eq+er+30)]), srgkarf.epsilon
     print sum([srgkarf.get_stationary_probability(i) for i in xrange(0, srgkarf.max_req_count+1)]) + 2*srgkarf.epsilon
-    print pformat([(i, srgkarf.get_request_lifetime_rate(i)) for i in xrange(eq-er-20, eq+er+30)])
-    print pformat([(i, 1.0 / srgkarf.get_request_lifetime_rate(i)) for i in xrange(eq-er-20, eq+er+30)])
+    print "exponential distr. parameter", pformat([(i, srgkarf.get_request_lifetime_rate(i)) for i in xrange(0, eq+er+100)])
+    print "expected lifetime", pformat([(i, 1.0 / srgkarf.get_request_lifetime_rate(i)) for i in xrange(0, eq+er+100)])
     # print pformat(srgkarf.request_lifetime_lambda_cache)
