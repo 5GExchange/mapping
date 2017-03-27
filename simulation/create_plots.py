@@ -66,13 +66,13 @@ def main(argv):
     #Create mapped picture
 
     if hybrid:
-        plt.plot(x, hybrid_requests['running_requests'],label="hybrid")
+        plt.plot(x, hybrid_requests['mapped_requests'],label="hybrid")
 
     if online:
-        plt.plot(x, online_requests['running_requests'],label="online")
+        plt.plot(x, online_requests['mapped_requests'],label="online")
 
     if offline:
-        plt.plot(x, offline_requests['running_requests'],label="offline")
+        plt.plot(x, offline_requests['mapped_requests'],label="offline")
 
     plt.title('Accepted incoming service requests')
     plt.ylabel('Accepted requests count')
