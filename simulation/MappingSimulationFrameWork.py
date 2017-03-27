@@ -241,8 +241,7 @@ class MappingSolutionFramework():
                 "Invalid 'orchestrator' in the simulation.cfg file! "
                 "Please choose one of the followings: online, hybrid, offline")
 
-
-    def __mapping(self, service_graph, life_time, time, sim_iter):
+    def __mapping(self, service_graph, life_time, req_num):
         try:
             log.debug("# of VNFs in resource graph: %s" % len(
                 [n for n in self.__network_topology.nfs]))
@@ -255,12 +254,13 @@ class MappingSolutionFramework():
             log.info("Time passed with one mapping response: %s s"%
                      (datetime.datetime.now() - current_time))
             # Adding successfully mapped request to the remaining_request_lifetimes
-            service_life_element = {"dead_time": time +
-                            life_time, "SG": service_graph, "req_num": sim_iter}
+            service_life_element = {"dead_time": datetime.datetime.now() +
+                                                 datetime.timedelta(0, life_time),
+                                    "SG": service_graph, "req_num": req_num}
 
             self.__remaining_request_lifetimes.append(service_life_element)
             log.info("Mapping thread: Mapping service_request_"
-                     + str(sim_iter) + " successful +")
+                     + str(req_num) + " successful +")
             self.mapped_requests += 1
             self.running_requests += 1
             self.mapped_array.append(self.mapped_requests)
@@ -271,7 +271,7 @@ class MappingSolutionFramework():
 
         except uet.MappingException as me:
             log.info("Mapping thread: Mapping service_request_" +
-                     str(sim_iter) + " unsuccessful\n%s"%me.msg)
+                     str(req_num) + " unsuccessful\n%s" % me.msg)
             self.refused_requests += 1
             self.refused_array.append(self.refused_requests)
             # we continue working, the __network_topology is in the last valid state
@@ -324,9 +324,7 @@ class MappingSolutionFramework():
                 # Remove expired service graph requests
                 self.__clean_expired_requests(datetime.datetime.now())
 
-                self.__mapping(request, datetime.timedelta(0, life_time),
-                               datetime.datetime.now(),
-                               req_num)
+                self.__mapping(request, life_time, req_num)
 
                 self.running_array.append(self.running_requests)
 
