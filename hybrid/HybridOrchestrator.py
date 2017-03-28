@@ -212,8 +212,11 @@ class HybridOrchestrator():
                   self.__res_offline,
                   self.reqs_under_optimization,
                   ignore_infras=True)
+                if len([n for n in self.reqs_under_optimization.nfs]) == 0:
+                  raise uet.MappingException("Offline didn't get any requests to optimize",
+                                             False)
                 log.debug("Removing requests (%s NFs) from res_offline which "
-                          "shouldn't be optimized!"%len(reqs_not_to_be_opt))
+                          "shouldn't be optimized!"%len([n for n in reqs_not_to_be_opt.nfs]))
                 self.__res_offline = online_mapping.MAP(reqs_not_to_be_opt,
                                                         self.__res_offline,
                                                         mode=NFFG.MODE_DEL)
