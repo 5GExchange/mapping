@@ -217,6 +217,13 @@ class HybridOrchestrator():
                 self.__res_offline = online_mapping.MAP(reqs_not_to_be_opt,
                                                         self.__res_offline,
                                                         mode=NFFG.MODE_DEL)
+                log.debug("Adding %s path requirements to offline resource."
+                          %len([r for r in self.reqs_under_optimization.reqs]))
+                for req in self.reqs_under_optimization.reqs:
+                  if not self.__res_offline.network.has_edge(req.src.node.id,
+                                                             req.dst.node.id, key=req.id):
+                    # port objects are set correctly by NFFG lib
+                    self.__res_offline.add_req(req.src, req.dst, req=req)
 
                 # we don't want to map additional requests, so set request to empty
                 self.__res_offline = offline_mapping.MAP(
