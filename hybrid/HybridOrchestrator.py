@@ -79,14 +79,14 @@ class HybridOrchestrator():
             log.setLevel(logging.DEBUG)
 
             # Protects the res_online
-            self.res_online_protector = ResNFFGProtector()
+            self.res_online_protector = ResNFFGProtector(True)
             self.res_online = None
             self.__res_offline = copy.deepcopy(RG)
             self.deleted_services = deleted_services
             # All request in one NFFG
             # The sum of reqs needs to be accessed from Offline optimization to determine
             # what to opt and online mapping have to gather all requests there
-            self.sum_req_protector = ResNFFGProtector()
+            self.sum_req_protector = ResNFFGProtector(True)
             self.SUM_req = NFFG()
             self.offline_mapping_thread = None
             self.offline_status = HybridOrchestrator.OFFLINE_STATE_INIT
@@ -203,9 +203,24 @@ class HybridOrchestrator():
                           len([s for s in self.__res_offline.saps]), len(self.__res_offline)))
                 self.offline_status = HybridOrchestrator.OFFLINE_STATE_RUNNING
 
-                # set mapped NF reoptimization False, because it is what_to_opt's choice!
+                # set mapped NF reoptimization True, and delete other NFs from
+                # __res_offline which are not in reqs_under_optimization, because
+                # it is what_to_opt's responsibilty to determine the set of requests to optimize!
+                # ignore_infras=True calculates the difference only on the SG.
+                self.__res_offline = NFFGToolBox.recreate_all_sghops(self.__res_offline)
+                _, reqs_not_to_be_opt = NFFGToolBox.generate_difference_of_nffgs(
+                  self.__res_offline,
+                  self.reqs_under_optimization,
+                  ignore_infras=True)
+                log.debug("Removing requests (%s NFs) from res_offline which "
+                          "shouldn't be optimized!"%len(reqs_not_to_be_opt))
+                self.__res_offline = online_mapping.MAP(reqs_not_to_be_opt,
+                                                        self.__res_offline,
+                                                        mode=NFFG.MODE_DEL)
+
+                # we don't want to map additional requests, so set request to empty
                 self.__res_offline = offline_mapping.MAP(
-                    self.reqs_under_optimization, self.__res_offline, False,
+                    NFFG(), self.__res_offline, True,
                     self.mig_handler, self.migration_coeff, self.load_balance_coeff,
                     self.edge_cost_coeff)
 
