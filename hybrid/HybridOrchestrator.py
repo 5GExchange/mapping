@@ -23,11 +23,12 @@ log = logging.getLogger(" Hybrid Orchestrator")
 
 class ResNFFGProtector(object):
 
-  def __init__(self, do_logging=False):
+  def __init__(self, lock_name, do_logging=False):
     self.readers_count = 0
     self.reader_counter_protector = threading.Lock()
     self.res_nffg_protector = threading.Lock()
     self.do_logging = do_logging
+    self.lock_name = lock_name
 
   def start_reading_res_nffg(self, read_reason):
     self.reader_counter_protector.acquire()
@@ -35,8 +36,8 @@ class ResNFFGProtector(object):
     if self.readers_count == 1:
       self.res_nffg_protector.acquire()
       if self.do_logging:
-        log.debug("Locking res nffg for reading: \"%s\", number of current readers: %s"
-                  %(read_reason, self.readers_count))
+        log.debug("Locking %s nffg for reading: \"%s\", number of current readers: %s"
+                  %(self.lock_name, read_reason, self.readers_count))
     self.reader_counter_protector.release()
 
   def finish_reading_res_nffg(self, read_reason):
@@ -47,19 +48,19 @@ class ResNFFGProtector(object):
     if self.readers_count == 0:
       self.res_nffg_protector.release()
       if self.do_logging:
-        log.debug("Releasing res nffg for reading: \"%s\", number of current readers: %s"
-                  %(read_reason, self.readers_count))
+        log.debug("Releasing %s nffg for reading: \"%s\", number of current readers: %s"
+                  %(self.lock_name, read_reason, self.readers_count))
     self.reader_counter_protector.release()
 
   def start_writing_res_nffg(self, write_reason):
     self.res_nffg_protector.acquire()
     if self.do_logging:
-      log.debug("Locking res nffg for writing: \"%s\"."%write_reason)
+      log.debug("Locking %s nffg for writing: \"%s\"."%(self.lock_name, write_reason))
 
   def finish_writing_res_nffg(self, write_reason):
     self.res_nffg_protector.release()
     if self.do_logging:
-      log.debug("Releasing res nffg for writing: \"%s\"."%write_reason)
+      log.debug("Releasing %s nffg for writing: \"%s\"."%(self.lock_name, write_reason))
 
 
 class HybridOrchestrator():
@@ -79,14 +80,14 @@ class HybridOrchestrator():
             log.setLevel(logging.DEBUG)
 
             # Protects the res_online
-            self.res_online_protector = ResNFFGProtector(True)
+            self.res_online_protector = ResNFFGProtector("res_online", True)
             self.res_online = None
             self.__res_offline = copy.deepcopy(RG)
             self.deleted_services = deleted_services
             # All request in one NFFG
             # The sum of reqs needs to be accessed from Offline optimization to determine
             # what to opt and online mapping have to gather all requests there
-            self.sum_req_protector = ResNFFGProtector(True)
+            self.sum_req_protector = ResNFFGProtector("sum_req", True)
             self.SUM_req = NFFG()
             self.offline_mapping_thread = None
             self.offline_status = HybridOrchestrator.OFFLINE_STATE_INIT
@@ -152,7 +153,6 @@ class HybridOrchestrator():
         self.sum_req_protector.start_writing_res_nffg("Appending new request to the "
                                                       "sum of requests and removing expired ones")
         self.SUM_req = NFFGToolBox.merge_nffgs(self.SUM_req, request)
-        self.del_exp_reqs_from_sum_req()
         log.debug("Requests in SUM_req: %s"%[r.sg_path for r in self.SUM_req.reqs])
         self.sum_req_protector.finish_writing_res_nffg("New request %s appended to "
                                                        "sum req and removed expired ones" % request)
@@ -182,7 +182,6 @@ class HybridOrchestrator():
             self.res_online = temp_res_online
             self.online_fails.put(error)
             # Balazs: an online failure due to mapping is natural, we continue working.
-
         except Exception as e:
             # Balazs: exception is not thrown when acquire didnt succeed, this exception is fatal
             log.error(str(e.message) + str(e.__class__))
@@ -193,11 +192,12 @@ class HybridOrchestrator():
     def do_offline_mapping(self):
             try:
                 self.sum_req_protector.start_reading_res_nffg("Determine set of requests to optimize")
-                # the res_online and the sum_req must not be modified to determine what
-                # reqs on what resource should the offline algorithm reoptimize!
-                self.set_offline_resource_graph()
+                self.del_exp_reqs_from_sum_req()
                 self.reqs_under_optimization = self.__what_to_opt.reqs_to_optimize(self.SUM_req)
                 self.sum_req_protector.finish_reading_res_nffg("Got requests to optimize")
+                # WARNING: we can't lock both of them at the same time, cuz that can cause deadlock
+                # If both of them needs to be locked make the order: sum_req -> res_online!
+                self.set_offline_resource_graph()
                 log.debug("SAP count in request %s and in resource: %s, resource total size: %s"%
                         (len([s for s in self.reqs_under_optimization.saps]),
                           len([s for s in self.__res_offline.saps]), len(self.__res_offline)))
@@ -233,7 +233,7 @@ class HybridOrchestrator():
 
                 log.info("Offline mapping is ready")
 
-                log.info("Delete expired requests from the request summary")
+                log.info("Delete expired requests from the res_offline")
                 self.del_exp_reqs_from_res_offline()
                 log.info("Try to merge online and offline")
                 # the merge MUST set the state before releasing the writeing lock
@@ -251,7 +251,6 @@ class HybridOrchestrator():
                   msg = e.message
                 log.error("Offline mapping failed: with exception %s, message: %s"%(e,msg))
                 raise
-
 
     def del_exp_reqs_from_res_offline(self):
         try:
@@ -280,21 +279,30 @@ class HybridOrchestrator():
           log.error("Unhandled exception catched during deleting expired requests from sum_req")
           raise
 
+    def remove_sg_from_sum_req(self, request):
+      """
+      Removes request from SUM_req, the sum_req protector lock must be called
+      around it!
+      :param request:
+      :return:
+      """
+      # The MAP function removed from NFFGs which represent mappings,
+      # removal from an SG collection is much easier.
+      for nf in request.nfs:
+        self.SUM_req.del_node(nf.id)
+      for req in request.reqs:
+        self.SUM_req.del_edge(req.src.node.id, req.dst.node.id, id=req.id)
+      for sap in request.saps:
+        # if sap.id is a string it may try to iterate in it... so we can
+        # prevent this with checking whether it contains this node.
+        if sap.id in self.SUM_req.network:
+          if self.SUM_req.network.out_degree(sap.id) + \
+             self.SUM_req.network.in_degree(sap.id) == 0:
+            self.SUM_req.del_node(sap.id)
+
     def del_exp_reqs_from_sum_req(self):
       for i in self.deleted_services:
-        # The MAP function removed from NFFGs which represent mappings,
-        # removal from an SG collection is much easier.
-        for nf in i['SG'].nfs:
-          self.SUM_req.del_node(nf.id)
-        for req in i['SG'].reqs:
-          self.SUM_req.del_edge(req.src.node.id, req.dst.node.id, id=req.id)
-        for sap in i['SG'].saps:
-          # if sap.id is a string it may try to iterate in it... so we can
-          # prevent this with checking whether it contains this node.
-          if sap.id in self.SUM_req.network:
-            if self.SUM_req.network.out_degree(sap.id) + \
-               self.SUM_req.network.in_degree(sap.id) == 0:
-              self.SUM_req.del_node(sap.id)
+        self.remove_sg_from_sum_req(i['SG'])
 
     def set_online_resource_graph(self, resource):
         # Resource sharing strategy
@@ -378,9 +386,6 @@ class HybridOrchestrator():
 
     def MAP(self, request, resource):
 
-        # Collect the requests
-        self.merge_all_request(request)
-
         # Start online mapping thread
         online_mapping_thread = threading.Thread(None, self.do_online_mapping,
                         "Online mapping thread", [request, resource])
@@ -424,11 +429,16 @@ class HybridOrchestrator():
 
         if not self.online_fails.empty():
             error = self.online_fails.get()
+            self.res_online_protector.finish_writing_res_nffg("Online mapping failed")
             raise uet.MappingException(error.msg, False)
 
         res_online_to_return = copy.deepcopy(self.res_online)
-        self.res_online_protector.finish_writing_res_nffg(
-          "Online mapping finished or failed")
+        self.res_online_protector.finish_writing_res_nffg("Online mapping finished")
+
+        # Collect the requests
+        # NOTE: only after we know for sure, this request is mapped and the other
+        # lock is released (to avoid deadlock)
+        self.merge_all_request(request)
 
         return res_online_to_return
 
