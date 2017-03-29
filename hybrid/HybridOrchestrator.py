@@ -153,7 +153,7 @@ class HybridOrchestrator():
         self.sum_req_protector.start_writing_res_nffg("Appending new request to the "
                                                       "sum of requests and removing expired ones")
         self.SUM_req = NFFGToolBox.merge_nffgs(self.SUM_req, request)
-        log.debug("Requests in SUM_req: %s"%[r.sg_path for r in self.SUM_req.reqs])
+        log.debug("Requests in SUM_req: %s"%len([r.sg_path for r in self.SUM_req.reqs]))
         self.sum_req_protector.finish_writing_res_nffg("New request %s appended to "
                                                        "sum req and removed expired ones" % request)
 
@@ -191,6 +191,7 @@ class HybridOrchestrator():
 
     def do_offline_mapping(self):
             try:
+                self.offline_status = HybridOrchestrator.OFFLINE_STATE_RUNNING
                 self.sum_req_protector.start_reading_res_nffg("Determine set of requests to optimize")
                 self.del_exp_reqs_from_sum_req()
                 self.reqs_under_optimization = self.__what_to_opt.reqs_to_optimize(self.SUM_req)
@@ -201,7 +202,6 @@ class HybridOrchestrator():
                 log.debug("SAP count in request %s and in resource: %s, resource total size: %s"%
                         (len([s for s in self.reqs_under_optimization.saps]),
                           len([s for s in self.__res_offline.saps]), len(self.__res_offline)))
-                self.offline_status = HybridOrchestrator.OFFLINE_STATE_RUNNING
 
                 # set mapped NF reoptimization True, and delete other NFs from
                 # __res_offline which are not in reqs_under_optimization, because
