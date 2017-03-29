@@ -30,19 +30,22 @@ and calculates the average and deviation of link/node resources for all
 resource types. Prints them in ascending order of test levels in CSV format.
 Removes the uncompressed NFFG after it is finished with its processing.
    -h                               Print this help message.
-   -l <<NFFG.tgz location>>         Location of the *.nffg.tgz files.
+   -l <<NFFG location>>             Location of the *.nffg files.
+   --prefix=<<string>>              File names should look like
+   --suffix=<<string>>              "prefix<<NUM>>suffix<<optional variable string>>.nffg"
    --single_nffg=<<path>>           If given, a single uncompressed NFFG is
                                     processed.
    --hist=<<aggregation size>>      If given, draws the histogram
                                     for the utilization of resource 
                                     components aggregating the values by the 
                                     given size.
+                                    WARN: histogram drawing doesn't work!
    --add_hist_values                If set, non-zero values are written above the
                                     bars on the histogram.
    --hist_format=<<pdf|png|...>>    The format of the saved histograms. 
                                     PNG by default
    --starting_lvl=i                 Start the analyzation only after the given 
-                                    test level.
+                                    NFFG number.
    --one                            Exit after one NFFG processing
    --cdf_format=<<pdf|png|...>>     The format of the saved CDF, PNG by default.
    --cdf                            Produces images of Cumulative Distribution 
@@ -61,9 +64,6 @@ Removes the uncompressed NFFG after it is finished with its processing.
                                     between points.
    --print_minmax                   Print the minimal and maximal utilization of 
                                     all resource types of the processed NFFG-s.
-   --consider_seeds                 Makes the decompressed NFFG folder tree 
-                                    seed dependent. Use "-s" to set the seed.
-   -s <<seed_number>> 
    --plot_aspect=<<float>>          Ratio of x/y axis.
 """
 
@@ -94,7 +94,7 @@ def autolabel(rects, ax):
               '%.2f' % height,
               ha='center', va='bottom')
 
-def gather_and_print_cdf_hist_data (nffg, empty_hist, empty_cdf, test_lvl=0):
+def gather_and_print_cdf_hist_data (nffg, empty_hist, empty_cdf, nffg_num=0):
   # calculate avg. res utils by resource types.
   avgs = {}
   cnts = {}
@@ -159,7 +159,7 @@ def gather_and_print_cdf_hist_data (nffg, empty_hist, empty_cdf, test_lvl=0):
   avg_linkutil /= linkcnt
 
   if print_avgs:
-    to_print = [test_lvl, avg_linkutil]
+    to_print = [nffg_num, avg_linkutil]
     to_print.extend([avgs[res] for res in reskeys])
     print ",".join(map(str, to_print))
 
@@ -170,12 +170,12 @@ def gather_and_print_cdf_hist_data (nffg, empty_hist, empty_cdf, test_lvl=0):
       devs[res] = math.sqrt(sum([(avgs[res] - u) ** 2 for u in cdf[res]])
                             / \
                             (len(cdf[res]) - 1))
-    to_print = [test_lvl]
+    to_print = [nffg_num]
     to_print.extend([devs[res] for res in cdf])
     print ",".join(map(str, to_print))
 
   if print_minmax:
-    to_print = [test_lvl]
+    to_print = [nffg_num]
     for res in reskeys + ['link_bw']:
       to_print.append(mins[res])
       to_print.append(maxs[res])
@@ -183,7 +183,8 @@ def gather_and_print_cdf_hist_data (nffg, empty_hist, empty_cdf, test_lvl=0):
 
   return hist, cdf
 
-def draw_histogram (hist, add_hist_values, hist_format, plot_aspect, test_lvl=0):
+def draw_histogram (hist, add_hist_values, hist_format, plot_aspect, loc_of_nffgs,
+                                            prefix, suffix, variable_str="", nffg_num=0):
   # normalize the histogram to [0,1], so the resource types could be
   # plotted
   # on the same bar chart
@@ -192,7 +193,6 @@ def draw_histogram (hist, add_hist_values, hist_format, plot_aspect, test_lvl=0)
       [hist[res][util_range] for util_range in hist[res]])
     for util_range in hist[res]:
       hist[res][util_range] = float(hist[res][util_range]) / sum_util_cnt
-  # print "test_lvl", test_lvl, pformat(hist),"\n"
 
   # plot the histograms.
   fig, ax = plt.subplots()
@@ -222,13 +222,15 @@ def draw_histogram (hist, add_hist_values, hist_format, plot_aspect, test_lvl=0)
   ax.set_aspect(plot_aspect)
   ax.legend([r[0] for r in zip(*rects)[1]], zip(*rects)[0], ncol=5,
             loc='upper left', fontsize=8, bbox_to_anchor=(0, 1))
-  plt.savefig('plots/hist-test_lvl-%s.%s' % (test_lvl, hist_format),
+  plt.savefig('%s/hists/%s%s%s%s.%s' % (loc_of_nffgs, prefix, nffg_num,
+                                     suffix, variable_str, hist_format),
               bbox_inches='tight')
   plt.close(fig)
 
 def draw_cummulative_distribution_function (cdf, res_cdf_to_print,
                                             no_cdf_interpolation, cdf_format,
-                                            plot_aspect, test_lvl=0):
+                                            plot_aspect, loc_of_nffgs,
+                                            prefix, suffix, variable_str="", nffg_num=0):
   # sort util values incrementing in each resource type
   for res in cdf:
     cdf[res] = sorted(cdf[res])
@@ -272,7 +274,7 @@ def draw_cummulative_distribution_function (cdf, res_cdf_to_print,
              marker=resmarker)
     if print_cdf_data and res == res_cdf_to_print:
       cdf_plot_data.append((1.0, 1.0))
-      print test_lvl, ",", ",".join(
+      print nffg_num, ",", ",".join(
         map(lambda t: "(%.6f; %.6f)" % (t[0], t[1]),
             cdf_plot_data))
   ax.set_ylabel("CDF")
@@ -282,25 +284,25 @@ def draw_cummulative_distribution_function (cdf, res_cdf_to_print,
   ax.set_xticklabels([str(i) for i in xrange(0, 101, 20)])
   ax.legend(bbox_to_anchor=(0, 1), loc='upper left', ncol=5, fontsize=12,
             columnspacing=0.9)
-  plt.savefig('plots/cdf-test_lvl-%s.%s' % (test_lvl, cdf_format),
+  plt.savefig('%s/cdfs/%s%s%s%s.%s' % (loc_of_nffgs, prefix, nffg_num,
+                                     suffix, variable_str, cdf_format),
               bbox_inches='tight')
   plt.close(fig)
 
 def main(argv):
   global print_avgs, print_devs, print_minmax, draw_hist, draw_cdf
   try:
-    opts, args = getopt.getopt(argv, "hl:s:", ["hist=", "add_hist_values", 
+    opts, args = getopt.getopt(argv, "hl:", ["hist=", "add_hist_values",
                                              "hist_format=", "starting_lvl=",
                                              "one", "cdf_format=", "cdf",
                                              "print_devs", "print_avgs",
                                              "print_cdf_data=", "print_minmax", 
-                                             "no_cdf_interpolation", 
-                                               "consider_seeds", "plot_aspect=",
-                                               "single_nffg="])
+                                             "no_cdf_interpolation", "plot_aspect=",
+                                               "single_nffg=", "prefix=", "suffix="])
   except getopt.GetoptError as goe:
     print helpmsg
     raise
-  loc_tgz = ""
+  loc_of_nffgs = ""
   add_hist_values = False
   hist_format = "png"
   starting_lvl = 0
@@ -308,18 +310,21 @@ def main(argv):
   cdf_format = "png"
   res_cdf_to_print = None
   no_cdf_interpolation = True
-  seednum = None
   plot_aspect = 1
-  consider_seeds = False
   single_nffg_process = False
+  nffg_prefix = None
+  nffg_suffix = None
+  nffg_name_variable_str = {}
+  print_cdf_data = False
+  print_devs = False
+  print_avgs = False
+  print_minmax = False
   for opt, arg in opts:
     if opt == "-h":
       print helpmsg
       sys.exit()
     elif opt == "-l":
-      loc_tgz = arg
-    elif opt == "-s":
-      seednum = int(arg)
+      loc_of_nffgs = arg
     elif opt == "--hist":
       draw_hist = True
       hist_aggr_size = float(arg)
@@ -355,33 +360,49 @@ def main(argv):
       no_cdf_interpolation = True
     elif opt == "--print_minmax":
       print_minmax = True
-    elif opt == "--consider_seeds":
-      consider_seeds = True
     elif opt == "--plot_aspect":
       plot_aspect = float(arg)
     elif opt == "--single_nffg":
       single_nffg_process = True
       single_nffg_path = arg
+    elif opt == "--prefix":
+      nffg_prefix = arg
+    elif opt == "--suffix":
+      nffg_suffix = arg
+
+  if not single_nffg_process and (nffg_suffix is None or nffg_prefix is None):
+    raise Exception("If --single_process is not specified a location and "
+                    "--prefix and --suffix must be specified!")
+
+  # clean previously created plots
+  os.system("rm -rf %s/hists %s/cdfs"%(loc_of_nffgs, loc_of_nffgs))
+  os.system("mkdir %s/hists %s/cdfs"%(loc_of_nffgs, loc_of_nffgs))
 
   if not single_nffg_process:
     nffg_num_list = []
-    bashCommand = "ls -x "+loc_tgz
+    bashCommand = "ls -x " + loc_of_nffgs
     process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
-    tgz_files =  process.communicate()[0]
-    for filen in tgz_files.replace("\n", " ").split(" "):
-      if 'test_lvl' in filen:
-        nffg_num_list.append(int(filen.split('-')[1].split('.')[0]))
+    nffg_files = process.communicate()[0]
+    for filen in nffg_files.replace("\n", " ").split(" "):
+      if nffg_prefix in filen and nffg_suffix in filen:
+        truncted_filen = filen.lstrip(nffg_prefix).rstrip(".nffg").split(nffg_suffix)
+        number_of_nffg = int(truncted_filen[0])
+        if len(truncted_filen) > 1:
+          nffg_name_variable_str[number_of_nffg] = truncted_filen[1]
+        else:
+          nffg_name_variable_str[number_of_nffg] = ""
+        nffg_num_list.append(number_of_nffg)
     nffg_num_list = sorted(filter(lambda x: x>=starting_lvl, nffg_num_list))
   
   if print_avgs:
-    print "test_lvl, avg(link_bw), ",", ".join(["".join(["avg(",noderes,")"]) \
+    print "nffg_num, avg(link_bw), ",", ".join(["".join(["avg(",noderes,")"]) \
                                                 for noderes in reskeys])
   if print_devs:
-    print "test_lvl, ", ", ".join(["".join(["dev(",noderes,")"]) \
+    print "nffg_num, ", ", ".join(["".join(["dev(",noderes,")"]) \
                                    for noderes in cdf])
 
   if print_minmax:
-    print "test_lvl, ", ", ".join(["min(%s), max(%s)"%(res, res) for res in \
+    print "nffg_num, ", ", ".join(["min(%s), max(%s)"%(res, res) for res in \
                                    reskeys + ['link_bw']])
 
   if draw_hist:
@@ -390,39 +411,36 @@ def main(argv):
     empty_cdf = copy.deepcopy(cdf)
 
   if not single_nffg_process:
-    for test_lvl in nffg_num_list:
-      filename = "test_lvl-%s.nffg.tgz"%test_lvl
-      os.system("".join(["tar -xf ",loc_tgz,"/",filename])) # decompress
-      # after decompression nffg-s end up two folder deep.
-      if consider_seeds:
-        nffg_prefix = "nffgs-seed%s-batch_tests/"%seednum+loc_tgz.split("/")[-1]+"/"
-      else:
-        nffg_prefix = "nffgs-batch_tests/"+loc_tgz.split("/")[-1]+"/"
-      with open("".join([nffg_prefix,"test_lvl-",str(test_lvl), ".nffg"]),
-                "r") as f:
+    for nffg_num in nffg_num_list:
+      filename = "".join((nffg_prefix, str(nffg_num), nffg_suffix,
+                          nffg_name_variable_str[nffg_num], ".nffg"))
+      with open("".join((loc_of_nffgs, "/", filename)), "r") as f:
         nffg = NFFG.parse(f.read())
         nffg.calculate_available_node_res()
         nffg.calculate_available_link_res([])
 
-      hist, cdf = gather_and_print_cdf_hist_data(nffg, empty_hist, empty_cdf, test_lvl)
-
-      # delete the NFFG and its parent folders
-      os.system("rm -rf nffgs-batch_tests/")
+      hist, cdf = gather_and_print_cdf_hist_data(nffg, empty_hist, empty_cdf, nffg_num)
 
       # we can only know the number of CDF points after the first processing.
       # this number should stay the same for all consequential NFFG-s.
-      if print_cdf_data and test_lvl == nffg_num_list[0]:
-        print ",".join(["test_lvl"] + \
+      if print_cdf_data and nffg_num == nffg_num_list[0]:
+        print ",".join(["nffg_num"] + \
                        [res_cdf_to_print + "_cdf_point" + str(i) \
                         for i in range(0, len(cdf[res_cdf_to_print]) + 2)])
 
-      if draw_hist:
-        draw_histogram(hist, add_hist_values, hist_format, plot_aspect, test_lvl)
+      # NOTE: Draw hist doesn't work but not needed for now.
+      # if draw_hist:
+      #   draw_histogram(hist, add_hist_values, hist_format, plot_aspect,
+      #                  loc_of_nffgs, nffg_prefix, nffg_suffix,
+      #                  nffg_name_variable_str[nffg_num], nffg_num)
 
       if draw_cdf:
         draw_cummulative_distribution_function(cdf, res_cdf_to_print,
                                                no_cdf_interpolation, cdf_format,
-                                               plot_aspect, test_lvl)
+                                               plot_aspect, loc_of_nffgs,
+                                               nffg_prefix, nffg_suffix,
+                                               nffg_name_variable_str[nffg_num],
+                                               nffg_num)
       # maybe finish after one iteration
       if process_only_one:
         break
@@ -433,13 +451,15 @@ def main(argv):
       nffg.calculate_available_link_res([])
       hist, cdf = gather_and_print_cdf_hist_data(nffg, empty_hist, empty_cdf)
 
-      if draw_hist:
-        draw_histogram(hist, add_hist_values, hist_format, plot_aspect)
+      # if draw_hist:
+      #   draw_histogram(hist, add_hist_values, hist_format, plot_aspect,
+      #                  loc_of_nffgs, nffg_prefix, nffg_suffix)
 
       if draw_cdf:
         draw_cummulative_distribution_function(cdf, res_cdf_to_print,
                                                no_cdf_interpolation, cdf_format,
-                                               plot_aspect)
+                                               plot_aspect, loc_of_nffgs,
+                                               nffg_prefix, nffg_suffix)
 
 if __name__ == '__main__':
   main(sys.argv[1:])
