@@ -64,6 +64,7 @@ Removes the uncompressed NFFG after it is finished with its processing.
                                     between points.
    --print_minmax                   Print the minimal and maximal utilization of 
                                     all resource types of the processed NFFG-s.
+   --print_objective_value          Print the objective function value of each NFFG.
    --plot_aspect=<<float>>          Ratio of x/y axis.
 """
 
@@ -289,6 +290,29 @@ def draw_cummulative_distribution_function (cdf, res_cdf_to_print,
               bbox_inches='tight')
   plt.close(fig)
 
+def calc_objective_value (nffg):
+  max_edge_cost = 0.0
+  edge_cost = 0.0
+  # find sum of used bandwidth and its max possible value
+  for link in nffg.links:
+    if link.type == NFFG.TYPE_LINK_STATIC:
+      max_edge_cost += link.bandwidth
+      edge_cost += link.bandwidth - link.availbandwidth
+
+  # find the node with lowest utilization, balancing means maximizing
+  # the lowest utilization
+  node_resources_to_balance = ["cpu", "mem"]
+  load_balance_component = 1.0
+  for res in node_resources_to_balance:
+    for node in nffg.infras:
+      if node.resources[res] > 1e-30:
+        node_load = float(node.resources[res] - node.availres[res]) / \
+                    node.resources[res]
+        if node_load < load_balance_component:
+          load_balance_component = node_load
+
+  return edge_cost/max_edge_cost, load_balance_component
+
 def main(argv):
   global print_avgs, print_devs, print_minmax, draw_hist, draw_cdf
   try:
@@ -298,7 +322,8 @@ def main(argv):
                                              "print_devs", "print_avgs",
                                              "print_cdf_data=", "print_minmax", 
                                              "no_cdf_interpolation", "plot_aspect=",
-                                               "single_nffg=", "prefix=", "suffix="])
+                                               "single_nffg=", "prefix=", "suffix=",
+                                             "print_objective_value"])
   except getopt.GetoptError as goe:
     print helpmsg
     raise
@@ -319,6 +344,7 @@ def main(argv):
   print_devs = False
   print_avgs = False
   print_minmax = False
+  print_objective_value = False
   for opt, arg in opts:
     if opt == "-h":
       print helpmsg
@@ -369,6 +395,8 @@ def main(argv):
       nffg_prefix = arg
     elif opt == "--suffix":
       nffg_suffix = arg
+    elif opt == "--print_objective_value":
+      print_objective_value = True
 
   if not single_nffg_process and (nffg_suffix is None or nffg_prefix is None):
     raise Exception("If --single_process is not specified a location and "
@@ -405,6 +433,9 @@ def main(argv):
     print "nffg_num, ", ", ".join(["min(%s), max(%s)"%(res, res) for res in \
                                    reskeys + ['link_bw']])
 
+  if print_objective_value:
+    print "nffg_num, edge_cost_comp, load_balancing_comp, total"
+
   if draw_hist:
     empty_hist = copy.deepcopy(hist)
   if draw_cdf:
@@ -428,6 +459,10 @@ def main(argv):
                        [res_cdf_to_print + "_cdf_point" + str(i) \
                         for i in range(0, len(cdf[res_cdf_to_print]) + 2)])
 
+      if print_objective_value:
+        edge_comp, balancing_comp = calc_objective_value(nffg)
+        print ",".join(map(str, (nffg_num, edge_comp, balancing_comp,
+                                 edge_comp+balancing_comp)))
       # NOTE: Draw hist doesn't work but not needed for now.
       # if draw_hist:
       #   draw_histogram(hist, add_hist_values, hist_format, plot_aspect,
