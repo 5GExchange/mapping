@@ -158,7 +158,7 @@ class HybridOrchestrator():
                                                        "sum req and removed expired ones" % request)
 
     def do_online_mapping(self, request, resource):
-        self.set_online_resource_graph(resource)
+        self.set_online_resource_graph(resource, request)
         temp_res_online = copy.deepcopy(self.res_online)
         try:
             # propagate_e2e_reqs must be turned False (so they are not tried to
@@ -307,7 +307,7 @@ class HybridOrchestrator():
       for i in self.deleted_services:
         self.remove_sg_from_sum_req(i['SG'])
 
-    def set_online_resource_graph(self, resource):
+    def set_online_resource_graph(self, resource, request):
         # Resource sharing strategy
         try:
             log.debug("Setting online resource for sharing between "
@@ -317,13 +317,15 @@ class HybridOrchestrator():
               # The online_res may be under merge OR offline reoptimization is idle because it was not needed.
               self.res_online = self.__res_sharing_strat.get_online_resource(resource,
                                                                              self.__res_offline)
-              log.debug("Setting online based on received resource!")
+              log.debug("Setting online resource based on received resource "
+                        "for request %s!"%request.id)
             elif self.offline_status == HybridOrchestrator.OFFLINE_STATE_FINISHED:
               # we need to set res_online based on the reoptimized resource not the one handled by our caller.
               # lock is not needed because offline is terminated.
               self.res_online = self.__res_sharing_strat.get_online_resource(self.reoptimized_resource,
                                                                              self.__res_offline)
-              log.debug("Setting online resource based on reoptimized resource!")
+              log.debug("Setting online resource based on reoptimized resource "
+                        "for request %s!"%request.id)
               self.offline_status = HybridOrchestrator.OFFLINE_STATE_INIT
             else:
               raise Exception("Invalid offline_status: %s"%self.offline_status)
