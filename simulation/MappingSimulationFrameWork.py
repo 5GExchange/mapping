@@ -325,6 +325,7 @@ class MappingSolutionFramework():
             # Remove expired service graph requests
             self.__clean_expired_requests(datetime.datetime.now())
 
+            log.debug("Number of mapping iteration is %s"%req_num)
             self.__mapping(request, life_time, req_num)
 
             self.running_array.append(self.running_requests)
@@ -345,7 +346,8 @@ class MappingSolutionFramework():
                self.__del_service(service, service['req_num'])
                self.deleted_services.append(service)
                self.running_requests -= 1
-
+               log.debug("Number of requests in the deleted_services "
+                         "list: %s"%len(self.deleted_services))
 
     def create_request(self):
         log.info("Start request generator thread")
@@ -375,6 +377,9 @@ class MappingSolutionFramework():
                 scale_radius = (1/self.request_arrival_lambda)
                 exp_time = N.random.exponential(scale_radius)
                 time.sleep(exp_time)
+
+            log.debug("Request Generator thread: Number of requests waiting in"
+                      " the queue %s"%self.__request_list.qsize())
 
             # Increase simulation iteration
             if (self.sim_iter < sim_end):
