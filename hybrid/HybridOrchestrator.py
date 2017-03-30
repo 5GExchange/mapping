@@ -92,14 +92,15 @@ class HybridOrchestrator():
             self.offline_mapping_thread = None
             self.offline_status = HybridOrchestrator.OFFLINE_STATE_INIT
             self.reoptimized_resource = None
-            self.when_to_opt_param = config['when_to_opt_parameter']
+            self.when_to_opt_param = int(float(config['when_to_opt_parameter']))
+
 
             # What to optimize strategy
             what_to_opt_strat = config['what_to_optimize']
             if what_to_opt_strat == "reqs_since_last":
-                self.__what_to_opt = ReqsSinceLastOpt()
+                self.__what_to_opt = ReqsSinceLastOpt(full_log_path)
             elif what_to_opt_strat == "all_reqs":
-                self.__what_to_opt = AllReqsOpt()
+                self.__what_to_opt = AllReqsOpt(full_log_path)
             else:
                 raise ValueError(
                     'Invalid what_to_opt_strat type! Please choose one of the '
@@ -116,14 +117,14 @@ class HybridOrchestrator():
                 self.__when_to_opt = FixedTime(full_log_path)
             elif when_to_opt_strat == "periodical_model_based":
                 self.__when_to_opt = PeriodicalModelBased(full_log_path)
-            elif when_to_opt_strat == "allways":
-                self.__when_to_opt = Allways(full_log_path)
+            elif when_to_opt_strat == "always":
+                self.__when_to_opt = Always(full_log_path)
             else:
                 raise ValueError(
                     'Invalid when_to_opt type! Please choose '
                                    'one of the followings: modell_based, '
                                    'fixed_req_count, fixed_time, '
-                                   'periodical_model_based, allways')
+                                   'periodical_model_based, always')
 
             # Mapped RG
             self.resource_graph = RG
@@ -411,7 +412,7 @@ class HybridOrchestrator():
         # Start offline mapping thread
         # check if there is anything to optimize
         if self.res_online is not None and len([n for n in self.res_online.nfs]) > 0:
-          if self.__when_to_opt.need_to_optimize(not self.offline_status==HybridOrchestrator.OFFLINE_STATE_INIT, 3):
+          if self.__when_to_opt.need_to_optimize(not self.offline_status==HybridOrchestrator.OFFLINE_STATE_INIT, self.when_to_opt_param):
               try:
                   self.offline_mapping_thread = threading.Thread(None,
                               self.do_offline_mapping, "Offline mapping thread", [])

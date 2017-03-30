@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
-import time
+import datetime
 import logging
+import time
 
 log = logging.getLogger(" WhenToOpt ")
 
@@ -29,26 +30,44 @@ class FixedReqCount(AbstractWhenToOptimizeStrategy):
 
     def __init__(self, full_log_path):
         super(FixedReqCount, self).__init__(full_log_path)
-        self.req_counter = 0
+        self.call_counter = 0
 
     def need_to_optimize(self, offline_status, parameter):
-        self.req_counter += 1
-        if self.req_counter % parameter == 0:
+        self.call_counter += 1
+        log.debug("FixedReqCounter param: " + str(parameter) +
+                  "call_counter: " + str(self.call_counter))
+
+        # Ha fut eppen az offline es akkor oszthato maradek nelkul a call_
+        # counter a parameterrel akkor "kihagy egy kort" az optimalizalas.
+        #  Ez nem biztos hogy baj de nagy parameter eseten sok ido eltelhet
+        # az optimalizalasok kozott. Kezeljuk ezt vagy jo igy?
+        if (self.call_counter % parameter == 0) and not offline_status:
+            log.debug("WhenToOpt: Need to optimize!")
             return True
         else:
+            log.debug("WhenToOpt: No need to optimize!")
             return False
 
 
-class Allways(AbstractWhenToOptimizeStrategy):
+class Always(AbstractWhenToOptimizeStrategy):
 
     def __init__(self, full_log_path):
-        super(Allways, self).__init__(full_log_path)
+        super(Always, self).__init__(full_log_path)
 
     def need_to_optimize(self, offline_status, parameter):
+        """"
+        Calculate elapsed time and if it is greater than the parameter,
+        than return True.
+
+          :param offline_status: Offline running status. bool
+          :param parameter: -
+          :return: bool
+          """
         if offline_status:
-            log.info("Offline still running ")
+            log.debug("WhenToOpt: Offline still running ")
             return False
         else:
+            log.debug("WhenToOpt: Need to optimize!")
             return True
 
 
@@ -59,11 +78,21 @@ class FixedTime(AbstractWhenToOptimizeStrategy):
         self.start_time = time.time()
 
     def need_to_optimize(self, offline_status, parameter):
+        """
+        Calculate elapsed time and if it is greater than the parameter,
+        than return True.
+
+        :param offline_status: Offline running status. bool
+        :param parameter: Time frequency in seconds.
+        :return: bool
+        """
         elapsed_time = time.time() - self.start_time
-        if elapsed_time >= parameter:
+        if (elapsed_time > parameter) and not offline_status:
             self.start_time = time.time()
+            log.debug("WhenToOpt: Need to optimize!")
             return True
         else:
+            log.debug("WhenToOpt: No need to optimize!")
             return False
 
 

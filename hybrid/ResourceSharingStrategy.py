@@ -44,19 +44,62 @@ class AbstractResourceSharingStrategy(object):
 
 class DynamicMaxOnlineToAll(AbstractResourceSharingStrategy):
     # TODO: dinamikus RG gen
+    # NOT READY YET !!!!!!!!!!
 
-    def get_rg_max_node(self, rg):
-        pass
+    def __init__(self, resource_grap, full_log_path):
+        super(DynamicMaxOnlineToAll, self).__init__(resource_grap, full_log_path)
 
-    def get_rg_max_link(self, rg):
-        pass
+        self.max_avail_node_bw = 0.0
+        self.max_avail_node_cpu = 0
+        self.max_avail_node_mem = 0.0
+        self.max_avail_node_storage = 0.0
+        self.max_avail_link_bw = 0.0
+        self.max_avail_sw_bw = 0.0
+
+    def set_rg_max_avail_node_and_link(self, rs):
+
+        res_online = copy.deepcopy(rs)
+        res_online.calculate_available_node_res()
+        res_online.calculate_available_link_res([])
+
+        for i in res_online.infras:
+            if i.infra_type == 'EE':
+                if i.availres.bandwidth > self.max_avail_node_bw:
+                    self.max_avail_node_bw = i.availres.bandwidth
+
+                if i.availres.cpu > self.max_avail_node_cpu:
+                    self.max_avail_node_cpu = i.availres.cpu
+
+                if i.availres.mem > self.max_avail_node_mem:
+                    self.max_avail_node_mem = i.availres.mem
+
+                if i.availres.storage > self.max_avail_node_storage:
+                    self.max_avail_node_storage = i.availres.storage
+
+            elif i.infra_type == 'SDN-SWITCH':
+                if i.availres.bandwidth > self.max_avail_sw_bw:
+                    self.max_avail_sw_bw = i.availres.bandwidth
+
+            else:
+                log.error("Invalid infra type!")
+                raise
+
+            for k in i.ports:
+                for l in k.flowrules:
+                    if l.bandwidth > self.max_avail_link_bw:
+                            self.max_avail_link_bw = l.bandwidth
 
     def get_offline_resource(self, res_online, res_offline):
-        max_node = self.get_rg_max_node(res_online)
-        max_link = self.get_rg_max_link(res_online)
+        self.set_rg_max_avail_node_and_link(res_online)
+        to_offline = copy.deepcopy(self.bare_resource_graph)
+        for i in to_offline.infras:
+            if i.infra_type == 'EE':
+
+                pass
+        return copy.deepcopy(res_online)
 
     def get_online_resource(self, res_online, res_offline):
-        return res_online
+        return copy.deepcopy(res_online)
 
 
 class DoubleHundred(AbstractResourceSharingStrategy):
