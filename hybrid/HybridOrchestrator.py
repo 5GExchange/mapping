@@ -212,6 +212,10 @@ class HybridOrchestrator():
                   self.__res_offline,
                   self.reqs_under_optimization,
                   ignore_infras=True)
+
+                # Remove infras from del graph to avoid unnecessary warning during delete.
+                for infra in [i for i in reqs_not_to_be_opt.infras]:
+                  reqs_not_to_be_opt.del_node(infra)
                 if len([n for n in self.reqs_under_optimization.nfs]) == 0:
                   raise uet.MappingException("Offline didn't get any requests to optimize",
                                              False)
