@@ -225,6 +225,11 @@ class HybridOrchestrator():
                 for req in self.reqs_under_optimization.reqs:
                   if not self.__res_offline.network.has_edge(req.src.node.id,
                                                              req.dst.node.id, key=req.id):
+                    # Bandwidth requirements of SGhops are already known by the
+                    # flowrules!! IF we would keep the EdgeReqs with non-zero
+                    # bandwidth, they would count as additional bw!
+                    # Only the delay is important in this case!
+                    req.bandwidth = 0.0
                     # port objects are set correctly by NFFG lib
                     self.__res_offline.add_req(req.src, req.dst, req=req)
 
