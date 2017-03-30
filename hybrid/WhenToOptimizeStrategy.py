@@ -46,7 +46,7 @@ class Allways(AbstractWhenToOptimizeStrategy):
 
     def need_to_optimize(self, offline_status, parameter):
         if offline_status:
-            log.info(" Offline still running ")
+            log.info("Offline still running ")
             return False
         else:
             return True

@@ -223,7 +223,10 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
          **migration_handler_kwargs):
   """
   Starts an offline optimization of the 'resource', which may contain NFs for
-  considering migration if optimize_already_mapped_nfs is set.
+  considering migration if optimize_already_mapped_nfs is set. 'request' should
+  be new NF-s to be mapped during the reoptimization of 'resource'.
+  If 'optimize_already_mapped_nfs' is set to false, 'request' should contain
+  only NF-s which are net yet mapped to resource.
 
   :param optimize_already_mapped_nfs:
   :param request:
@@ -239,10 +242,10 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
   resource = copy.deepcopy(resource)
 
   migration_handler = None
+  req_nf_ids = [nf.id for nf in request.nfs]
   if optimize_already_mapped_nfs:
     # This is a full reoptimization, add VNFs and everything from resource to
     # request for reoptimization!
-    req_nf_ids = [nf.id for nf in request.nfs]
     for vnf in resource.nfs:
       if vnf.id not in req_nf_ids:
         request.add_nf(vnf)
@@ -282,7 +285,13 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
   else:
     # No migration can happen! We just map the given request and resource
     # with MILP.
-    pass
+    # Fail if there is VNF which is mapped already!
+    for vnf in resource.nfs:
+      if vnf.id in req_nf_ids:
+        raise uet.BadInputException("If 'optimize_already_mapped_nfs' is set to "
+                                    "False, request shouldn't contain VNFs "
+                                    "from resource", "VNF %s is both in request "
+                                                     "and resource!"%vnf.id)
   mappedNFFG = convert_mip_solution_to_nffg([request], resource,
                                             migration_handler=migration_handler,
                                             migration_coeff=migration_coeff,
@@ -304,9 +313,9 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
 
 if __name__ == '__main__':
   req, net = None, None
-  with open('../alg1/nffgs/escape-mn-req-extra.nffg', "r") as f:
+  with open('../simulation/offline-req.nffg78', "r") as f:
     req = NFFG.parse(f.read())
-  with open('../alg1/nffgs/escape-mn-double-mapped.nffg', "r") as f:
+  with open('../simulation/offline-res.nffg78', "r") as f:
     net = NFFG.parse(f.read())
 
   # print "\nMIGRATION-TEST: Simple MILP: \n"
@@ -329,6 +338,6 @@ if __name__ == '__main__':
 
   print "\nMIGRATION-TEST: Optimize everything with composite objective"
   with open("reopt-milp-lb.nffg", "w") as f:
-    f.write(MAP(req, net, optimize_already_mapped_nfs=True, migration_coeff=1.0,
+    f.write(MAP(req, net, optimize_already_mapped_nfs=False, migration_coeff=1.0,
                 load_balance_coeff=1.0, edge_cost_coeff=1.0,
                 migration_handler_name="ConstantMigrationCost", const_cost=2.0).dump())

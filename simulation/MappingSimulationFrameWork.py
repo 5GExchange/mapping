@@ -241,26 +241,26 @@ class MappingSolutionFramework():
                 "Invalid 'orchestrator' in the simulation.cfg file! "
                 "Please choose one of the followings: online, hybrid, offline")
 
-
-    def __mapping(self, service_graph, life_time, time, sim_iter):
+    def __mapping(self, service_graph, life_time, req_num):
+        current_time = datetime.datetime.now()
         try:
             log.debug("# of VNFs in resource graph: %s" % len(
                 [n for n in self.__network_topology.nfs]))
 
             # Give a copy for the mapping, so in case it fails, we dont have to
             # reset the prerocessed/modified resource
-            current_time = datetime.datetime.now()
             self.__network_topology = self.__orchestrator_adaptor.MAP(
                 service_graph, copy.deepcopy(self.__network_topology))
             log.info("Time passed with one mapping response: %s s"%
                      (datetime.datetime.now() - current_time))
             # Adding successfully mapped request to the remaining_request_lifetimes
-            service_life_element = {"dead_time": time +
-                            life_time, "SG": service_graph, "req_num": sim_iter}
+            service_life_element = {"dead_time": datetime.datetime.now() +
+                                                 datetime.timedelta(0, life_time),
+                                    "SG": service_graph, "req_num": req_num}
 
             self.__remaining_request_lifetimes.append(service_life_element)
             log.info("Mapping thread: Mapping service_request_"
-                     + str(sim_iter) + " successful +")
+                     + str(req_num) + " successful +")
             self.mapped_requests += 1
             self.running_requests += 1
             self.mapped_array.append(self.mapped_requests)
@@ -270,8 +270,10 @@ class MappingSolutionFramework():
                 self.dump()
 
         except uet.MappingException as me:
+            log.info("Time passed with one mapping response: %s s" %
+                     (datetime.datetime.now() - current_time))
             log.info("Mapping thread: Mapping service_request_" +
-                     str(sim_iter) + " unsuccessful\n%s"%me.msg)
+                     str(req_num) + " unsuccessful\n%s" % me.msg)
             self.refused_requests += 1
             self.refused_array.append(self.refused_requests)
             # we continue working, the __network_topology is in the last valid state
@@ -312,23 +314,20 @@ class MappingSolutionFramework():
     def make_mapping(self):
         log.info("Start mapping thread")
 
-        while req_gen_thread.is_alive():
-            while not self.__request_list.empty():
-                request_list_element = self.__request_list.get()
-                request = request_list_element['request']
-                life_time = request_list_element['life_time']
-                req_num = request_list_element['req_num']
-                self.__request_list.task_done()
+        while req_gen_thread.is_alive() or not self.__request_list.empty():
+            request_list_element = self.__request_list.get()
+            request = request_list_element['request']
+            life_time = request_list_element['life_time']
+            req_num = request_list_element['req_num']
+            self.__request_list.task_done()
 
-                # TODO: remove expired requests even when mapping didn't happen!
-                # Remove expired service graph requests
-                self.__clean_expired_requests(datetime.datetime.now())
+            # TODO: remove expired requests even when mapping didn't happen!
+            # Remove expired service graph requests
+            self.__clean_expired_requests(datetime.datetime.now())
 
-                self.__mapping(request, datetime.timedelta(0, life_time),
-                               datetime.datetime.now(),
-                               req_num)
+            self.__mapping(request, life_time, req_num)
 
-                self.running_array.append(self.running_requests)
+            self.running_array.append(self.running_requests)
 
         if self.wait_all_req_expire:
             # Wait for all request to expire

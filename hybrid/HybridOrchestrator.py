@@ -23,11 +23,12 @@ log = logging.getLogger(" Hybrid Orchestrator")
 
 class ResNFFGProtector(object):
 
-  def __init__(self, do_logging=False):
+  def __init__(self, lock_name, do_logging=False):
     self.readers_count = 0
     self.reader_counter_protector = threading.Lock()
     self.res_nffg_protector = threading.Lock()
     self.do_logging = do_logging
+    self.lock_name = lock_name
 
   def start_reading_res_nffg(self, read_reason):
     self.reader_counter_protector.acquire()
@@ -35,8 +36,8 @@ class ResNFFGProtector(object):
     if self.readers_count == 1:
       self.res_nffg_protector.acquire()
       if self.do_logging:
-        log.debug("Locking res nffg for reading: \"%s\", number of current readers: %s"
-                  %(read_reason, self.readers_count))
+        log.debug("Locking %s nffg for reading: \"%s\", number of current readers: %s"
+                  %(self.lock_name, read_reason, self.readers_count))
     self.reader_counter_protector.release()
 
   def finish_reading_res_nffg(self, read_reason):
@@ -47,19 +48,19 @@ class ResNFFGProtector(object):
     if self.readers_count == 0:
       self.res_nffg_protector.release()
       if self.do_logging:
-        log.debug("Releasing res nffg for reading: \"%s\", number of current readers: %s"
-                  %(read_reason, self.readers_count))
+        log.debug("Releasing %s nffg for reading: \"%s\", number of current readers: %s"
+                  %(self.lock_name, read_reason, self.readers_count))
     self.reader_counter_protector.release()
 
   def start_writing_res_nffg(self, write_reason):
     self.res_nffg_protector.acquire()
     if self.do_logging:
-      log.debug("Locking res nffg for writing: \"%s\"."%write_reason)
+      log.debug("Locking %s nffg for writing: \"%s\"."%(self.lock_name, write_reason))
 
   def finish_writing_res_nffg(self, write_reason):
     self.res_nffg_protector.release()
     if self.do_logging:
-      log.debug("Releasing res nffg for writing: \"%s\"."%write_reason)
+      log.debug("Releasing %s nffg for writing: \"%s\"."%(self.lock_name, write_reason))
 
 
 class HybridOrchestrator():
@@ -79,14 +80,14 @@ class HybridOrchestrator():
             log.setLevel(logging.DEBUG)
 
             # Protects the res_online
-            self.res_online_protector = ResNFFGProtector()
+            self.res_online_protector = ResNFFGProtector("res_online", True)
             self.res_online = None
             self.__res_offline = copy.deepcopy(RG)
             self.deleted_services = deleted_services
             # All request in one NFFG
             # The sum of reqs needs to be accessed from Offline optimization to determine
             # what to opt and online mapping have to gather all requests there
-            self.sum_req_protector = ResNFFGProtector()
+            self.sum_req_protector = ResNFFGProtector("sum_req", True)
             self.SUM_req = NFFG()
             self.offline_mapping_thread = None
             self.offline_status = HybridOrchestrator.OFFLINE_STATE_INIT
@@ -149,14 +150,15 @@ class HybridOrchestrator():
             self.edge_cost_coeff = float(config['edge_cost_coeff'])
 
     def merge_all_request(self, request):
-        self.sum_req_protector.start_writing_res_nffg("Appending new request to the sum of requests")
+        self.sum_req_protector.start_writing_res_nffg("Appending new request to the "
+                                                      "sum of requests and removing expired ones")
         self.SUM_req = NFFGToolBox.merge_nffgs(self.SUM_req, request)
-        log.debug("Requests in SUM_req: %s"%[r.sg_path for r in self.SUM_req.reqs])
-        self.sum_req_protector.finish_writing_res_nffg("New request %s appended to sum req" % request)
+        log.debug("Requests in SUM_req: %s"%len([r.sg_path for r in self.SUM_req.reqs]))
+        self.sum_req_protector.finish_writing_res_nffg("New request %s appended to "
+                                                       "sum req and removed expired ones" % request)
 
     def do_online_mapping(self, request, resource):
-        self.res_online_protector.start_writing_res_nffg("Map a request in an online manner")
-        self.set_online_resource_graph(resource)
+        self.set_online_resource_graph(resource, request)
         temp_res_online = copy.deepcopy(self.res_online)
         try:
             # propagate_e2e_reqs must be turned False (so they are not tried to
@@ -180,39 +182,62 @@ class HybridOrchestrator():
             self.res_online = temp_res_online
             self.online_fails.put(error)
             # Balazs: an online failure due to mapping is natural, we continue working.
-
         except Exception as e:
             # Balazs: exception is not thrown when acquire didnt succeed, this exception is fatal
             log.error(str(e.message) + str(e.__class__))
             log.error("do_online_mapping : "
                       "Unhandled exception cought during online mapping :( ")
             raise
-        finally:
-            self.res_online_protector.finish_writing_res_nffg("Online mapping finished or failed")
 
     def do_offline_mapping(self):
             try:
+                self.offline_status = HybridOrchestrator.OFFLINE_STATE_RUNNING
                 self.sum_req_protector.start_reading_res_nffg("Determine set of requests to optimize")
-                # the res_online and the sum_req must not be modified to determine what
-                # reqs on what resource should the offline algorithm reoptimize!
-                self.set_offline_resource_graph()
+                self.del_exp_reqs_from_sum_req()
                 self.reqs_under_optimization = self.__what_to_opt.reqs_to_optimize(self.SUM_req)
                 self.sum_req_protector.finish_reading_res_nffg("Got requests to optimize")
+                # WARNING: we can't lock both of them at the same time, cuz that can cause deadlock
+                # If both of them needs to be locked make the order: sum_req -> res_online!
+                self.set_offline_resource_graph()
                 log.debug("SAP count in request %s and in resource: %s, resource total size: %s"%
                         (len([s for s in self.reqs_under_optimization.saps]),
                           len([s for s in self.__res_offline.saps]), len(self.__res_offline)))
-                self.offline_status = HybridOrchestrator.OFFLINE_STATE_RUNNING
 
-                # set mapped NF reoptimization False, because it is what_to_opt's choice!
+                # set mapped NF reoptimization True, and delete other NFs from
+                # __res_offline which are not in reqs_under_optimization, because
+                # it is what_to_opt's responsibilty to determine the set of requests to optimize!
+                # ignore_infras=True calculates the difference only on the SG.
+                self.__res_offline = NFFGToolBox.recreate_all_sghops(self.__res_offline)
+                _, reqs_not_to_be_opt = NFFGToolBox.generate_difference_of_nffgs(
+                  self.__res_offline,
+                  self.reqs_under_optimization,
+                  ignore_infras=True)
+                if len([n for n in self.reqs_under_optimization.nfs]) == 0:
+                  raise uet.MappingException("Offline didn't get any requests to optimize",
+                                             False)
+                log.debug("Removing requests (%s NFs) from res_offline which "
+                          "shouldn't be optimized!"%len([n for n in reqs_not_to_be_opt.nfs]))
+                self.__res_offline = online_mapping.MAP(reqs_not_to_be_opt,
+                                                        self.__res_offline,
+                                                        mode=NFFG.MODE_DEL)
+                log.debug("Adding %s path requirements to offline resource."
+                          %len([r for r in self.reqs_under_optimization.reqs]))
+                for req in self.reqs_under_optimization.reqs:
+                  if not self.__res_offline.network.has_edge(req.src.node.id,
+                                                             req.dst.node.id, key=req.id):
+                    # port objects are set correctly by NFFG lib
+                    self.__res_offline.add_req(req.src, req.dst, req=req)
+
+                # we don't want to map additional requests, so set request to empty
                 self.__res_offline = offline_mapping.MAP(
-                    self.reqs_under_optimization, self.__res_offline, False,
+                    NFFG(), self.__res_offline, True,
                     self.mig_handler, self.migration_coeff, self.load_balance_coeff,
                     self.edge_cost_coeff)
 
                 log.info("Offline mapping is ready")
 
-                log.info("Delete expired requests from the request summary")
-                self.del_exp_reqs_from_SUMreq_and_res_offline()
+                log.info("Delete expired requests from the res_offline")
+                self.del_exp_reqs_from_res_offline()
                 log.info("Try to merge online and offline")
                 # the merge MUST set the state before releasing the writeing lock
                 self.merge_online_offline()
@@ -230,11 +255,7 @@ class HybridOrchestrator():
                 log.error("Offline mapping failed: with exception %s, message: %s"%(e,msg))
                 raise
 
-
-    def del_exp_reqs_from_SUMreq_and_res_offline(self):
-        # We had better lock sum_req for the whole function to give some priority for the
-        # offline-online RG merging over the online mapping
-        self.sum_req_protector.start_writing_res_nffg("Removing expired request from sum_req")
+    def del_exp_reqs_from_res_offline(self):
         try:
           for i in self.deleted_services:
               delete = False
@@ -252,16 +273,6 @@ class HybridOrchestrator():
                                                         self.__res_offline,
                                                         mode=NFFG.MODE_DEL,
                                                         keep_input_unchanged=True)
-                # The MAP function removed from NFFGs which represent mappings,
-                # removal from an SG collection is much easier.
-                for nf in i['SG'].nfs:
-                  self.SUM_req.del_node(nf.id)
-                for req in i['SG'].reqs:
-                  self.SUM_req.del_edge(req.src.node.id, req.dst.node.id, id=req.id)
-                for sap in i['SG'].saps:
-                  if self.SUM_req.network.out_degree(sap.id) + \
-                     self.SUM_req.network.in_degree(sap.id) == 0:
-                    self.SUM_req.del_node(sap.id)
 
         except uet.UnifyException as ue:
           log.error("UnifyException catched during deleting expired requests from sum_req")
@@ -270,11 +281,33 @@ class HybridOrchestrator():
         except Exception as e:
           log.error("Unhandled exception catched during deleting expired requests from sum_req")
           raise
-        finally:
-          self.sum_req_protector.finish_writing_res_nffg("Removed or failed during expired "
-                                                         "request deletion from sum_req")
 
-    def set_online_resource_graph(self, resource):
+    def remove_sg_from_sum_req(self, request):
+      """
+      Removes request from SUM_req, the sum_req protector lock must be called
+      around it!
+      :param request:
+      :return:
+      """
+      # The MAP function removed from NFFGs which represent mappings,
+      # removal from an SG collection is much easier.
+      for nf in request.nfs:
+        self.SUM_req.del_node(nf.id)
+      for req in request.reqs:
+        self.SUM_req.del_edge(req.src.node.id, req.dst.node.id, id=req.id)
+      for sap in request.saps:
+        # if sap.id is a string it may try to iterate in it... so we can
+        # prevent this with checking whether it contains this node.
+        if sap.id in self.SUM_req.network:
+          if self.SUM_req.network.out_degree(sap.id) + \
+             self.SUM_req.network.in_degree(sap.id) == 0:
+            self.SUM_req.del_node(sap.id)
+
+    def del_exp_reqs_from_sum_req(self):
+      for i in self.deleted_services:
+        self.remove_sg_from_sum_req(i['SG'])
+
+    def set_online_resource_graph(self, resource, request):
         # Resource sharing strategy
         try:
             log.debug("Setting online resource for sharing between "
@@ -284,13 +317,15 @@ class HybridOrchestrator():
               # The online_res may be under merge OR offline reoptimization is idle because it was not needed.
               self.res_online = self.__res_sharing_strat.get_online_resource(resource,
                                                                              self.__res_offline)
-              log.debug("Setting online based on received resource!")
+              log.debug("Setting online resource based on received resource "
+                        "for request %s!"%request.id)
             elif self.offline_status == HybridOrchestrator.OFFLINE_STATE_FINISHED:
-              # we need to set res_online based on the reoptimized resource not the one handled by our caller
+              # we need to set res_online based on the reoptimized resource not the one handled by our caller.
               # lock is not needed because offline is terminated.
               self.res_online = self.__res_sharing_strat.get_online_resource(self.reoptimized_resource,
                                                                              self.__res_offline)
-              log.debug("Setting online resource based on reoptimized resource!")
+              log.debug("Setting online resource based on reoptimized resource "
+                        "for request %s!"%request.id)
               self.offline_status = HybridOrchestrator.OFFLINE_STATE_INIT
             else:
               raise Exception("Invalid offline_status: %s"%self.offline_status)
@@ -310,7 +345,8 @@ class HybridOrchestrator():
     def merge_online_offline(self):
             try:
                 self.res_online_protector.start_writing_res_nffg("Removing SC-s which are possibly migrated and merging")
-                before_merge = copy.deepcopy(self.res_online)
+                # res_online always contains only the alive and currently mapped requests!
+                self.reoptimized_resource = copy.deepcopy(self.res_online)
                 # Balazs: Delete requests from res_online, which are possibly migrated
                 # NOTE: if an NF to be deleted doesn't exist in the substrate DEL mode ignores it.
                 log.debug("merge_online_offline: Removing NFs to be migrated from "
@@ -321,13 +357,12 @@ class HybridOrchestrator():
                 # if there is NF which is not in res_online anymore, DEL mode ignores it
                 for req in possible_reqs_to_migrate.reqs:
                   self.res_online.del_edge(req.src.node.id, req.dst.node.id, id=req.id)
-                # TODO: should we make another copy of res_online and delete the expired reqs from that copy? Otherwise returning with a copy of res_online may return with the "possible reqs to migratate" deleted
-                self.res_online = online_mapping.MAP(possible_reqs_to_migrate,
-                                                     self.res_online,
+                self.reoptimized_resource = online_mapping.MAP(possible_reqs_to_migrate,
+                                                     self.reoptimized_resource,
                                                      mode=NFFG.MODE_DEL,
                                                      keep_input_unchanged=True)
                 log.debug("merge_online_offline: Applying offline optimization...")
-                self.reoptimized_resource = NFFGToolBox.merge_nffgs(self.res_online,
+                self.reoptimized_resource = NFFGToolBox.merge_nffgs(self.reoptimized_resource,
                                                                     self.__res_offline)
                 try:
                   # Checking whether the merge was in fact successful according to resources.
@@ -340,7 +375,6 @@ class HybridOrchestrator():
                 # Balazs The calc res functions throw only RuntimeError if it is
                 # failed due to resource reservation collision!
                 except RuntimeError as e:
-                    self.res_online = before_merge
                     log.warn(e.message)
                     # We continue to work from this stage, we can try optimization again
                     log.warn("Unable to merge online and offline :(")
@@ -357,14 +391,16 @@ class HybridOrchestrator():
 
     def MAP(self, request, resource):
 
-        # Collect the requests
-        self.merge_all_request(request)
-
         # Start online mapping thread
         online_mapping_thread = threading.Thread(None, self.do_online_mapping,
                         "Online mapping thread", [request, resource])
         try:
             log.info("Start online mapping!")
+            # res_online surely shouldn't be modified while an online mapping
+            # is in progress! Until we return with its copy where the new
+            # request is also mapped.
+            self.res_online_protector.start_writing_res_nffg(
+              "Map a request in an online manner")
             online_mapping_thread.start()
         except Exception as e:
             log.error(e.message)
@@ -374,9 +410,7 @@ class HybridOrchestrator():
 
         # Start offline mapping thread
         # check if there is anything to optimize
-        self.res_online_protector.start_reading_res_nffg("Check if there is anything to optimize")
-        if len([n for n in self.res_online.nfs]) > 0:
-          self.res_online_protector.finish_reading_res_nffg("Checking if there was anything to optimize (yes)")
+        if self.res_online is not None and len([n for n in self.res_online.nfs]) > 0:
           if self.__when_to_opt.need_to_optimize(not self.offline_status==HybridOrchestrator.OFFLINE_STATE_INIT, 3):
               try:
                   self.offline_mapping_thread = threading.Thread(None,
@@ -395,18 +429,22 @@ class HybridOrchestrator():
               #Balazs This is not necessary, there would be 2 joins after each other
               # online_mapping_thread.join()
               log.info("No need to optimize!")
-        else:
-          self.res_online_protector.finish_reading_res_nffg("Checking if there was anything to optimize (no)")
 
         online_mapping_thread.join()
 
         if not self.online_fails.empty():
             error = self.online_fails.get()
+            self.res_online_protector.finish_writing_res_nffg("Online mapping failed")
             raise uet.MappingException(error.msg, False)
 
-        self.res_online_protector.start_reading_res_nffg("Returning independent copy of res_online")
         res_online_to_return = copy.deepcopy(self.res_online)
-        self.res_online_protector.finish_reading_res_nffg("Got independent copy for return")
+        self.res_online_protector.finish_writing_res_nffg("Online mapping finished")
+
+        # Collect the requests
+        # NOTE: only after we know for sure, this request is mapped and the other
+        # lock is released (to avoid deadlock)
+        self.merge_all_request(request)
+
         return res_online_to_return
 
 
