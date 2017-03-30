@@ -192,13 +192,15 @@ class HybridOrchestrator():
     def do_offline_mapping(self):
             try:
                 self.offline_status = HybridOrchestrator.OFFLINE_STATE_RUNNING
+                # WARNING: we can't lock both of them at the same time, cuz that can cause deadlock
+                # If both of them needs to be locked make the order: res_online -> sum_req!
+                self.set_offline_resource_graph()
+
+                # read what shall we optimize.
                 self.sum_req_protector.start_reading_res_nffg("Determine set of requests to optimize")
                 self.del_exp_reqs_from_sum_req()
                 self.reqs_under_optimization = self.__what_to_opt.reqs_to_optimize(self.SUM_req)
                 self.sum_req_protector.finish_reading_res_nffg("Got requests to optimize")
-                # WARNING: we can't lock both of them at the same time, cuz that can cause deadlock
-                # If both of them needs to be locked make the order: sum_req -> res_online!
-                self.set_offline_resource_graph()
                 log.debug("SAP count in request %s and in resource: %s, resource total size: %s"%
                         (len([s for s in self.reqs_under_optimization.saps]),
                           len([s for s in self.__res_offline.saps]), len(self.__res_offline)))
