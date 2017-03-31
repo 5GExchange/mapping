@@ -381,7 +381,7 @@ class HybridOrchestrator():
                                                      mode=NFFG.MODE_DEL)
                 log.debug("merge_online_offline: Applying offline optimization...")
                 self.reoptimized_resource = NFFGToolBox.merge_nffgs(self.reoptimized_resource,
-                                                                    self.__res_offline, merge_fix=True)
+                                                                    self.__res_offline)
                 starting_time = datetime.datetime.now()
                 try:
                   # Checking whether the merge was in fact successful according to resources.
