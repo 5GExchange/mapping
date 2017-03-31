@@ -33,7 +33,28 @@ def main(argv):
         elif opt in ("--offline_file"):
             offlinefile = arg
 
-    x = []
+
+
+    mapped_requests = []
+    running_requests = []
+    refused_requests = []
+    for line in open(log_file):
+        if "Mapped service_requests count:" in line:
+            line = line[32:]
+            mapped_requests.append(line)
+            print line
+        elif "Running service_requests count:" in line:
+            line = line[33:]
+            running_requests.append(line)
+            print line
+        elif "Refused service_requests count:" in line:
+            line = line[33:]
+            refused_requests.append(line)
+            print line
+
+
+
+
     try:
         with open(hybridfile) as data_file:
             hybrid_requests = json.load(data_file)
