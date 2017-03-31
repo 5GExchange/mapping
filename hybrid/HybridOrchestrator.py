@@ -1,4 +1,6 @@
 import threading
+
+import datetime
 from configobj import ConfigObj
 
 try:
@@ -151,15 +153,16 @@ class HybridOrchestrator():
 
     def merge_all_request(self, request):
         self.sum_req_protector.start_writing_res_nffg("Appending new request to the "
-                                                      "sum of requests and removing expired ones")
+                                                      "sum of requests")
         self.SUM_req = NFFGToolBox.merge_nffgs(self.SUM_req, request)
         log.debug("Requests in SUM_req: %s"%len([r.sg_path for r in self.SUM_req.reqs]))
         self.sum_req_protector.finish_writing_res_nffg("New request %s appended to "
-                                                       "sum req and removed expired ones" % request)
+                                                       "sum req" % request)
 
     def do_online_mapping(self, request, resource):
         self.set_online_resource_graph(resource, request)
-        temp_res_online = copy.deepcopy(self.res_online)
+        # keep_input_unchanged=True makes it unnecessary
+        # temp_res_online = copy.deepcopy(self.res_online)
         try:
             # propagate_e2e_reqs must be turned False (so they are not tried to
             # be splitted and the e2e versions removed!) We want to keep them in
@@ -179,7 +182,8 @@ class HybridOrchestrator():
         except uet.MappingException as error:
             log.warning("do_online_mapping : Unsuccessful online mapping :( ")
             log.warning(error.msg)
-            self.res_online = temp_res_online
+            # keep_input_unchanged=True makes it unnecessary
+            # self.res_online = temp_res_online
             self.online_fails.put(error)
             # Balazs: an online failure due to mapping is natural, we continue working.
         except Exception as e:
@@ -222,7 +226,7 @@ class HybridOrchestrator():
                   raise uet.MappingException("Offline didn't get any requests to optimize",
                                              False)
                 log.debug("Removing requests (%s NFs) from res_offline which "
-                          "shouldn't be optimized!"%len([n for n in reqs_not_to_be_opt.nfs]))
+                          "shouldn't be optimized!"%[n for n in reqs_not_to_be_opt.nfs])
                 self.__res_offline = online_mapping.MAP(reqs_not_to_be_opt,
                                                         self.__res_offline,
                                                         mode=NFFG.MODE_DEL)
@@ -356,18 +360,20 @@ class HybridOrchestrator():
     def merge_online_offline(self):
             try:
                 self.res_online_protector.start_writing_res_nffg("Removing SC-s which are possibly migrated and merging")
+                starting_time = datetime.datetime.now()
                 # res_online always contains only the alive and currently mapped requests!
                 self.reoptimized_resource = copy.deepcopy(self.res_online)
                 # Balazs: Delete requests from res_online, which are possibly migrated
                 # NOTE: if an NF to be deleted doesn't exist in the substrate DEL mode ignores it.
                 log.debug("merge_online_offline: Removing NFs to be migrated from "
                           "res_online: %s"%self.reqs_under_optimization.network.nodes())
-                possible_reqs_to_migrate = copy.deepcopy(self.reqs_under_optimization)
+                # deepcopy is not necessary here, SUM_req (at least its relevant subset) is copied
+                possible_reqs_to_migrate = self.reqs_under_optimization
                 for nf in possible_reqs_to_migrate.nfs:
                   nf.operation = NFFG.OP_DELETE
                 # if there is NF which is not in res_online anymore, DEL mode ignores it
                 for req in possible_reqs_to_migrate.reqs:
-                  self.res_online.del_edge(req.src.node.id, req.dst.node.id, id=req.id)
+                  self.reoptimized_resource.del_edge(req.src.node.id, req.dst.node.id, id=req.id)
                 self.reoptimized_resource = online_mapping.MAP(possible_reqs_to_migrate,
                                                      self.reoptimized_resource,
                                                      mode=NFFG.MODE_DEL,
@@ -397,6 +403,8 @@ class HybridOrchestrator():
                 self.offline_status = HybridOrchestrator.OFFLINE_STATE_INIT
                 raise
             finally:
+                log.debug("Time passed with merging online and offline resources: %s"%
+                          (datetime.datetime.now() - starting_time))
                 self.res_online_protector.finish_writing_res_nffg("Merged or failed during merging "
                                                                     "res_online and the optimized res_offline")
 
