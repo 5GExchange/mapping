@@ -369,10 +369,15 @@ class MappingSolutionFramework():
 
             # Not discrete working
             else:
-                log.info("Request Generator thread: Add request " + str(self.sim_iter))
-                request_list_element = {"request": service_graph,
-                                    "life_time": life_time, "req_num": self.sim_iter}
-                self.__request_list.put(request_list_element)
+
+                if self.__request_list.qsize() > 500:
+                    log.info("Request Generator thread: discarding generated "
+                             "request %s because the queue is full!"%self.sim_iter)
+                else:
+                    log.info("Request Generator thread: Add request " + str(self.sim_iter))
+                    request_list_element = {"request": service_graph,
+                                        "life_time": life_time, "req_num": self.sim_iter}
+                    self.__request_list.put(request_list_element)
 
                 scale_radius = (1/self.request_arrival_lambda)
                 exp_time = N.random.exponential(scale_radius)
