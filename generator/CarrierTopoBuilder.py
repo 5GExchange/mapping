@@ -284,7 +284,7 @@ def getCarrierTopo(params, increment_port_ids=False):
   nffg = NFFG(id="CarrierTopo")
   p = increment_port_ids
   backbone_res =  {'cpu': 0, 'mem': 0, 'storage': 0, 'delay': 0.5,
-                   'bandwidth': 1000, 'infra_type': NFFG.TYPE_INFRA_SDN_SW}
+                   'bandwidth': 10000, 'infra_type': NFFG.TYPE_INFRA_SDN_SW}
   bn0 = nffg.add_infra(id=getName("bn"), **backbone_res)
   bn1 = nffg.add_infra(id=getName("bn"), **backbone_res)
   bn2 = nffg.add_infra(id=getName("bn"), **backbone_res)
@@ -401,11 +401,11 @@ def getPicoTopo():
   random.seed(0)
   nffg = NFFG(id="SmallExampleTopo")
   switch = {'cpu': 0, 'mem': 0, 'storage': 0, 'delay': 0.5,
-            'bandwidth': 1000, 'infra_type': NFFG.TYPE_INFRA_SDN_SW}
+            'bandwidth': 100, 'infra_type': NFFG.TYPE_INFRA_SDN_SW}
   sw = nffg.add_infra(id = getName("sw"), **switch)
-  infra = {'cpu': 60, 'mem': 32000, 'storage': 200, 'delay': 1.0,
-           'bandwidth': 10000, 'infra_type': NFFG.TYPE_INFRA_EE}
-  linkres = {'bandwidth': 1000, 'delay': 0.5}
+  infra = {'cpu': 90, 'mem': 32000, 'storage': 200, 'delay': 1.0,
+           'bandwidth': 1000, 'infra_type': NFFG.TYPE_INFRA_EE}
+  linkres = {'bandwidth': 100, 'delay': 0.5}
 
   inf1 = nffg.add_infra(id = getName("infra"), **infra)
   inf0 = inf1

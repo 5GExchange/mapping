@@ -259,12 +259,14 @@ class MappingSolutionFramework():
                                     "SG": service_graph, "req_num": req_num}
 
             self.__remaining_request_lifetimes.append(service_life_element)
-            log.info("Mapping thread: Mapping service_request_"
-                     + str(req_num) + " successful +")
+            log.info("Mapping thread: Mapping service_request_"+ str(req_num) + " successful +")
             self.mapped_requests += 1
+            log.info("Mapped service_requests count: " + str(self.mapped_requests))
             self.running_requests += 1
+            log.info("Running service_requests count: " + str(self.running_requests))
             self.mapped_array.append(self.mapped_requests)
             self.refused_array.append(self.refused_requests)
+            log.info("Refused service_requests count: " + str(self.refused_requests))
             self.dump_iter += 1
             if not self.dump_iter % self.dump_freq:
                 self.dump()
@@ -275,6 +277,7 @@ class MappingSolutionFramework():
             log.info("Mapping thread: Mapping service_request_" +
                      str(req_num) + " unsuccessful\n%s" % me.msg)
             self.refused_requests += 1
+            log.info("Refused service_requests count: " + str(self.refused_requests))
             self.refused_array.append(self.refused_requests)
             # we continue working, the __network_topology is in the last valid state
         except Exception as e:
@@ -325,6 +328,7 @@ class MappingSolutionFramework():
             # Remove expired service graph requests
             self.__clean_expired_requests(datetime.datetime.now())
 
+            log.debug("Number of mapping iteration is %s"%req_num)
             self.__mapping(request, life_time, req_num)
 
             self.running_array.append(self.running_requests)
@@ -345,7 +349,8 @@ class MappingSolutionFramework():
                self.__del_service(service, service['req_num'])
                self.deleted_services.append(service)
                self.running_requests -= 1
-
+               log.debug("Number of requests in the deleted_services "
+                         "list: %s"%len(self.deleted_services))
 
     def create_request(self):
         log.info("Start request generator thread")
@@ -367,14 +372,22 @@ class MappingSolutionFramework():
 
             # Not discrete working
             else:
-                log.info("Request Generator thread: Add request " + str(self.sim_iter))
-                request_list_element = {"request": service_graph,
-                                    "life_time": life_time, "req_num": self.sim_iter}
-                self.__request_list.put(request_list_element)
+
+                if self.__request_list.qsize() > 500:
+                    log.info("Request Generator thread: discarding generated "
+                             "request %s because the queue is full!"%self.sim_iter)
+                else:
+                    log.info("Request Generator thread: Add request " + str(self.sim_iter))
+                    request_list_element = {"request": service_graph,
+                                        "life_time": life_time, "req_num": self.sim_iter}
+                    self.__request_list.put(request_list_element)
 
                 scale_radius = (1/self.request_arrival_lambda)
                 exp_time = N.random.exponential(scale_radius)
                 time.sleep(exp_time)
+
+            log.debug("Request Generator thread: Number of requests waiting in"
+                      " the queue %s"%self.__request_list.qsize())
 
             # Increase simulation iteration
             if (self.sim_iter < sim_end):
