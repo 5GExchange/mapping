@@ -259,12 +259,14 @@ class MappingSolutionFramework():
                                     "SG": service_graph, "req_num": req_num}
 
             self.__remaining_request_lifetimes.append(service_life_element)
-            log.info("Mapping thread: Mapping service_request_"
-                     + str(req_num) + " successful +")
+            log.info("Mapping thread: Mapping service_request_"+ str(req_num) + " successful +")
             self.mapped_requests += 1
+            log.info("Mapped service_requests count: " + str(self.mapped_requests))
             self.running_requests += 1
+            log.info("Running service_requests count: " + str(self.running_requests))
             self.mapped_array.append(self.mapped_requests)
             self.refused_array.append(self.refused_requests)
+            log.info("Refused service_requests count: " + str(self.refused_requests))
             self.dump_iter += 1
             if not self.dump_iter % self.dump_freq:
                 self.dump()
@@ -275,6 +277,7 @@ class MappingSolutionFramework():
             log.info("Mapping thread: Mapping service_request_" +
                      str(req_num) + " unsuccessful\n%s" % me.msg)
             self.refused_requests += 1
+            log.info("Refused service_requests count: " + str(self.refused_requests))
             self.refused_array.append(self.refused_requests)
             # we continue working, the __network_topology is in the last valid state
         except Exception as e:
