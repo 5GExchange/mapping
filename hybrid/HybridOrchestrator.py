@@ -225,8 +225,10 @@ class HybridOrchestrator():
                 if len([n for n in self.reqs_under_optimization.nfs]) == 0:
                   raise uet.MappingException("Offline didn't get any requests to optimize",
                                              False)
+                not_top_opt_nfs = [n.id for n in reqs_not_to_be_opt.nfs]
                 log.debug("Removing requests (%s NFs) from res_offline which "
-                          "shouldn't be optimized!"%[n for n in reqs_not_to_be_opt.nfs])
+                          "shouldn't be optimized! Examples: %s"%(len(not_top_opt_nfs),
+                                                                  not_top_opt_nfs[:20]))
                 self.__res_offline = online_mapping.MAP(reqs_not_to_be_opt,
                                                         self.__res_offline,
                                                         mode=NFFG.MODE_DEL)
@@ -366,7 +368,7 @@ class HybridOrchestrator():
                 # Balazs: Delete requests from res_online, which are possibly migrated
                 # NOTE: if an NF to be deleted doesn't exist in the substrate DEL mode ignores it.
                 log.debug("merge_online_offline: Removing NFs to be migrated from "
-                          "res_online: %s"%self.reqs_under_optimization.network.nodes())
+                          "res_online, examples: %s"%self.reqs_under_optimization.network.nodes()[:20])
                 # deepcopy is not necessary here, SUM_req (at least its relevant subset) is copied
                 possible_reqs_to_migrate = self.reqs_under_optimization
                 for nf in possible_reqs_to_migrate.nfs:
@@ -376,11 +378,11 @@ class HybridOrchestrator():
                   self.reoptimized_resource.del_edge(req.src.node.id, req.dst.node.id, id=req.id)
                 self.reoptimized_resource = online_mapping.MAP(possible_reqs_to_migrate,
                                                      self.reoptimized_resource,
-                                                     mode=NFFG.MODE_DEL,
-                                                     keep_input_unchanged=True)
+                                                     mode=NFFG.MODE_DEL)
                 log.debug("merge_online_offline: Applying offline optimization...")
                 self.reoptimized_resource = NFFGToolBox.merge_nffgs(self.reoptimized_resource,
-                                                                    self.__res_offline)
+                                                                    self.__res_offline, merge_fix=True)
+                starting_time = datetime.datetime.now()
                 try:
                   # Checking whether the merge was in fact successful according to resources.
                     self.reoptimized_resource.calculate_available_node_res()
