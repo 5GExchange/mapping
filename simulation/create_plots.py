@@ -92,15 +92,23 @@ def main(argv):
             print 'create_plots.py --online_log_files <online_log_files>'
             sys.exit()
 
-    online_files = separte_files(online_log_files)
-    mapped_online_req_list, running_online_req_list,refused_online_req_list = get_data(online_files,"Online")
+    try:
+        online_files = separte_files(online_log_files)
+        mapped_online_req_list, running_online_req_list,refused_online_req_list = get_data(online_files,"Online")
+    except:
+        pass
 
-    offline_files = separte_files(offline_log_files)
-    mapped_offline_req_list, running_offline_req_list, refused_offline_req_list = get_data(offline_files, "Offline")
+    try:
+        offline_files = separte_files(offline_log_files)
+        mapped_offline_req_list, running_offline_req_list, refused_offline_req_list = get_data(offline_files, "Offline")
+    except:
+        pass
 
-    hybrid_files = separte_files(hybrid_log_files)
-    mapped_hybrid_req_list, running_hybrid_req_list, refused_hybrid_req_list = get_data(hybrid_files, "Hybrid")
-
+    try:
+        hybrid_files = separte_files(hybrid_log_files)
+        mapped_hybrid_req_list, running_hybrid_req_list, refused_hybrid_req_list = get_data(hybrid_files, "Hybrid")
+    except:
+        pass
 
 
     #Create mapped picture
@@ -115,12 +123,21 @@ def main(argv):
     for i in xrange(1, len(x_list) + 1):
         x.append(i)
 
-    for element in mapped_online_req_list:
-        plt.plot(x, element["request_list"],label=element["name"])
-    for element in running_offline_req_list:
-        plt.plot(x, element["request_list"],label=element["name"])
-    for element in running_hybrid_req_list:
-        plt.plot(x, element["request_list"],label=element["name"])
+    try:
+        for element in mapped_online_req_list:
+            plt.plot(x, element["request_list"],label=element["name"])
+    except:
+        pass
+    try:
+        for element in running_offline_req_list:
+            plt.plot(x, element["request_list"],label=element["name"])
+    except:
+        pass
+    try:
+        for element in running_hybrid_req_list:
+            plt.plot(x, element["request_list"],label=element["name"])
+    except:
+        pass
 
     plt.title('Accepted incoming service requests')
     plt.ylabel('Accepted requests count')
@@ -130,12 +147,21 @@ def main(argv):
     plt.clf()
 
     #Create Running picture
-    for element in running_online_req_list:
-        plt.plot(x, element["request_list"],label=element["name"])
-    for element in running_offline_req_list:
-        plt.plot(x, element["request_list"],label=element["name"])
-    for element in running_hybrid_req_list:
-        plt.plot(x, element["request_list"],label=element["name"])
+    try:
+        for element in running_online_req_list:
+            plt.plot(x, element["request_list"],label=element["name"])
+    except:
+        pass
+    try:
+        for element in running_offline_req_list:
+            plt.plot(x, element["request_list"],label=element["name"])
+    except:
+        pass
+    try:
+        for element in running_hybrid_req_list:
+            plt.plot(x, element["request_list"],label=element["name"])
+    except:
+        pass
 
     plt.title('Currently running (mapped) requests in the NFFG')
     plt.ylabel('Mapped requests count')
@@ -146,12 +172,21 @@ def main(argv):
 
 
     #Create refused picture
-    for element in running_online_req_list:
-        plt.plot(x, element["request_list"],label=element["name"])
-    for element in running_offline_req_list:
-        plt.plot(x, element["request_list"],label=element["name"])
-    for element in running_hybrid_req_list:
-        plt.plot(x, element["request_list"],label=element["name"])
+    try:
+        for element in running_online_req_list:
+            plt.plot(x, element["request_list"],label=element["name"])
+    except:
+        pass
+    try:
+        for element in running_offline_req_list:
+            plt.plot(x, element["request_list"],label=element["name"])
+    except:
+        pass
+    try:
+        for element in running_hybrid_req_list:
+            plt.plot(x, element["request_list"],label=element["name"])
+    except:
+        pass
 
     plt.title('Refused requests during the simulation')
     plt.ylabel('Refused requests count')
