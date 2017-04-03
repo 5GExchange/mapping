@@ -114,14 +114,17 @@ def main(argv):
     #Create mapped picture
     x=[]
     x_list=[]
-    if mapped_online_req_list is not 0:
-        x_list =  mapped_online_req_list[0]["request_list"]
-    elif mapped_offline_req_list is not 0:
-        x_list = mapped_offline_req_list[0]["request_list"]
-    elif mapped_hybrid_req_list is not 0:
-        x_list = mapped_hybrid_req_list[0]["request_list"]
-    for i in xrange(1, len(x_list) + 1):
-        x.append(i)
+    try:
+        if mapped_online_req_list is not 0:
+            x_list =  mapped_online_req_list[0]["request_list"]
+        elif mapped_offline_req_list is not 0:
+            x_list = mapped_offline_req_list[0]["request_list"]
+        elif mapped_hybrid_req_list is not 0:
+            x_list = mapped_hybrid_req_list[0]["request_list"]
+        for i in xrange(1, len(x_list) + 1):
+            x.append(i)
+    except:
+        pass
 
     try:
         for element in mapped_online_req_list:
