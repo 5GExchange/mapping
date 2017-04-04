@@ -277,9 +277,13 @@ class MappingSolutionFramework():
             log.info("Mapping thread: Mapping service_request_" +
                      str(req_num) + " unsuccessful\n%s" % me.msg)
             self.refused_requests += 1
-            log.info("Refused service_requests count: " + str(self.refused_requests))
             self.refused_array.append(self.refused_requests)
             # we continue working, the __network_topology is in the last valid state
+
+            log.info("Mapped service_requests count: " + str(self.mapped_requests))
+            log.info("Running service_requests count: " + str(self.running_requests))
+            log.info("Refused service_requests count: " + str(self.refused_requests))
+
         except Exception as e:
             log.error("Mapping failed: %s", e)
             raise
