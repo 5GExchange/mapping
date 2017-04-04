@@ -43,7 +43,7 @@ def get_data(file_list, type):
         running_requests_dict["request_list"] = []
 
         refused_requests_dict["name"] = type + str(file_list.index(file))
-        refused_reqs.append(copy.copy(mapped_requests_dict))
+        refused_reqs.append(copy.copy(refused_requests_dict))
         refused_requests_dict["name"] = ""
         refused_requests_dict["request_list"] = []
 
@@ -117,28 +117,35 @@ def main(argv):
     try:
         if mapped_online_req_list is not 0:
             x_list =  mapped_online_req_list[0]["request_list"]
-        elif mapped_offline_req_list is not 0:
+    except:
+        pass
+    try:
+        if mapped_offline_req_list is not 0:
             x_list = mapped_offline_req_list[0]["request_list"]
-        elif mapped_hybrid_req_list is not 0:
+    except:
+        pass
+    try:
+        if mapped_hybrid_req_list is not 0:
             x_list = mapped_hybrid_req_list[0]["request_list"]
-        for i in xrange(1, len(x_list) + 1):
-            x.append(i)
     except:
         pass
 
+    for i in xrange(1, len(x_list) + 1):
+        x.append(i)
+
     try:
         for element in mapped_online_req_list:
-            plt.plot(x, element["request_list"],label=element["name"])
+            plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
     except:
         pass
     try:
-        for element in running_offline_req_list:
-            plt.plot(x, element["request_list"],label=element["name"])
+        for element in mapped_offline_req_list:
+            plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
     except:
         pass
     try:
-        for element in running_hybrid_req_list:
-            plt.plot(x, element["request_list"],label=element["name"])
+        for element in mapped_hybrid_req_list:
+            plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
     except:
         pass
 
@@ -152,17 +159,17 @@ def main(argv):
     #Create Running picture
     try:
         for element in running_online_req_list:
-            plt.plot(x, element["request_list"],label=element["name"])
+            plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
     except:
         pass
     try:
         for element in running_offline_req_list:
-            plt.plot(x, element["request_list"],label=element["name"])
+            plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
     except:
         pass
     try:
         for element in running_hybrid_req_list:
-            plt.plot(x, element["request_list"],label=element["name"])
+            plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
     except:
         pass
 
@@ -176,18 +183,18 @@ def main(argv):
 
     #Create refused picture
     try:
-        for element in running_online_req_list:
-            plt.plot(x, element["request_list"],label=element["name"])
+        for element in refused_online_req_list:
+            plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
     except:
         pass
     try:
-        for element in running_offline_req_list:
-            plt.plot(x, element["request_list"],label=element["name"])
+        for element in refused_offline_req_list:
+            plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
     except:
         pass
     try:
-        for element in running_hybrid_req_list:
-            plt.plot(x, element["request_list"],label=element["name"])
+        for element in refused_hybrid_req_list:
+            plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
     except:
         pass
 
