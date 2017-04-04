@@ -71,16 +71,17 @@ def main(argv):
     hybrid_requests = None
     online_requests = None
     offline_requests = None
+    bad_log = False
 
 
     try:
-        opts, args = getopt.getopt(argv,"h",["online_log_files=","offline_log_files=","hybrid_log_files="])
+        opts, args = getopt.getopt(argv,"h",["online_log_files=","offline_log_files=","hybrid_log_files=","bad_log"])
     except getopt.GetoptError:
-        print 'create_plots.py --online_log_files <online_log_file1,online_log_file2, ...> --offline_log_files <offline_log_file1,offline_log_file2, ...> --hybrid_log_files <hybrid_log_file1,hybrid_log_file2, ...>'
+        print 'create_plots.py --online_log_files=<online_log_file1,online_log_file2, ...> --offline_log_files=<offline_log_file1,offline_log_file2, ...> --hybrid_log_files=<hybrid_log_file1,hybrid_log_file2, ...> --bad_log'
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print 'create_plots.py --online_log_files <online_log_file1,online_log_file2, ...> --offline_log_files <offline_log_file1,offline_log_file2, ...> --hybrid_log_files <hybrid_log_file1,hybrid_log_file2, ...>'
+            print 'create_plots.py --online_log_files=<online_log_file1,online_log_file2, ...> --offline_log_files=<offline_log_file1,offline_log_file2, ...> --hybrid_log_files=<hybrid_log_file1,hybrid_log_file2, ...> --bad_log'
             sys.exit()
         elif opt in ("--online_log_files="):
             online_log_files = arg
@@ -88,8 +89,10 @@ def main(argv):
             offline_log_files = arg
         elif opt in ("--hybrid_log_files="):
             hybrid_log_files = arg
+        elif opt in ("--bad_log"):
+            bad_log = True
         else:
-            print 'create_plots.py --online_log_files <online_log_files>'
+            print 'Bad parameters! Use --help!'
             sys.exit()
 
     try:
@@ -110,29 +113,80 @@ def main(argv):
     except:
         pass
 
+    #Mapped requests bugfix --------------------------------------------------------------------------------------------------------------
+    if bad_log:
+        #Online
+        try:
+            mapped_online = dict()
+            mapped_online_req_list = []
+            for element in refused_online_req_list:
+                mapped_online["name"] = []
+                mapped_online["request_list"] = []
+                previous = 0
+                lista_elem = 0
+                for i in element["request_list"]:
+                    if i != previous:
+                        mapped_online["request_list"].append(lista_elem)
+                    else:
+                        lista_elem = lista_elem + 1
+                        mapped_online["request_list"].append(lista_elem)
+                    previous = copy.copy(i)
+
+                mapped_online["name"] = "Online" + str(refused_online_req_list.index(element))
+                mapped_online_req_list.append(copy.copy(mapped_online))
+        except:
+            pass
+
+        # Offline
+        try:
+            mapped_offline = dict()
+            mapped_offline_req_list = []
+            for element in refused_offline_req_list:
+                mapped_offline["name"] = []
+                mapped_offline["request_list"] = []
+                previous = 0
+                lista_elem = 0
+                for i in element["request_list"]:
+                    if i != previous:
+                        mapped_offline["request_list"].append(lista_elem)
+                    else:
+                        lista_elem = lista_elem + 1
+                        mapped_offline["request_list"].append(lista_elem)
+                    previous = copy.copy(i)
+
+                mapped_offline["name"] = "offline" + str(refused_offline_req_list.index(element))
+                mapped_offline_req_list.append(copy.copy(mapped_offline))
+        except:
+            pass
+
+        # hybrid
+        try:
+            mapped_hybrid = dict()
+            mapped_hybrid_req_list = []
+            for element in refused_hybrid_req_list:
+                mapped_hybrid["name"] = []
+                mapped_hybrid["request_list"] = []
+                previous = 0
+                lista_elem = 0
+                for i in element["request_list"]:
+                    if i != previous:
+                        mapped_hybrid["request_list"].append(lista_elem)
+                    else:
+                        lista_elem = lista_elem + 1
+                        mapped_hybrid["request_list"].append(lista_elem)
+                    previous = copy.copy(i)
+
+                mapped_hybrid["name"] = "hybrid" + str(refused_hybrid_req_list.index(element))
+                mapped_hybrid_req_list.append(copy.copy(mapped_hybrid))
+        except:
+            pass
+    # --------------------------------------------------------------------------------------------------------------
+
+    mapped_requests_dict = dict()
+    mapped_requests_dict["request_list"] = []
+    mapped_requests_dict["name"] = ""
 
     #Create mapped picture
-    x=[]
-    x_list=[]
-    try:
-        if mapped_online_req_list is not 0:
-            x_list =  mapped_online_req_list[0]["request_list"]
-    except:
-        pass
-    try:
-        if mapped_offline_req_list is not 0:
-            x_list = mapped_offline_req_list[0]["request_list"]
-    except:
-        pass
-    try:
-        if mapped_hybrid_req_list is not 0:
-            x_list = mapped_hybrid_req_list[0]["request_list"]
-    except:
-        pass
-
-    for i in xrange(1, len(x_list) + 1):
-        x.append(i)
-
     try:
         for element in mapped_online_req_list:
             plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
