@@ -41,32 +41,38 @@ class ReqsSinceLastOpt(AbstractWhatToOptimizeStrategy):
         self.optimized_reqs = None
 
     def reqs_to_optimize(self, sum_req):
+        """
+        
+        Return SUM_reqs - optimized requests
+        :param sum_req: 
+        :return: 
+        """
         try:
             if self.optimized_reqs is None:
                 self.optimized_reqs = copy.deepcopy(sum_req)
-                return self.optimized_reqs
+                return copy.deepcopy(sum_req)
             else:
-                # Return sum_reqs - optimized requests
-                need_to_optimalize = copy.deepcopy(sum_req)
+                need_to_optimize = copy.deepcopy(sum_req)
 
                 for nf in self.optimized_reqs.nfs:
-                    need_to_optimalize.del_node(nf.id)
+                    #nf.operation = NFFG.OP_DELETE
+                    need_to_optimize.del_node(nf.id)
                 for req in self.optimized_reqs.reqs:
-                    need_to_optimalize.del_edge(req.src.node.id,
+                    need_to_optimize.del_edge(req.src.node.id,
                                                 req.dst.node.id,
                                                 id=req.id)
                 for sap in self.optimized_reqs.saps:
-                    if need_to_optimalize.network.out_degree(sap.id) + \
-                            need_to_optimalize.network.in_degree(sap.id) == 0:
-                       need_to_optimalize.del_node(sap.id)
+                    if sap.id in need_to_optimize.network:
+                        if need_to_optimize.network.out_degree(sap.id) + \
+                                need_to_optimize.network.in_degree(sap.id) == 0:
+                            need_to_optimize.del_node(sap.id)
 
-                self.optimized_reqs = NFFGToolBox.merge_nffgs(
-                                        self.optimized_reqs, need_to_optimalize)
+                self.optimized_reqs = need_to_optimize
 
-                return need_to_optimalize
+                return copy.deepcopy(need_to_optimize)
         except Exception as e:
-            log.error(str(e.message) + str(e.__class__))
-            log.error("reqs_to_optimize error")
+            log.error("reqs_to_optimize error" +
+                      str(e.message) + str(e.__class__))
             raise
 
 

@@ -252,13 +252,16 @@ class HybridOrchestrator():
                     self.mig_handler, self.migration_coeff, self.load_balance_coeff,
                     self.edge_cost_coeff)
 
-                log.info("Offline mapping is ready")
+                log.info("Offline mapping is ready. "
+                         "Need to del_exp_reqs_from_res_offline and merge ")
 
                 log.info("Delete expired requests from the res_offline")
                 self.del_exp_reqs_from_res_offline()
                 log.info("Try to merge online and offline")
                 # the merge MUST set the state before releasing the writeing lock
                 self.merge_online_offline()
+                log.info("Offline mapping is ready!")
+
             except uet.MappingException as e:
                 log.warn(e.msg)
                 log.warn("Mapping thread: "
