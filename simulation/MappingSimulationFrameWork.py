@@ -21,6 +21,7 @@ import json
 import copy
 import os
 from time import sleep
+import subprocess
 
 import numpy as N
 from configobj import ConfigObj
@@ -64,8 +65,10 @@ class MappingSolutionFramework():
         hdlr.setFormatter(formatter)
         log.addHandler(hdlr)
         log.setLevel(logging.DEBUG)
-
+        git_commit = subprocess.check_output(['git', 'show', '--oneline', '-s'])
+        git_branch = subprocess.check_output(['git', 'branch'])
         log.info("Configuration file: " + str(config_file_path))
+        log.info("Git current commit: " + str(git_commit) + str(git_branch))
         log.info(" ----------------------------------------")
         log.info(" Start simulation")
         log.info(" ------ Simulation configurations -------")
