@@ -82,6 +82,7 @@ class MappingSolutionFramework():
         log.info(" | Request lifetime lambda: " + str(config['request_lifetime_lambda']))
         log.info(" | Number of iteration: " + str(config['max_number_of_iterations']))
         log.info(" | Wait all request to expire (nothing = False): " + str(config['wait_all_req_expire']))
+        log.info(" | Request queue size: " + str(int(config['req_queue_size'])))
         log.info(" ----------------------------------------")
 
         self.number_of_iter = config['max_number_of_iterations']
@@ -91,7 +92,7 @@ class MappingSolutionFramework():
         self.wait_all_req_expire = bool(config['wait_all_req_expire'])
         self.__discrete_simulation = bool(config['discrete_simulation'])
         self.request_lifetime_lambda = float(config['request_lifetime_lambda'])
-
+        self.req_queue_size = int(config['req_queue_size'])
         # This stores the request waiting to be mapped
         self.__request_list = request_list
         self.sim_iter = 0
@@ -380,7 +381,7 @@ class MappingSolutionFramework():
             # Not discrete working
             else:
 
-                if self.__request_list.qsize() > 500:
+                if self.__request_list.qsize() > self.req_queue_size:
                     log.info("Request Generator thread: discarding generated "
                              "request %s because the queue is full!"%self.sim_iter)
                 else:
