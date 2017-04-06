@@ -4,6 +4,7 @@ import json
 import matplotlib.pyplot as plt
 import sys, getopt
 import copy
+import time
 
 def get_data(file_list, type):
 
@@ -207,7 +208,8 @@ def main(argv):
     plt.ylabel('Accepted requests count')
     plt.xlabel('Incoming requests')
     plt.legend(loc=3)
-    plt.savefig("mapped_requests.png")
+    plt.savefig("mapped_requests" +  str (time.ctime()).\
+            replace(' ', '_').replace(':', '-') + ".png")
     plt.clf()
 
     #Create Running picture
@@ -231,7 +233,8 @@ def main(argv):
     plt.ylabel('Mapped requests count')
     plt.xlabel('Incoming requests')
     plt.legend(loc=3)
-    plt.savefig("running_requests.png")
+    plt.savefig("running_requests" +  str (time.ctime()).\
+            replace(' ', '_').replace(':', '-') + ".png")
     plt.clf()
 
 
@@ -256,7 +259,8 @@ def main(argv):
     plt.ylabel('Refused requests count')
     plt.xlabel('Incoming requests')
     plt.legend(loc=3)
-    plt.savefig("refused_requests.png")
+    plt.savefig("refused_requests" +  str (time.ctime()).\
+            replace(' ', '_').replace(':', '-') + ".png")
 
     print("DONE")
 
