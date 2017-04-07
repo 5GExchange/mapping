@@ -133,7 +133,7 @@ def main(argv):
                         mapped_online["request_list"].append(lista_elem)
                     previous = copy.copy(i)
 
-                mapped_online["name"] = "Online" + str(refused_online_req_list.index(element))
+                mapped_online["name"] = "Online" + str(refused_online_req_list.index(element)+1)
                 mapped_online_req_list.append(copy.copy(mapped_online))
         except:
             pass
@@ -155,7 +155,7 @@ def main(argv):
                         mapped_offline["request_list"].append(lista_elem)
                     previous = copy.copy(i)
 
-                mapped_offline["name"] = "offline" + str(refused_offline_req_list.index(element))
+                mapped_offline["name"] = "offline" + str(refused_offline_req_list.index(element)+1)
                 mapped_offline_req_list.append(copy.copy(mapped_offline))
         except:
             pass
@@ -177,7 +177,7 @@ def main(argv):
                         mapped_hybrid["request_list"].append(lista_elem)
                     previous = copy.copy(i)
 
-                mapped_hybrid["name"] = "hybrid" + str(refused_hybrid_req_list.index(element))
+                mapped_hybrid["name"] = "hybrid" + str(refused_hybrid_req_list.index(element)+1)
                 mapped_hybrid_req_list.append(copy.copy(mapped_hybrid))
         except:
             pass
