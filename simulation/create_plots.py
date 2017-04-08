@@ -207,7 +207,7 @@ def main(argv):
     plt.title('Accepted incoming service requests')
     plt.ylabel('Accepted requests count')
     plt.xlabel('Incoming requests')
-    plt.legend(loc=3)
+    plt.legend(loc=4)
     plt.savefig("mapped_requests" +  str (time.ctime()).\
             replace(' ', '_').replace(':', '-') + ".png")
     plt.clf()
@@ -232,7 +232,7 @@ def main(argv):
     plt.title('Currently running (mapped) requests in the NFFG')
     plt.ylabel('Mapped requests count')
     plt.xlabel('Incoming requests')
-    plt.legend(loc=3)
+    plt.legend(loc=4)
     plt.savefig("running_requests" +  str (time.ctime()).\
             replace(' ', '_').replace(':', '-') + ".png")
     plt.clf()
@@ -258,7 +258,7 @@ def main(argv):
     plt.title('Refused requests during the simulation')
     plt.ylabel('Refused requests count')
     plt.xlabel('Incoming requests')
-    plt.legend(loc=3)
+    plt.legend(loc=4)
     plt.savefig("refused_requests" +  str (time.ctime()).\
             replace(' ', '_').replace(':', '-') + ".png")
 
