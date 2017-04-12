@@ -498,7 +498,7 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
         use_saps_once = False
         vnf_sharing_probabilty = 0.0
         sc_count = 1
-        max_bw = 1.0
+        max_bw = 10.0
         current_sg_link_cnt = 1
 
         while len(all_saps_ending) > sc_count and len(
