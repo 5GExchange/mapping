@@ -39,6 +39,7 @@ class AbstractRequestGenerator:
         self.request_lifetime_lambda = request_lifetime_lambda
         self.rnd = random.Random()
         self.rnd.seed(seed)
+        self.numpyrandom = N.random.RandomState(seed)
 
     @abstractmethod
     def get_request(self, resource_graph, test_lvl, requests_alive):
@@ -138,7 +139,7 @@ class TestReqGen(AbstractRequestGenerator):
                     current_nfs.extend(new_nfs)
 
                 scale_radius = (1 / self.request_lifetime_lambda)
-                exp_time = N.random.exponential(scale_radius)
+                exp_time = self.numpyrandom.exponential(scale_radius)
                 life_time = exp_time
 
                 return nffg, life_time
@@ -220,7 +221,7 @@ class SimpleReqGen(AbstractRequestGenerator):
                 for tmp in xrange(0, scid + 1):
                     current_nfs.extend(new_nfs)
                 scale_radius = (1 / self.request_lifetime_lambda)
-                exp_time = N.random.exponential(scale_radius)
+                exp_time = self.numpyrandom.exponential(scale_radius)
                 life_time = exp_time
 
                 return nffg, life_time
@@ -303,7 +304,7 @@ class MultiReqGen(AbstractRequestGenerator):
                     current_nfs.extend(new_nfs)
 
                 scale_radius = (1 / self.request_lifetime_lambda)
-                exp_time = N.random.exponential(scale_radius)
+                exp_time = self.numpyrandom.exponential(scale_radius)
                 life_time = exp_time
 
                 return nffg, life_time
@@ -576,7 +577,7 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
                     current_nfs.extend(new_nfs)
                 scale_radius = (1.0 / self.get_request_lifetime_rate(requests_alive))
                 # meaning: the scale_radius is the expected value of the exponential distribution
-                exp_time = N.random.exponential(scale_radius)
+                exp_time = self.numpyrandom.exponential(scale_radius)
 
                 return nffg, exp_time
 
