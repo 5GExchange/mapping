@@ -50,29 +50,30 @@ def get_data(file_list, type):
 
     return mapped_reqs, running_reqs, refused_reqs
 
-def separte_files(log_files):
+def separte_files(log_files,method):
 
     files = []
     log_files += ","
     while "," in log_files:
         file = log_files[:log_files.find(",")]
         files.append(file)
+        print "Read "+method+" file:"+file
         log_files = log_files[log_files.find(",") + 1:]
 
     return files
 
 def main(argv):
 
-    hybridfile = ""
-    onlinefile = ""
-    offlinefile = ""
-    hybrid = False
-    online = False
-    offline = False
-    hybrid_requests = None
-    online_requests = None
-    offline_requests = None
     bad_log = False
+    mapped_online_req_list = None
+    mapped_offline_req_list = None
+    mapped_hybrid_req_list = None
+    running_online_req_list = None
+    running_offline_req_list = None
+    running_hybrid_req_list = None
+    refused_online_req_list = None
+    refused_offline_req_list = None
+    refused_hybrid_req_list = None
 
 
     try:
@@ -97,22 +98,22 @@ def main(argv):
             sys.exit()
 
     try:
-        online_files = separte_files(online_log_files)
+        online_files = separte_files(online_log_files,"Online")
         mapped_online_req_list, running_online_req_list,refused_online_req_list = get_data(online_files,"Online")
     except:
-        pass
+        print "The program runs without online log file."
 
     try:
-        offline_files = separte_files(offline_log_files)
+        offline_files = separte_files(offline_log_files,"Offline")
         mapped_offline_req_list, running_offline_req_list, refused_offline_req_list = get_data(offline_files, "Offline")
     except:
-        pass
+        print "The program runs without offline log file."
 
     try:
-        hybrid_files = separte_files(hybrid_log_files)
+        hybrid_files = separte_files(hybrid_log_files,"Hybrid")
         mapped_hybrid_req_list, running_hybrid_req_list, refused_hybrid_req_list = get_data(hybrid_files, "Hybrid")
     except:
-        pass
+        print "The program runs without hybrid log file."
 
     #Mapped requests bugfix --------------------------------------------------------------------------------------------------------------
     if bad_log:
@@ -188,21 +189,15 @@ def main(argv):
     mapped_requests_dict["name"] = ""
 
     #Create mapped picture
-    try:
+    if mapped_online_req_list is not None:
         for element in mapped_online_req_list:
             plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
-    except:
-        pass
-    try:
+    if mapped_offline_req_list is not None:
         for element in mapped_offline_req_list:
             plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
-    except:
-        pass
-    try:
+    if mapped_hybrid_req_list is not None:
         for element in mapped_hybrid_req_list:
             plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
-    except:
-        pass
 
     plt.title('Accepted incoming service requests')
     plt.ylabel('Accepted requests count')
@@ -213,24 +208,18 @@ def main(argv):
     plt.clf()
 
     #Create Running picture
-    try:
+    if running_online_req_list is not None:
         for element in running_online_req_list:
             plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
-    except:
-        pass
-    try:
+    if running_offline_req_list is not None:
         for element in running_offline_req_list:
             plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
-    except:
-        pass
-    try:
+    if running_hybrid_req_list is not None:
         for element in running_hybrid_req_list:
             plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
-    except:
-        pass
 
     plt.title('Currently running (mapped) requests in the NFFG')
-    plt.ylabel('Mapped requests count')
+    plt.ylabel('Requests count')
     plt.xlabel('Incoming requests')
     plt.legend(loc=4)
     plt.savefig("running_requests" +  str (time.ctime()).\
@@ -239,21 +228,15 @@ def main(argv):
 
 
     #Create refused picture
-    try:
+    if refused_online_req_list is not None:
         for element in refused_online_req_list:
             plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
-    except:
-        pass
-    try:
+    if refused_offline_req_list is not None:
         for element in refused_offline_req_list:
             plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
-    except:
-        pass
-    try:
+    if refused_hybrid_req_list is not None:
         for element in refused_hybrid_req_list:
             plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
-    except:
-        pass
 
     plt.title('Refused requests during the simulation')
     plt.ylabel('Refused requests count')
@@ -262,7 +245,7 @@ def main(argv):
     plt.savefig("refused_requests" +  str (time.ctime()).\
             replace(' ', '_').replace(':', '-') + ".png")
 
-    print("DONE")
+    print("Creating plots are DONE :)")
 
 
 if __name__ == "__main__":
