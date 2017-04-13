@@ -164,6 +164,8 @@ class MappingSolutionFramework():
                 "Please choose one of the followings: test, simple, multi")
 
         self.__remaining_request_lifetimes = []
+        # if any of these counters are changed, all of them are logged!
+        # NOTE: ONLY this makes them comparable on the same diagram!!
         self.mapped_requests = 0
         self.mapped_array = [0]
         self.refused_requests = 0
@@ -361,11 +363,13 @@ class MappingSolutionFramework():
         # Delete expired SCs
         for service in self.__remaining_request_lifetimes:
             if service['dead_time'] < time:
-               self.__del_service(service, service['req_num'])
-               self.deleted_services.append(service)
-               self.running_requests -= 1
-               log.debug("Number of requests in the deleted_services "
-                         "list: %s"%len(self.deleted_services))
+                self.__del_service(service, service['req_num'])
+                self.deleted_services.append(service)
+                self.running_requests -= 1
+                log.debug("Number of requests in the deleted_services list: %s"%len(self.deleted_services))
+                log.info("Mapped service_requests count: " + str(self.mapped_requests))
+                log.info("Running service_requests count: " + str(self.running_requests))
+                log.info("Refused service_requests count: " + str(self.refused_requests))
 
     def create_request(self):
         log.info("Start request generator thread")
