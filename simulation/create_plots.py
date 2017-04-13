@@ -75,11 +75,14 @@ def main(argv):
     refused_offline_req_list = None
     refused_hybrid_req_list = None
 
-
     try:
+        for param in argv:
+            if param[0:2] != "--":
+                print 'Bad parameter: '+str(param)+'\nUse "python create_plots.py --help"'
+                sys.exit()
         opts, args = getopt.getopt(argv,"h",["online_log_files=","offline_log_files=","hybrid_log_files=","bad_log"])
     except getopt.GetoptError:
-        print 'create_plots.py --online_log_files=<online_log_file1,online_log_file2, ...> --offline_log_files=<offline_log_file1,offline_log_file2, ...> --hybrid_log_files=<hybrid_log_file1,hybrid_log_file2, ...> --bad_log'
+        print 'create_plots.py --online_log_files=<online_log_file1,online_log_file2,...> --offline_log_files=<offline_log_file1,offline_log_file2,...> --hybrid_log_files=<hybrid_log_file1,hybrid_log_file2,...> --bad_log'
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
@@ -94,7 +97,7 @@ def main(argv):
         elif opt in ("--bad_log"):
             bad_log = True
         else:
-            print 'Bad parameters! Use --help!'
+            print 'Bad parameters! Use python create_plots.py --help'
             sys.exit()
 
     try:
