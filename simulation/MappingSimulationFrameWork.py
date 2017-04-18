@@ -43,6 +43,61 @@ from ResourceGetter import *
 
 log = logging.getLogger(" Simulator")
 
+
+class SimulationCounters():
+
+    def __init__(self):
+        """
+        Initializes all the counters
+        """
+        # NOTE: Counters MUST NOT be modified from outside!
+        self.sim_iter = 0
+        self.dump_iter = 0
+        self.mapped_requests = 0
+        self.mapped_array = [0]
+        self.refused_requests = 0
+        self.refused_array = [0]
+        self.running_requests = 0
+        self.running_array = [0]
+
+    def _log_running_refused_mapped_counters(self):
+        log.info("Simulation iteration count: "+str(self.sim_iter))
+        log.info("Mapped service_requests count: " + str(self.mapped_requests))
+        log.info("Running service_requests count: " + str(self.running_requests))
+        log.info("Refused service_requests count: " + str(self.refused_requests))
+
+    def successful_mapping_happened(self):
+        self.sim_iter += 1
+        self.dump_iter += 1
+        self.mapped_requests += 1
+        self.mapped_array.append(self.mapped_requests)
+        self.running_requests += 1
+        self.running_array.append(self.running_requests)
+        self._log_running_refused_mapped_counters()
+
+    def unsuccessful_mapping_happened(self):
+        self.sim_iter += 1
+        self.refused_requests += 1
+        self.refused_array.append(self.refused_requests)
+        self._log_running_refused_mapped_counters()
+
+    def purging_all_expired_requests(self):
+        self.dump_iter += 1
+
+    def deleting_one_expired_service(self):
+        self.running_requests -= 1
+        self.running_array.append(self.running_requests)
+
+    def incoming_request_buffer_overflow_happened(self):
+        # meaning this mapping iteration was handled very fast, the request
+        # was discarded!
+        # NOTE: currently handled the same as unsuccessful mapping!
+        self.sim_iter += 1
+        self.refused_requests += 1
+        self.refused_array.append(self.refused_requests)
+        self._log_running_refused_mapped_counters()
+
+
 class MappingSolutionFramework():
 
     def __init__(self, config_file_path, request_list):
@@ -92,7 +147,6 @@ class MappingSolutionFramework():
         log.info(" | Request queue size: " + str(int(config['req_queue_size'])))
         log.info(" ----------------------------------------")
 
-        self.number_of_iter = config['max_number_of_iterations']
         self.dump_freq = int(config['dump_freq'])
         self.max_number_of_iterations = int(config['max_number_of_iterations'])
         self.request_arrival_lambda = float(config['request_arrival_lambda'])
@@ -102,9 +156,7 @@ class MappingSolutionFramework():
         self.req_queue_size = int(config['req_queue_size'])
         # This stores the request waiting to be mapped
         self.__request_list = request_list
-        self.sim_iter = 0
         self.copy_of_rg_network_topology = None
-        self.dump_iter = 0
         # This is used to let the orchestrators know which SGs have been expired.
         self.deleted_services = []
 
@@ -164,14 +216,7 @@ class MappingSolutionFramework():
                 "Please choose one of the followings: test, simple, multi")
 
         self.__remaining_request_lifetimes = []
-        # if any of these counters are changed, all of them are logged!
-        # NOTE: ONLY this makes them comparable on the same diagram!!
-        self.mapped_requests = 0
-        self.mapped_array = [0]
-        self.refused_requests = 0
-        self.refused_array = [0]
-        self.running_requests = 0
-        self.running_array = [0]
+        self.numpyrandom = N.random.RandomState(request_seed)
 
         # Orchestrator
         if self.orchestrator_type == "online":
@@ -253,6 +298,7 @@ class MappingSolutionFramework():
             raise RuntimeError(
                 "Invalid 'orchestrator' in the simulation.cfg file! "
                 "Please choose one of the followings: online, hybrid, offline")
+        self.counters = SimulationCounters()
 
     def __mapping(self, service_graph, life_time, req_num):
         current_time = datetime.datetime.now()
@@ -273,15 +319,10 @@ class MappingSolutionFramework():
 
             self.__remaining_request_lifetimes.append(service_life_element)
             log.info("Mapping thread: Mapping service_request_"+ str(req_num) + " successful +")
-            self.mapped_requests += 1
-            log.info("Mapped service_requests count: " + str(self.mapped_requests))
-            self.running_requests += 1
-            log.info("Running service_requests count: " + str(self.running_requests))
-            self.mapped_array.append(self.mapped_requests)
-            self.refused_array.append(self.refused_requests)
-            log.info("Refused service_requests count: " + str(self.refused_requests))
-            self.dump_iter += 1
-            if not self.dump_iter % self.dump_freq:
+
+            self.counters.successful_mapping_happened()
+
+            if not self.counters.dump_iter % self.dump_freq:
                 self.dump()
 
         except uet.MappingException as me:
@@ -289,23 +330,21 @@ class MappingSolutionFramework():
                      (datetime.datetime.now() - current_time))
             log.info("Mapping thread: Mapping service_request_" +
                      str(req_num) + " unsuccessful\n%s" % me.msg)
-            self.refused_requests += 1
-            self.refused_array.append(self.refused_requests)
             # we continue working, the __network_topology is in the last valid state
 
-            log.info("Mapped service_requests count: " + str(self.mapped_requests))
-            log.info("Running service_requests count: " + str(self.running_requests))
-            log.info("Refused service_requests count: " + str(self.refused_requests))
+            self.counters.unsuccessful_mapping_happened()
 
         except Exception as e:
             log.error("Mapping failed: %s", e)
             raise
 
     def dump(self):
-        log.info("Dump NFFG to file after the " + str(self.dump_iter) + ". NFFG change")
+        log.info("Dump NFFG to file after the " + str(self.counters.dump_iter) +
+                 ". NFFG change")
+        # NOTE: instead of dump_iter we give sim_iter to dumping function!!
         self.__orchestrator_adaptor.dump_mapped_nffg(
-            self.dump_iter, "change", self.sim_number, self.orchestrator_type,
-            self.__network_topology)
+            self.counters.sim_iter, "change", self.sim_number,
+            self.orchestrator_type, self.__network_topology)
 
     def __del_service(self, service, sim_iter):
         try:
@@ -319,9 +358,7 @@ class MappingSolutionFramework():
                      str(sim_iter) + " successful -")
             self.__remaining_request_lifetimes.remove(service)
 
-            self.dump_iter += 1
-            if not self.dump_iter % self.dump_freq:
-                self.dump()
+            self.counters.deleting_one_expired_service()
 
         except uet.MappingException:
             log.error("Mapping thread: Deleting service_request_" +
@@ -334,6 +371,7 @@ class MappingSolutionFramework():
     def make_mapping(self):
         log.info("Start mapping thread")
 
+        last_req_num = 0
         while req_gen_thread.is_alive() or not self.__request_list.empty():
             request_list_element = self.__request_list.get()
             request = request_list_element['request']
@@ -341,14 +379,25 @@ class MappingSolutionFramework():
             req_num = request_list_element['req_num']
             self.__request_list.task_done()
 
+            if req_num > last_req_num + 1:
+                for discarded_req_num in xrange(last_req_num + 1, req_num):
+                    log.info("Mapping thread: handling discarded request %s as"
+                             " refused request!"%discarded_req_num)
+                    self.counters.incoming_request_buffer_overflow_happened()
+            elif req_num == last_req_num + 1:
+                # we are on track, lets see if we can map it or not!
+                pass
+            elif req_num < last_req_num + 1:
+                raise Exception("Implementation error in simulation framework, "
+                                "request number should increase monotonically.")
+            last_req_num = req_num
+
             # TODO: remove expired requests even when mapping didn't happen!
             # Remove expired service graph requests
             self.__clean_expired_requests(datetime.datetime.now())
 
             log.debug("Number of mapping iteration is %s"%req_num)
             self.__mapping(request, life_time, req_num)
-
-            self.running_array.append(self.running_requests)
 
         if self.wait_all_req_expire:
             # Wait for all request to expire
@@ -361,57 +410,57 @@ class MappingSolutionFramework():
 
     def __clean_expired_requests(self,time):
         # Delete expired SCs
+        self.counters.purging_all_expired_requests()
         for service in self.__remaining_request_lifetimes:
             if service['dead_time'] < time:
                 self.__del_service(service, service['req_num'])
                 self.deleted_services.append(service)
-                self.running_requests -= 1
-                log.debug("Number of requests in the deleted_services list: %s"%len(self.deleted_services))
-                log.info("Mapped service_requests count: " + str(self.mapped_requests))
-                log.info("Running service_requests count: " + str(self.running_requests))
-                log.info("Refused service_requests count: " + str(self.refused_requests))
+                log.debug("Number of requests in the deleted_services list: %s"
+                          %len(self.deleted_services))
 
     def create_request(self):
         log.info("Start request generator thread")
-        sim_end = self.max_number_of_iterations
 
         # Simulation cycle
         sim_running = True
-        self.sim_iter = 1
+        request_gen_iter = 1
         while sim_running:
 
             # Get request
             service_graph, life_time = \
                 self.__request_generator.get_request(self.__network_topology_bare,
-                                                     self.sim_iter, self.running_requests)
-
+                                                     request_gen_iter,
+                                                     self.counters.running_requests)
             # Discrete working
             if self.__discrete_simulation:
                 pass
-
             # Not discrete working
             else:
-
                 if self.__request_list.qsize() > self.req_queue_size:
                     log.info("Request Generator thread: discarding generated "
-                             "request %s because the queue is full!"%self.sim_iter)
+                            "request %s with lifetime %s because the queue is full!"%
+                             (request_gen_iter, life_time))
                 else:
-                    log.info("Request Generator thread: Add request " + str(self.sim_iter))
+                    log.info("Request Generator thread: Add request " + str(request_gen_iter))
+                    log.debug("Request Generator thread: Generated lifetime of "
+                              "request %s is %s s"%(request_gen_iter, life_time))
                     request_list_element = {"request": service_graph,
-                                        "life_time": life_time, "req_num": self.sim_iter}
+                                            "life_time": life_time,
+                                            "req_num": request_gen_iter}
                     self.__request_list.put(request_list_element)
 
                 scale_radius = (1/self.request_arrival_lambda)
-                exp_time = N.random.exponential(scale_radius)
+                exp_time = self.numpyrandom.exponential(scale_radius)
                 time.sleep(exp_time)
 
             log.debug("Request Generator thread: Number of requests waiting in"
                       " the queue %s"%self.__request_list.qsize())
-
-            # Increase simulation iteration
-            if (self.sim_iter < sim_end):
-                self.sim_iter += 1
-            else:
+            # Increase simulation iteration is done by counters
+            # Increasing request generatior iteration counter
+            request_gen_iter += 1
+            if request_gen_iter > self.max_number_of_iterations:
+                # meaning: all the requests are generated (or discarded) which
+                # will be needed during the simulation
                 sim_running = False
                 log.info("Stop request generator thread")
 
@@ -425,8 +474,9 @@ def test_sg_consumer(test, request_list, consumption_time, maxiter):
         req_num = request_list_element['req_num']
         request_list.task_done()
 
-        test.running_requests = len(running_reqs)
-        log.debug("TEST: Number of requests in the system: %s"%test.running_requests)
+        test.counters.running_requests = len(running_reqs)
+        log.debug("TEST: Number of requests in the system: %s"%
+                  test.counters.running_requests)
         sleep(consumption_time)
         current_time = time.time()
         running_reqs.append((current_time+life_time, req_num))
@@ -479,9 +529,10 @@ if __name__ == "__main__":
             raise
         finally:
             # Create JSON files
-            requests = {"mapped_requests": test.mapped_array,
-                        "running_requests": test.running_array,
-                        "refused_requests": test.refused_array}
+            # This output is not advised to use!
+            requests = {"mapped_requests": test.counters.mapped_array,
+                        "running_requests": test.counters.running_array,
+                        "refused_requests": test.counters.refused_array}
             full_path_json = os.path.join(test.path,
                                           "requests" + str(time.ctime()) + ".json")
             with open(full_path_json, 'w') as outfile:
