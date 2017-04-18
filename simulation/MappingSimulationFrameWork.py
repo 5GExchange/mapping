@@ -538,6 +538,9 @@ if __name__ == "__main__":
             with open(full_path_json, 'w') as outfile:
                 json.dump(requests, outfile)
 
+            # make a dump after everything is finished to see the final state!
+            test.dump()
+
 
 
 

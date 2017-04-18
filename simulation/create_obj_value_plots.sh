@@ -16,4 +16,4 @@ gnuplot <<- EOF
     "$1" using 1:3 with linespoint title "Load balancing component", "reopts.txt" using 1:2 with boxes title "Reoptimizations"
 EOF
 
-# rm reopts.txt
+rm reopts.txt
