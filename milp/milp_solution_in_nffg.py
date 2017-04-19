@@ -75,6 +75,15 @@ def get_MIP_solution (reqnffgs, netnffg, migration_handler,
     return solution.mapping_of_request.values()[0]
 
 
+def add_saps_if_needed_for_link (link, nffg):
+  if link.dst.node.type == 'SAP' and link.dst.node.id not in nffg.network:
+    added_sap1 = nffg.add_sap(sap_obj=link.dst.node)
+    log.debug("SAP added: %s" % added_sap1)
+  if link.src.node.type == 'SAP' and link.src.node.id not in nffg.network:
+    added_sap2 = nffg.add_sap(sap_obj=link.src.node)
+    log.debug("SAP added: %s" % added_sap2)
+
+
 def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
                                   migration_handler=None,
                                   migration_coeff=None,
@@ -106,9 +115,6 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
   # all input NFFG-s are obtained somehow
 
   current_time = time.time()
-  ######################################################################
-  ## This part is very similar to the MappingAlgorithms.MAP() function #
-  ######################################################################
 
   request = request_seq[0]
 
@@ -207,6 +213,16 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
     log.info("MILP didn't produce a mapping for request %s" % mapping_of_req)
     return None
 
+  # The CoreAlgorithm processing or the constructOutputNFFG cannot do it, we
+  # have to add them manually.
+  for req in request_for_milp.reqs:
+    if not mappedNFFG.network.has_edge(req.src.node.id, req.dst.node.id,
+                                       key=req.id):
+      log.debug("Adding requirement link on path %s back to the output."%
+                req.sg_path)
+      log.debug("SAPs in mappedNFFG: %s"%[s for s in mappedNFFG.saps])
+      add_saps_if_needed_for_link(req, mappedNFFG)
+
   # replace Infinity values
   helper.purgeNFFGFromInfinityValues(mappedNFFG)
 
@@ -255,10 +271,7 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
     for sg in resource.sg_hops:
       if not request.network.has_edge(sg.src.node.id, sg.dst.node.id,
                                       key=sg.id):
-        if sg.dst.node.type == 'SAP' and sg.dst.node.id not in request.network:
-          request.add_sap(sap_obj=sg.dst.node)
-        if sg.src.node.type == 'SAP' and sg.src.node.id not in request.network:
-          request.add_sap(sap_obj=sg.src.node)
+        add_saps_if_needed_for_link(sg, request)
         request.add_sglink(sg.src, sg.dst, hop=sg)
 
     # reqs in the substrate (requirements satisfied by earlier mapping) needs
@@ -269,8 +282,9 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
                [r.sg_path for r in resource.reqs][:20]))
     for req in resource.reqs:
       # all possible SAPs are added already!
-      log.debug("Adding requirement link on path %s to request to preserve it "
-                "during reoptimization"%req.sg_path)
+      log.debug("Adding requirement link on path %s between %s and %s to request to preserve it "
+                "during reoptimization"%(req.sg_path, req.src, req.dst))
+      add_saps_if_needed_for_link(req, resource)
       request.add_req(req.src, req.dst, req=req)
 
     # We have to deal with migration in this case only.
@@ -314,9 +328,9 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
 
 if __name__ == '__main__':
   req, net = None, None
-  with open('../simulation/offline-req.nffg78', "r") as f:
+  with open('dictwtf-req.nffg', "r") as f:
     req = NFFG.parse(f.read())
-  with open('../simulation/offline-res.nffg78', "r") as f:
+  with open('dictwtf-net.nffg', "r") as f:
     net = NFFG.parse(f.read())
 
   # print "\nMIGRATION-TEST: Simple MILP: \n"
@@ -339,6 +353,6 @@ if __name__ == '__main__':
 
   print "\nMIGRATION-TEST: Optimize everything with composite objective"
   with open("reopt-milp-lb.nffg", "w") as f:
-    f.write(MAP(req, net, optimize_already_mapped_nfs=False, migration_coeff=1.0,
+    f.write(MAP(req, net, optimize_already_mapped_nfs=True, migration_coeff=1.0,
                 load_balance_coeff=1.0, edge_cost_coeff=1.0,
                 migration_handler_name="ConstantMigrationCost", const_cost=2.0).dump())
