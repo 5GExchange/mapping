@@ -423,7 +423,7 @@ def getPicoTopo():
 
     nffg.add_undirected_link(sw.add_port(), inf2.add_port(), **linkres)
     nffg.add_undirected_link(inf1.add_port(), inf2.add_port(), **linkres)
-    nffg.add_undirected_link(inf2.add_port(), sap.add_port(), **linkres)
+    nffg.add_undirected_link(inf2.add_port(), sap.add_port(id=1), **linkres)
     inf1 = inf2 
     
   return nffg
