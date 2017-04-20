@@ -286,7 +286,7 @@ class HybridOrchestrator():
               if delete:
                 log.debug("Deleting NFs from %s due to expiration during the "
                           "offline optimization: %s" %
-                          (i['SG'].network.nodes(), self_nffg_name))
+                          (self_nffg_name, i['SG'].network.nodes()))
                 for req in i['SG'].reqs:
                   self.res_offline.del_edge(req.src.node.id, req.dst.node.id, id=req.id)
                   log.debug("Deleting E2E requirement from %s on path %s" %
@@ -366,6 +366,7 @@ class HybridOrchestrator():
       self.res_online_protector.start_reading_res_nffg("Setting offline resource")
       self.res_offline = self.__res_sharing_strat.get_offline_resource(self.res_online,
                                                                        self.res_offline)
+      self.del_exp_reqs_from_nffg("res_offline")
       self.res_online_protector.finish_reading_res_nffg("Offline resource was set")
 
     def merge_online_offline(self):

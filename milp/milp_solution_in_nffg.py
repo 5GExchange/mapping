@@ -218,9 +218,9 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
   for req in request_for_milp.reqs:
     if not mappedNFFG.network.has_edge(req.src.node.id, req.dst.node.id,
                                        key=req.id):
-      log.debug("Adding requirement link on path %s back to the output."%
-                req.sg_path)
-      log.debug("SAPs in mappedNFFG: %s"%[s for s in mappedNFFG.saps])
+      # log.debug("Adding requirement link on path %s back to the output."%
+      #           req.sg_path)
+      # log.debug("SAPs in mappedNFFG: %s"%[s for s in mappedNFFG.saps])
       add_saps_if_needed_for_link(req, mappedNFFG)
       mappedNFFG.add_req(req.src, req.dst, req=req)
 
