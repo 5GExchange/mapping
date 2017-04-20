@@ -23,8 +23,8 @@ except ImportError:
   # runs when mapping repo is cloned individually, and NFFG lib is in a
   # sibling directory. WARNING: cicular import is not avioded by design.
   import site
-  site.addsitedir('../nffg_lib')
-  from nffg import NFFG, NFFGToolBox
+  site.addsitedir('..')
+  from nffg_lib.nffg import NFFG, NFFGToolBox
 
 try:
     from generator import CarrierTopoBuilder

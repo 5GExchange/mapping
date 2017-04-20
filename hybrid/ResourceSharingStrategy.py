@@ -64,38 +64,51 @@ class DynamicMaxOnlineToAll(AbstractResourceSharingStrategy):
 
         for i in res_online.infras:
             if i.infra_type == 'EE':
-                if i.availres.bandwidth > self.max_avail_node_bw:
-                    self.max_avail_node_bw = i.availres.bandwidth
+                if i.resources.bandwidth - i.availres.bandwidth > self.max_avail_node_bw:
+                    self.max_avail_node_bw = i.resources.bandwidth - i.availres.bandwidth
 
-                if i.availres.cpu > self.max_avail_node_cpu:
-                    self.max_avail_node_cpu = i.availres.cpu
+                if i.resources.cpu - i.availres.cpu > self.max_avail_node_cpu:
+                    self.max_avail_node_cpu = i.resources.cpu - i.availres.cpu
 
-                if i.availres.mem > self.max_avail_node_mem:
-                    self.max_avail_node_mem = i.availres.mem
+                if i.resources.mem - i.availres.mem > self.max_avail_node_mem:
+                    self.max_avail_node_mem = i.resources.mem - i.availres.mem
 
-                if i.availres.storage > self.max_avail_node_storage:
-                    self.max_avail_node_storage = i.availres.storage
+                if i.resources.storage - i.availres.storage > self.max_avail_node_storage:
+                    self.max_avail_node_storage = i.resources.storage - i.availres.storage
 
             elif i.infra_type == 'SDN-SWITCH':
-                if i.availres.bandwidth > self.max_avail_sw_bw:
-                    self.max_avail_sw_bw = i.availres.bandwidth
+                if i.resources.bandwidth - i.availres.bandwidth > self.max_avail_sw_bw:
+                    self.max_avail_sw_bw = i.resources.bandwidth - i.availres.bandwidth
 
             else:
                 log.error("Invalid infra type!")
                 raise
+
 
             for k in i.ports:
                 for l in k.flowrules:
                     if l.bandwidth > self.max_avail_link_bw:
                             self.max_avail_link_bw = l.bandwidth
 
+
     def get_offline_resource(self, res_online, res_offline):
         self.set_rg_max_avail_node_and_link(res_online)
         to_offline = copy.deepcopy(self.bare_resource_graph)
         for i in to_offline.infras:
+            new_resources = copy.deepcopy(i.resources)
             if i.infra_type == 'EE':
+                new_resources.bandwidth = self.max_avail_node_bw
+                new_resources.cpu = self.max_avail_node_cpu
+                new_resources.mem = self.max_avail_node_mem
+                new_resources.storage = self.max_avail_node_storage
+                setattr(i, 'resource',new_resources)
+            elif i.infra_type == 'SDN-SWITCH':
+                new_resources.bandwidth = self.max_avail_sw_bw
+                setattr(i, 'resource', new_resources)
+            else:
+                log.error("Invalid infra type!")
+                raise
 
-                pass
         return copy.deepcopy(res_online)
 
     def get_online_resource(self, res_online, res_offline):
