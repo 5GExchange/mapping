@@ -80,3 +80,12 @@ class AllReqsOpt(AbstractWhatToOptimizeStrategy):
 
     def reqs_to_optimize(self, sum_req):
        return copy.deepcopy(sum_req)
+
+class ReqsBasedOnLifetime (AbstractWhatToOptimizeStrategy):
+
+    def __init__(self, full_log_path, lifetimes ):
+        super(ReqsBasedOnLifetime, self).__init__(full_log_path)
+        self.optimized_reqs = None
+
+    def reqs_to_optimize(self, sum_req):
+        raise NotImplementedError("ReqsLifetime strategy is not ready yet!")

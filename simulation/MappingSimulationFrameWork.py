@@ -182,17 +182,21 @@ class MappingSolutionFramework():
         request_seed = int(config['request_seed'])
         nf_type_count = int(config['request_nf_type_count'])
         if request_type == "test":
-            self.__request_generator = TestReqGen(self.request_lifetime_lambda, nf_type_count, request_seed)
+            self.__request_generator = TestReqGen(self.request_lifetime_lambda,
+                                                  nf_type_count, request_seed)
         elif request_type == "simple":
             if 'request_min_lat' in config and 'request_max_lat' in config:
                 minlat = float(config['request_min_lat'])
                 maxlat = float(config['request_max_lat'])
                 self.__request_generator = SimpleReqGen(
-                    self.request_lifetime_lambda, nf_type_count, request_seed, min_lat=minlat, max_lat=maxlat)
+                    self.request_lifetime_lambda, nf_type_count, request_seed,
+                                                min_lat=minlat, max_lat=maxlat)
             else:
-                self.__request_generator = SimpleReqGen(self.request_lifetime_lambda, nf_type_count, request_seed)
+                self.__request_generator = SimpleReqGen(
+                    self.request_lifetime_lambda, nf_type_count, request_seed)
         elif request_type == "multi":
-            self.__request_generator = MultiReqGen(self.request_lifetime_lambda, nf_type_count, request_seed)
+            self.__request_generator = MultiReqGen(self.request_lifetime_lambda,
+                                                   nf_type_count, request_seed)
         elif request_type == "simple_equilibrium":
             minlat = float(config['request_min_lat'])
             maxlat = float(config['request_max_lat'])
@@ -406,7 +410,6 @@ class MappingSolutionFramework():
                 self.__clean_expired_requests(datetime.datetime.now())
 
         log.info("End mapping thread!")
-
 
     def __clean_expired_requests(self,time):
         # Delete expired SCs

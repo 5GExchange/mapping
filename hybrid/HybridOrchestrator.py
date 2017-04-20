@@ -103,6 +103,8 @@ class HybridOrchestrator():
                 self.__what_to_opt = ReqsSinceLastOpt(full_log_path)
             elif what_to_opt_strat == "all_reqs":
                 self.__what_to_opt = AllReqsOpt(full_log_path)
+            elif what_to_opt_strat == "reqs_lifetime":
+                self.__what_to_opt = ReqsBasedOnLifetime(full_log_path, self.deleted_services)
             else:
                 raise ValueError(
                     'Invalid what_to_opt_strat type! Please choose one of the '
