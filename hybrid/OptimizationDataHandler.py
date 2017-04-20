@@ -1,4 +1,5 @@
 import os
+import copy
 import logging
 log = logging.getLogger(" OptimizationDataHandler ")
 
@@ -20,12 +21,14 @@ class OptimizationDataHandler():
                                                     resource_type + '.dat'
 
 
-        with open(self.opt_data_path, 'r+') as file:
-            file.write("a\n")
-            file.write("b\n")
-            self.number_of_lines = sum(1 for _ in file)
+        with open(self.opt_data_path, 'a') as file:
+            file.write("0 \n")
+            file.write("0 \n")
 
-        asd = 0
+
+        with open(self.opt_data_path, 'r') as file:
+            self.number_of_lines = sum (1 for _ in file)
+
 
     def get_opt_time(self, number_of_vnfs):
 
@@ -41,28 +44,41 @@ class OptimizationDataHandler():
                 time = []
                 result = 0.0
 
-                for n in lines:
-                    if n % 2:
-                        vnf_numbers.append(n)
+                for x in range(0, self.number_of_lines):
+                    if not x % 2:
+                        lines[x] = lines[x].rstrip()
+                        vnf_numbers.append(lines[x])
                     else:
-                        opt_times.append(n)
+                        lines[x] = lines[x].rstrip()
+                        opt_times.append(lines[x])
 
-                for i in vnf_numbers:
-                    if i > number_of_vnfs - 20 or i < number_of_vnfs + 20:
-                        time.append(opt_times[i])
+                for i in range(0, len(vnf_numbers)):
+                    for j in vnf_numbers:
+                        for k in j:
+                            if k > int(number_of_vnfs) - 20 or k < int(number_of_vnfs) + 20:
 
+    # eddig van kesz, most a itt szereplo sorszamu elemeket kell kiszedni a opt_times-bol es atlagolni
+
+                                time.append(opt_times)
+                                asd = 0
                 for k in time:
                     result += k
-
                 return result/len(time)
-
 
     def write_data(self, number_of_vnfs, time_of_opt):
         with open(self.opt_data_path, 'r') as file:
             lines = file.readlines()
 
-        lines[self.number_of_lines-1] += number_of_vnfs + ' '
-        lines[self.number_of_lines] += time_of_opt + ' '
+        asd = 10
+
+        line_of_vnfs = self.number_of_lines - 2
+        line_of_time = self.number_of_lines - 1
+
+        lines[line_of_vnfs] = lines[line_of_vnfs].rstrip()
+        lines[line_of_vnfs] += ' ' + number_of_vnfs + '\n'
+
+        lines[line_of_time] = lines[line_of_time].rstrip()
+        lines[line_of_time] += ' ' + time_of_opt + '\n'
 
         with open(self.opt_data_path, 'w') as file:
             for line in lines:
