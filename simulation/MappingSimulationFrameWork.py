@@ -322,9 +322,6 @@ class MappingSolutionFramework():
 
             self.counters.successful_mapping_happened()
 
-            if not self.counters.dump_iter % self.dump_freq:
-                self.dump()
-
         except uet.MappingException as me:
             log.info("Time passed with one mapping response: %s s" %
                      (datetime.datetime.now() - current_time))
@@ -339,6 +336,10 @@ class MappingSolutionFramework():
         except Exception as e:
             log.error("Mapping failed: %s", e)
             raise
+        # Try to dump even if unsucessful mapping happened, because the dum_iter
+        # could have been increased due to exired requests.
+        if not self.counters.dump_iter % self.dump_freq:
+            self.dump()
 
     def dump(self):
         log.info("Dump NFFG to file after the " + str(self.counters.dump_iter) +
