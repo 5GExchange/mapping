@@ -78,10 +78,10 @@ def get_MIP_solution (reqnffgs, netnffg, migration_handler,
 def add_saps_if_needed_for_link (link, nffg):
   if link.dst.node.type == 'SAP' and link.dst.node.id not in nffg.network:
     added_sap1 = nffg.add_sap(sap_obj=link.dst.node)
-    log.debug("SAP added: %s" % added_sap1)
+    # log.debug("SAP added: %s, ports: %s" % (added_sap1,added_sap1.ports))
   if link.src.node.type == 'SAP' and link.src.node.id not in nffg.network:
     added_sap2 = nffg.add_sap(sap_obj=link.src.node)
-    log.debug("SAP added: %s" % added_sap2)
+    # log.debug("SAP added: %s" % added_sap2)
 
 
 def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
@@ -265,6 +265,7 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
     # request for reoptimization!
     for vnf in resource.nfs:
       if vnf.id not in req_nf_ids:
+        # log.debug("Adding NF %s to request for reoptimization."%vnf.id)
         request.add_nf(vnf)
 
     NFFGToolBox.recreate_all_sghops(resource)
@@ -272,7 +273,7 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
     for sg in resource.sg_hops:
       if not request.network.has_edge(sg.src.node.id, sg.dst.node.id,
                                       key=sg.id):
-        log.debug("Adding SGHop %s to request from resource."%sg.id)
+        # log.debug("Adding SGHop %s to request from resource."%sg.id)
         add_saps_if_needed_for_link(sg, request)
         request.add_sglink(sg.src, sg.dst, hop=sg)
 
@@ -282,14 +283,17 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
     log.debug("e2e reqs in request:%s, e2e reqs in resource, e.g: %s"%
               ([r.sg_path for r in request.reqs],
                [r.sg_path for r in resource.reqs][:20]))
-    log.debug("SAPs in resource: %s" % [s for s in resource.saps])
+    # log.debug("SAPs in resource: %s" % [s for s in resource.saps])
     for req in resource.reqs:
       # all possible SAPs should be added already!
       if not request.network.has_edge(req.src.node.id, req.dst.node.id,
                                        key=req.id):
-        log.debug("Adding requirement link on path %s between %s and %s to request to preserve it "
-                "during reoptimization"%(req.sg_path, req.src, req.dst))
+        # log.debug("Adding requirement link on path %s between %s and %s to request to preserve it "
+        #         "during reoptimization"%(req.sg_path, req.src, req.dst))
         add_saps_if_needed_for_link(req, request)
+        # bandwidth requirement of the already mapped SGHops are stored by
+        # the resource graph!
+        req.bandwidth = 0.0
         request.add_req(req.src, req.dst, req=req)
 
     # We have to deal with migration in this case only.
