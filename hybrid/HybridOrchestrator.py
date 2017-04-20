@@ -286,7 +286,7 @@ class HybridOrchestrator():
               if delete:
                 log.debug("Deleting NFs from %s due to expiration during the "
                           "offline optimization: %s" %
-                          (self_nffg_name, i['SG'].network.nodes()))
+                          (i['SG'].network.nodes(), self_nffg_name))
                 for req in i['SG'].reqs:
                   self.res_offline.del_edge(req.src.node.id, req.dst.node.id, id=req.id)
                   log.debug("Deleting E2E requirement from %s on path %s" %

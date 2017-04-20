@@ -222,6 +222,7 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
                 req.sg_path)
       log.debug("SAPs in mappedNFFG: %s"%[s for s in mappedNFFG.saps])
       add_saps_if_needed_for_link(req, mappedNFFG)
+      mappedNFFG.add_req(req.src, req.dst, req=req)
 
   # replace Infinity values
   helper.purgeNFFGFromInfinityValues(mappedNFFG)
@@ -254,7 +255,7 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
   # Make heuristic and MILP even in number of large object deepcopies
   # This would also be required for correct behaviour (Maybe the mapping
   # shouldn't change the input NFFG)
-  # request = copy.deepcopy(request) - should receive a copy, it wants to modify it!
+  request = copy.deepcopy(request)
   resource = copy.deepcopy(resource)
 
   migration_handler = None
@@ -271,6 +272,7 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
     for sg in resource.sg_hops:
       if not request.network.has_edge(sg.src.node.id, sg.dst.node.id,
                                       key=sg.id):
+        log.debug("Adding SGHop %s to request from resource."%sg.id)
         add_saps_if_needed_for_link(sg, request)
         request.add_sglink(sg.src, sg.dst, hop=sg)
 
@@ -280,12 +282,15 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
     log.debug("e2e reqs in request:%s, e2e reqs in resource, e.g: %s"%
               ([r.sg_path for r in request.reqs],
                [r.sg_path for r in resource.reqs][:20]))
+    log.debug("SAPs in resource: %s" % [s for s in resource.saps])
     for req in resource.reqs:
-      # all possible SAPs are added already!
-      log.debug("Adding requirement link on path %s between %s and %s to request to preserve it "
+      # all possible SAPs should be added already!
+      if not request.network.has_edge(req.src.node.id, req.dst.node.id,
+                                       key=req.id):
+        log.debug("Adding requirement link on path %s between %s and %s to request to preserve it "
                 "during reoptimization"%(req.sg_path, req.src, req.dst))
-      add_saps_if_needed_for_link(req, resource)
-      request.add_req(req.src, req.dst, req=req)
+        add_saps_if_needed_for_link(req, request)
+        request.add_req(req.src, req.dst, req=req)
 
     # We have to deal with migration in this case only.
     if migration_handler_name is not None and type(

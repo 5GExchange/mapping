@@ -234,7 +234,7 @@ class MappingSolutionFramework():
             self.__orchestrator_adaptor = OnlineOrchestratorAdaptor(
                                             self.deleted_services,
                                             self.full_log_path,
-                                            config_file_path)
+                                            config_file_path, log)
         elif self.orchestrator_type == "hybrid":
             log.info(" ---- Hybrid specific configurations -----")
             log.info(" | What to optimize: " + str(config['what_to_optimize']))
@@ -272,7 +272,7 @@ class MappingSolutionFramework():
                                             self.__network_topology_bare,
                                             self.deleted_services,
                                             self.full_log_path,
-                                            config_file_path)
+                                            config_file_path, log)
         elif self.orchestrator_type == "offline":
             log.info(" ---- Offline specific configurations -----")
             log.info(" | Optimize already mapped nfs " + config['optimize_already_mapped_nfs'])
@@ -291,7 +291,7 @@ class MappingSolutionFramework():
                 config_file_path,
                 bool(config['optimize_already_mapped_nfs']),
                 config['migration_handler_name'], config['migration_coeff'],
-                config['load_balance_coeff'], config['edge_cost_coeff'],
+                config['load_balance_coeff'], config['edge_cost_coeff'], log,
                 **config['migration_handler_kwargs'])
         else:
             log.error("Invalid 'orchestrator' in the simulation.cfg file!")
@@ -333,7 +333,9 @@ class MappingSolutionFramework():
             # we continue working, the __network_topology is in the last valid state
 
             self.counters.unsuccessful_mapping_happened()
-
+        except uet.UnifyException as ue:
+            log.error("Mapping failed: %s", ue.msg)
+            raise
         except Exception as e:
             log.error("Mapping failed: %s", e)
             raise
