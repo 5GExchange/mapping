@@ -412,9 +412,12 @@ class MappingSolutionFramework():
 
     def __clean_expired_requests(self,time):
         # Delete expired SCs
-        self.counters.purging_all_expired_requests()
+        purge_needed = False
         for service in self.__remaining_request_lifetimes:
             if service['dead_time'] < time:
+                if not purge_needed:
+                    self.counters.purging_all_expired_requests()
+                    purge_needed = True
                 self.__del_service(service, service['req_num'])
                 self.deleted_services.append(service)
                 log.debug("Number of requests in the deleted_services list: %s"
