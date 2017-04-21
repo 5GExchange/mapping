@@ -49,11 +49,12 @@ class DynamicMaxOnlineToAll(AbstractResourceSharingStrategy):
     def __init__(self, resource_grap, full_log_path):
         super(DynamicMaxOnlineToAll, self).__init__(resource_grap, full_log_path)
 
+        self.link_bw_types = []
         self.max_avail_node_bw = 0.0
         self.max_avail_node_cpu = 0
         self.max_avail_node_mem = 0.0
         self.max_avail_node_storage = 0.0
-        self.max_avail_link_bw = 0.0
+        self.max_avail_link_bw = []
         self.max_avail_sw_bw = 0.0
 
     def set_rg_max_avail_node_and_link(self, rs):
@@ -85,10 +86,24 @@ class DynamicMaxOnlineToAll(AbstractResourceSharingStrategy):
                 raise
 
 
-            for k in i.ports:
-                for l in k.flowrules:
-                    if l.bandwidth > self.max_avail_link_bw:
-                            self.max_avail_link_bw = l.bandwidth
+        #Calculate links
+        for i, j, k, d in res_online.network.edges_iter(data=True, keys=True):
+            if d.type == 'STATIC':
+                if d.bandwidth not in self.link_bw_types:
+                    self.link_bw_types.append(d.bandwidth)
+
+        link = {}
+        for i in self.link_bw_types:
+            link[i] = 0
+        for i, j, k, d in res_online.network.edges_iter(data=True, keys=True):
+            if d.type == 'STATIC':
+                if d.bandwidth - d.availbandwidth > link[d.bandwidth]:
+                    link[d.bandwidth] = d.bandwidth - d.availbandwidth
+
+        for i in self.link_bw_types:
+            max_link = {'type':i,'used_bw':link[i]}
+            self.max_avail_link_bw.append(max_link)
+
 
 
     def get_offline_resource(self, res_online, res_offline):
@@ -108,6 +123,13 @@ class DynamicMaxOnlineToAll(AbstractResourceSharingStrategy):
             else:
                 log.error("Invalid infra type!")
                 raise
+        for i, j, k, edge in to_offline.network.edges_iter(data=True, keys=True):
+            for bw in self.max_avail_link_bw:
+                if edge.bandwidth == bw['type']:
+                    edge.bandwidth = bw['used_bw']
+                    break
+
+
 
         return copy.deepcopy(res_online)
 
