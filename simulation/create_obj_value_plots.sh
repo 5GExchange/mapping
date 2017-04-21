@@ -5,6 +5,9 @@
 cat $2 | grep -e "DEBUG: Hybrid Orchestrator:Setting online resource based on reoptimized resource for request" |
 cut -d ' ' -f12 | cut -d '-' -f3 | awk '{print $1,",",2}' > reopts.txt
 
+# delete 1st line of the CSV, because it is the header
+sed -i.bak -e '1d' $1
+
 gnuplot <<- EOF
     set xlabel "Number of simulation iterations"
     set ylabel "Objective function value"
