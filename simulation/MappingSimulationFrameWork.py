@@ -244,7 +244,7 @@ class MappingSolutionFramework():
             log.info(" | What to optimize: " + str(config['what_to_optimize']))
             log.info(" | When to optimize: " + str(config['when_to_optimize']))
             log.info(" | When to optimize parameter: " + str(config['when_to_opt_parameter']))
-            log.info(" | Optimize strategy: " + str(config['orchestrator']))
+            log.info(" | Optimize strategy: " + str(config['resource_share_strat']))
             log.info(" -----------------------------------------")
             log.info(" ---- Online specific configurations -----")
             log.info(" | Enable shortest path cache: " + str(
