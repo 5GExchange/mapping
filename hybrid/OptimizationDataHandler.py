@@ -20,65 +20,57 @@ class OptimizationDataHandler():
         self.opt_data_path = os.path.abspath('optimization_data') + '/' +\
                                                     resource_type + '.dat'
 
+        # if dat file is not exist
+        if not os.path.exists(self.opt_data_path):
+            with open(self.opt_data_path, 'w') as file:
+                file.write("0 \n")
+                file.write("0 \n")
 
-        with open(self.opt_data_path, 'a') as file:
-            file.write("0 \n")
-            file.write("0 \n")
-
+        # if dat file is exist, but it's empty
+        if os.stat(self.opt_data_path).st_size == 0:
+            with open(self.opt_data_path, 'a') as file:
+                file.write("0 \n")
+                file.write("0 \n")
 
         with open(self.opt_data_path, 'r') as file:
             self.number_of_lines = sum (1 for _ in file)
 
+    def get_opt_time(self, target_vnf_number):
 
-    def get_opt_time(self, number_of_vnfs):
+        if os.stat(self.opt_data_path).st_size == 0:
+            time = 0
+            return time
+        else:
+            with open(self.opt_data_path, 'r') as file:
+                lines = file.readlines()
 
-            if os.stat(self.opt_data_path).st_size == 0:
-                time = 0
-                return time
-            else:
-                with open(self.opt_data_path, 'r') as file:
-                    lines = file.readlines()
+            time = []
+            result = 0.0
+            id = 0
 
-                vnf_numbers = []
-                opt_times = []
-                time = []
-                result = 0.0
+            vnf_numbers = lines[0].rstrip().split(",")
+            opt_times = lines[1].rstrip().split(",")
 
-                for x in range(0, self.number_of_lines):
-                    if not x % 2:
-                        lines[x] = lines[x].rstrip()
-                        vnf_numbers.append(lines[x])
-                    else:
-                        lines[x] = lines[x].rstrip()
-                        opt_times.append(lines[x])
+            # TODO: a kereses intervalluma config fajlbol allithato legyen
+            for i in vnf_numbers:
 
-                for i in range(0, len(vnf_numbers)):
-                    for j in vnf_numbers:
-                        for k in j:
-                            if k > int(number_of_vnfs) - 20 or k < int(number_of_vnfs) + 20:
+                if int(i) > int(target_vnf_number)-20  and int(i) < int(target_vnf_number) + 20:
+                    time.append(opt_times[id])
+                id += 1
 
-    # eddig van kesz, most a itt szereplo sorszamu elemeket kell kiszedni a opt_times-bol es atlagolni
-
-                                time.append(opt_times)
-                                asd = 0
-                for k in time:
-                    result += k
-                return result/len(time)
+            for k in time:
+                result += int(k)
+            return result/len(time)
 
     def write_data(self, number_of_vnfs, time_of_opt):
         with open(self.opt_data_path, 'r') as file:
             lines = file.readlines()
 
-        asd = 10
+        lines[0] = lines[0].rstrip()
+        lines[0] += ',' + number_of_vnfs + '\n'
 
-        line_of_vnfs = self.number_of_lines - 2
-        line_of_time = self.number_of_lines - 1
-
-        lines[line_of_vnfs] = lines[line_of_vnfs].rstrip()
-        lines[line_of_vnfs] += ' ' + number_of_vnfs + '\n'
-
-        lines[line_of_time] = lines[line_of_time].rstrip()
-        lines[line_of_time] += ' ' + time_of_opt + '\n'
+        lines[1] = lines[1].rstrip()
+        lines[1] += ',' + time_of_opt + '\n'
 
         with open(self.opt_data_path, 'w') as file:
             for line in lines:
