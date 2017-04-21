@@ -176,7 +176,7 @@ class HybridOrchestrator():
                                             propagate_e2e_reqs=False,
                                             bt_limit=6,
                                             bt_branching_factor=3, mode=NFFG.MODE_ADD,
-                                            keep_e2e_reqs_in_output=True,
+                                            keep_e2e_reqs_in_output=False,
                                             keep_input_unchanged=True)
 
             log.info("do_online_mapping : Successful online mapping :)")
@@ -205,6 +205,7 @@ class HybridOrchestrator():
                 self.sum_req_protector.start_reading_res_nffg("Determine set of requests to optimize")
                 self.del_exp_reqs_from_sum_req()
                 self.reqs_under_optimization = self.__what_to_opt.reqs_to_optimize(self.SUM_req)
+                tmp_sum_req = copy.deepcopy(self.SUM_req)
                 self.sum_req_protector.finish_reading_res_nffg("Got requests to optimize")
                 log.debug("SAP count in request %s and in resource: %s, resource total size: %s" %
                           (len([s for s in self.reqs_under_optimization.saps]),
@@ -228,13 +229,22 @@ class HybridOrchestrator():
                   raise uet.MappingException("Offline didn't get any requests to optimize",
                                              False)
                 not_top_opt_nfs = [n.id for n in reqs_not_to_be_opt.nfs]
+                # Even in case of all_reqs strategy this may be non zero, in
+                # case a deletion happened during execution of this function.
                 log.debug("Removing requests (%s NFs) from res_offline which "
                           "shouldn't be optimized! Examples: %s"%(len(not_top_opt_nfs),
                                                                   not_top_opt_nfs[:20]))
                 if len(not_top_opt_nfs) > 0:
+                  # NOTE: generate_difference_of_nffgs doesn't return with the
+                  # EdgeReqs! This is an ugly solution!!!
+                  for req in tmp_sum_req.reqs:
+                    if req.sg_path[0] in [sg.id for sg in reqs_not_to_be_opt.sg_hops]:
+                      self.res_offline.del_edge(req.src.node.id, req.dst.node.id,
+                                                id=req.id)
                   self.res_offline = online_mapping.MAP(reqs_not_to_be_opt,
                                                         self.res_offline,
-                                                        mode=NFFG.MODE_DEL)
+                                                        mode=NFFG.MODE_DEL,
+                                                        keep_input_unchanged=True)
                 log.debug("Adding %s path requirements to offline resource."
                           %len([r for r in self.reqs_under_optimization.reqs]))
                 for req in self.reqs_under_optimization.reqs:
@@ -247,6 +257,8 @@ class HybridOrchestrator():
                     req.bandwidth = 0.0
                     # port objects are set correctly by NFFG lib
                     self.res_offline.add_req(req.src, req.dst, req=req)
+                    # log.debug("Adding requirement with zero-ed bandwidth on "
+                    #           "path %s"%req.sg_path)
 
                 # we don't want to map additional requests, so set request to empty
                 self.res_offline = offline_mapping.MAP(
@@ -288,9 +300,10 @@ class HybridOrchestrator():
                           "offline optimization: %s" %
                           (self_nffg_name, i['SG'].network.nodes()))
                 for req in i['SG'].reqs:
-                  self.res_offline.del_edge(req.src.node.id, req.dst.node.id, id=req.id)
+                  getattr(self, self_nffg_name).del_edge(req.src.node.id,
+                                                         req.dst.node.id, id=req.id)
                   log.debug("Deleting E2E requirement from %s on path %s" %
-                            (req.sg_path, self_nffg_name))
+                            (self_nffg_name, req.sg_path))
                 setattr(self, self_nffg_name, online_mapping.MAP(i['SG'],
                                               getattr(self, self_nffg_name),
                                               mode=NFFG.MODE_DEL,
@@ -315,10 +328,21 @@ class HybridOrchestrator():
       """
       # The MAP function removed from NFFGs which represent mappings,
       # removal from an SG collection is much easier.
+      nf_deleted = False
       for nf in request.nfs:
         self.SUM_req.del_node(nf.id)
+        nf_deleted = True
+      # if nf_deleted:
+      #   log.debug("Deleted NFs of request %s from sum_req"%request.id)
+      req_deleted = False
       for req in request.reqs:
         self.SUM_req.del_edge(req.src.node.id, req.dst.node.id, id=req.id)
+        req_deleted = True
+      # if req_deleted:
+      #   log.debug("Deleted EdgeReq on path %s from sum_req"%
+      #             [r for r in request.reqs])
+      if nf_deleted and not req_deleted:
+        raise Exception("NFs were removed from sum_req, but their EdgeReq wasn't!")
       for sap in request.saps:
         # if sap.id is a string it may try to iterate in it... so we can
         # prevent this with checking whether it contains this node.
@@ -328,6 +352,7 @@ class HybridOrchestrator():
             self.SUM_req.del_node(sap.id)
 
     def del_exp_reqs_from_sum_req(self):
+      log.debug("Deleting expired requests from sum_req.")
       for i in self.deleted_services:
         self.remove_sg_from_sum_req(i['SG'])
 
@@ -395,7 +420,8 @@ class HybridOrchestrator():
                   self.reoptimized_resource.del_edge(req.src.node.id, req.dst.node.id, id=req.id)
                 self.reoptimized_resource = online_mapping.MAP(possible_reqs_to_migrate,
                                                      self.reoptimized_resource,
-                                                     mode=NFFG.MODE_DEL)
+                                                     mode=NFFG.MODE_DEL,
+                                                     keep_input_unchanged=True)
                 log.debug("merge_online_offline: Applying offline optimization...")
                 self.reoptimized_resource = NFFGToolBox.merge_nffgs(self.reoptimized_resource,
                                                                     self.res_offline)

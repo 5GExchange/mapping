@@ -309,7 +309,7 @@ class MappingSolutionFramework():
             # Give a copy for the mapping, so in case it fails, we dont have to
             # reset the prerocessed/modified resource
             self.__network_topology = self.__orchestrator_adaptor.MAP(
-                service_graph, copy.deepcopy(self.__network_topology))
+                copy.deepcopy(service_graph), copy.deepcopy(self.__network_topology))
             log.info("Time passed with one mapping response: %s s"%
                      (datetime.datetime.now() - current_time))
             # Adding successfully mapped request to the remaining_request_lifetimes
