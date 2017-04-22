@@ -13,6 +13,7 @@
 # limitations under the License.
 import Queue
 import datetime
+import pprint
 import shutil
 import logging
 import threading
@@ -145,6 +146,7 @@ class MappingSolutionFramework():
         log.info(" | Equilibrium: " + str(config['equilibrium']))
         log.info(" | Equilibrium radius: " + str(config['equilibrium_radius']))
         log.info(" | Request queue size: " + str(int(config['req_queue_size'])))
+        log.info(" | Full configuration object dumped: \n" + str(pprint.pformat(dict(config))))
         log.info(" ----------------------------------------")
 
         self.dump_freq = int(config['dump_freq'])
