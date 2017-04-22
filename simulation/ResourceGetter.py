@@ -70,7 +70,7 @@ class CarrierTopoGetter(AbstractResourceGetter):
                                     [80, 120, 160], [32000, 64000], [150], 4000,
                                     4)})
     topoparams = 3 * topoparams
-    return CarrierTopoBuilder.getCarrierTopo(topoparams)
+    return CarrierTopoBuilder.getCarrierTopo(topoparams, increment_port_ids=True)
 
 
 
