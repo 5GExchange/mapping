@@ -285,6 +285,16 @@ class MappingSolutionFramework():
             log.info(" | Migration cost handler given: " + config[
                 'migration_handler_name'] if 'migration_handler_name' in config else "None")
 
+            opt_params = {}
+            if 'time_limit' in config:
+                opt_params['time_limit'] = int(config['time_limit'])
+            if 'mip_gap_limit' in config:
+                opt_params['mip_gap_limit'] = float(config['mip_gap_limit'])
+            if 'node_limit' in config:
+                opt_params['node_limit'] = int(config['node_limit'])
+
+            opt_params.update(**config['migration_handler_kwargs'])
+
             self.__orchestrator_adaptor = OfflineOrchestratorAdaptor(
                 self.deleted_services,
                 self.full_log_path,
@@ -292,7 +302,7 @@ class MappingSolutionFramework():
                 bool(config['optimize_already_mapped_nfs']),
                 config['migration_handler_name'], config['migration_coeff'],
                 config['load_balance_coeff'], config['edge_cost_coeff'], log,
-                **config['migration_handler_kwargs'])
+                **opt_params)
         else:
             log.error("Invalid 'orchestrator' in the simulation.cfg file!")
             raise RuntimeError(

@@ -103,11 +103,11 @@ class OfflineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
                  config_file_path, optimize_already_mapped_nfs,
                  migration_handler_name, migration_coeff,
                  load_balance_coeff, edge_cost_coeff, log,
-                 **migration_handler_kwargs):
+                 **opt_params):
         super(OfflineOrchestratorAdaptor, self).__init__("offline", log)
         self.optimize_already_mapped_nfs = optimize_already_mapped_nfs
         self.migration_handler_name = migration_handler_name
-        self.migration_handler_kwargs = migration_handler_kwargs
+        self.optional_params = opt_params
         self.migration_coeff = float(migration_coeff)
         self.load_balance_coeff = float(load_balance_coeff)
         self.edge_cost_coeff = float(edge_cost_coeff)
@@ -119,5 +119,5 @@ class OfflineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
             migration_handler_name=self.migration_handler_name,
             migration_coeff=self.migration_coeff,
             load_balance_coeff=self.load_balance_coeff,
-            edge_cost_coeff=self.edge_cost_coeff,
-            **self.migration_handler_kwargs)
+            edge_cost_coeff=self.edge_cost_coeff, logger=self.log,
+            **self.optional_params)
