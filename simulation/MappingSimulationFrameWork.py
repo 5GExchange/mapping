@@ -37,9 +37,9 @@ except ImportError:
   from nffg_lib.nffg import NFFG, NFFGToolBox
 
 import alg1.UnifyExceptionTypes as uet
-from OrchestratorAdaptor import *
-from RequestGenerator import *
-from ResourceGetter import *
+from simulation.OrchestratorAdaptor import *
+from simulation.RequestGenerator import *
+from simulation.ResourceGetter import *
 
 log = logging.getLogger(" Simulator")
 
@@ -276,7 +276,9 @@ class MappingSolutionFramework():
                                             self.__network_topology_bare,
                                             self.deleted_services,
                                             self.full_log_path,
-                                            config_file_path)
+                                            config_file_path,
+                                            resource_type,
+                                            self.__remaining_request_lifetimes)
         elif self.orchestrator_type == "offline":
             log.info(" ---- Offline specific configurations -----")
             log.info(" | Optimize already mapped nfs " + config['optimize_already_mapped_nfs'])
@@ -411,7 +413,7 @@ class MappingSolutionFramework():
 
         log.info("End mapping thread!")
 
-    def __clean_expired_requests(self,time):
+    def __clean_expired_requests(self, time):
         # Delete expired SCs
         self.counters.purging_all_expired_requests()
         for service in self.__remaining_request_lifetimes:

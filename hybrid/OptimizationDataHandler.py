@@ -77,7 +77,7 @@ class OptimizationDataHandler():
                 file.write(str(line))
 
 
-if __name__ == "__main__":
+"""if __name__ == "__main__":
 
     opt = OptimizationDataHandler('log_file.log', 'gwin')
 
@@ -85,4 +85,4 @@ if __name__ == "__main__":
     opt.write_data('45', '33')
     opt.write_data('75', '43')
 
-    print(opt.get_opt_time('45'))
+    print(opt.get_opt_time('45'))"""

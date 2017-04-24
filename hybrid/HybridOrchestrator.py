@@ -16,6 +16,7 @@ except ImportError:
 from hybrid.WhatToOptimizeStrategy import *
 from hybrid.WhenToOptimizeStrategy import *
 from hybrid.ResourceSharingStrategy import *
+from hybrid.OptimizationDataHandler import *
 import milp.milp_solution_in_nffg as offline_mapping
 import alg1.MappingAlgorithms as online_mapping
 import alg1.UnifyExceptionTypes as uet
@@ -71,7 +72,9 @@ class HybridOrchestrator():
     OFFLINE_STATE_RUNNING = 1
     OFFLINE_STATE_FINISHED = 2
 
-    def __init__(self, RG, config_file_path, deleted_services, full_log_path):
+    def __init__(self, RG, config_file_path, deleted_services, full_log_path,
+                 resource_type, remaining_request_lifetimes):
+
             config = ConfigObj(config_file_path)
 
             formatter = logging.Formatter(
@@ -86,6 +89,10 @@ class HybridOrchestrator():
             self.res_online = None
             self.res_offline = copy.deepcopy(RG)
             self.deleted_services = deleted_services
+
+            #TODO: ellenorizni hogy itt nem e copy-t kell atadni
+            self.remaining_request_lifetimes = remaining_request_lifetimes
+
             # All request in one NFFG
             # The sum of reqs needs to be accessed from Offline optimization to determine
             # what to opt and online mapping have to gather all requests there
@@ -104,7 +111,7 @@ class HybridOrchestrator():
             elif what_to_opt_strat == "all_reqs":
                 self.__what_to_opt = AllReqsOpt(full_log_path)
             elif what_to_opt_strat == "reqs_lifetime":
-                self.__what_to_opt = ReqsBasedOnLifetime(full_log_path, self.deleted_services)
+                self.__what_to_opt = ReqsBasedOnLifetime(full_log_path, resource_type)
             else:
                 raise ValueError(
                     'Invalid what_to_opt_strat type! Please choose one of the '
@@ -206,12 +213,14 @@ class HybridOrchestrator():
                 # read what shall we optimize.
                 self.sum_req_protector.start_reading_res_nffg("Determine set of requests to optimize")
                 self.del_exp_reqs_from_sum_req()
-                self.reqs_under_optimization = self.__what_to_opt.reqs_to_optimize(self.SUM_req)
+                self.reqs_under_optimization = \
+                    self.__what_to_opt.reqs_to_optimize(self.SUM_req,
+                                            self.remaining_request_lifetimes)
                 self.sum_req_protector.finish_reading_res_nffg("Got requests to optimize")
                 log.debug("SAP count in request %s and in resource: %s, resource total size: %s" %
                           (len([s for s in self.reqs_under_optimization.saps]),
-                           len([s for s in self.res_offline.saps]), len(self
-                                                                        .res_offline)))
+                           len([s for s in self.res_offline.saps]),
+                           len(self.res_offline)))
 
                 # set mapped NF reoptimization True, and delete other NFs from
                 # res_offline which are not in reqs_under_optimization, because
@@ -260,6 +269,11 @@ class HybridOrchestrator():
                 log.info("Try to merge online and offline")
                 # the merge MUST set the state before releasing the writing lock
                 self.merge_online_offline()
+                self.__what_to_opt.opt_data_handler.write_data(
+                    len([n for n in self.reqs_under_optimization.nfs]),
+                    self.offline_start_time-datetime.datetime.now())
+
+                self.offline_start_time = None
                 log.info("Offline mapping is ready!")
 
             except uet.MappingException as e:
@@ -455,6 +469,7 @@ class HybridOrchestrator():
                   self.offline_mapping_thread = threading.Thread(None,
                               self.do_offline_mapping, "Offline mapping thread", [])
                   log.info("Start offline optimalization!")
+                  self.offline_start_time = datetime.datetime.now()
                   self.offline_mapping_thread.start()
                   #Balazs This is not necessary, there would be 2 joins after each other
                   # online_mapping_thread.join()
