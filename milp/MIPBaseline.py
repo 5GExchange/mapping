@@ -692,7 +692,8 @@ class ModelCreator(object):
     self.migration_cost_handler = migration_cost_handler
 
   def init_model_creator (self, migration_coeff=None, load_balance_coeff=None,
-                          edge_cost_coeff=None):
+                          edge_cost_coeff=None, time_limit=None,
+                          mip_gap_limit=None, node_limit=None):
 
     # if any of the coefficents is None then we ignore all of them
     if None not in (migration_coeff, load_balance_coeff, edge_cost_coeff) and \
@@ -707,8 +708,16 @@ class ModelCreator(object):
     # create the variables
     self.create_variables()
 
-    # set time limit of 20 minutes
-    self.model.setParam('TimeLimit', 40*60)
+    if time_limit is not None:
+      self.model.setParam('TimeLimit', time_limit)
+
+    # If MIP terminates due to MIP gap the status reports optimal according
+    # to the documentation.
+    if mip_gap_limit is not None:
+      self.model.setParam('MIPGap', mip_gap_limit)
+
+    if node_limit is not None:
+      self.model.setParam('NodeLimit', node_limit)
 
     # necessary for accessing the variables after creation
     self.model.update()
