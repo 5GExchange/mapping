@@ -14,6 +14,7 @@
 
 # Embedded file name: /home/dj/escape/mapping/simulation/ResourceGetter.py
 import string
+import json
 from abc import ABCMeta, abstractmethod
 
 try:
@@ -40,6 +41,12 @@ class AbstractResourceGetter:
     def GetNFFG(self):
         pass
 
+class FromFileResourceGetter(AbstractResourceGetter):
+
+    def GetNFFG(self):
+        full_gwin_nffg = NFFG.parse_from_file('full_gwin2.nffg')
+
+        return full_gwin_nffg
 
 class PicoResourceGetter(AbstractResourceGetter):
 

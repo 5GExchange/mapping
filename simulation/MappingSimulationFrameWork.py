@@ -168,6 +168,8 @@ class MappingSolutionFramework():
             self.__resource_getter = GwinResourceGetter()
         elif resource_type == "carrier":
             self.__resource_getter = CarrierTopoGetter()
+        elif resource_type == "gwin_full":
+            self.__resource_getter = FromFileResourceGetter()
         else:
             log.error("Invalid 'topology' in the simulation.cfg file!")
             raise RuntimeError(
@@ -221,6 +223,21 @@ class MappingSolutionFramework():
 
         self.__remaining_request_lifetimes = []
         self.numpyrandom = N.random.RandomState(request_seed)
+
+        # Init counters
+        """
+        if resource_type == "gwin_full":
+            # TODO:
+            log.info(" Start NFFG")
+            for sc in self.__network_topology.reqs:
+                scale_radius = (1.0 / 300.0)
+                # meaning: the scale_radius is the expected value of the exponential distribution
+                life_time = self.numpyrandom.exponential(scale_radius)
+                service_life_element = {"dead_time": datetime.datetime.now() +
+                                                     datetime.timedelta(0, life_time),
+                                        "SG": sc, "req_num": req_num}
+                self.__remaining_request_lifetimes.append(service_life_element)
+        """
 
         # Orchestrator
         if self.orchestrator_type == "online":
@@ -319,12 +336,29 @@ class MappingSolutionFramework():
             # Adding successfully mapped request to the remaining_request_lifetimes
             service_life_element = {"dead_time": datetime.datetime.now() +
                                                  datetime.timedelta(0, life_time),
+                                    "life_time": life_time,
                                     "SG": service_graph, "req_num": req_num}
 
             self.__remaining_request_lifetimes.append(service_life_element)
             log.info("Mapping thread: Mapping service_request_"+ str(req_num) + " successful +")
 
             self.counters.successful_mapping_happened()
+
+            #TODO: szepiteni ezt a reszt
+            if len(self.__remaining_request_lifetimes) == 300:
+                log.info("300. telitett allapot!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                self.dump()
+                i = 0
+                lifes = []
+                for elem in self.__remaining_request_lifetimes:
+                    self.__orchestrator_adaptor.dump_mapped_nffg(
+                        self.counters.sim_iter, "telitett"+str(i), self.sim_number,
+                        self.orchestrator_type, elem['SG'])
+                    lifes.append(elem['life_time'])
+                    i += 1
+
+                with open('life_list.json', 'w') as outfile:
+                    json.dump(lifes, outfile)
 
             if not self.counters.dump_iter % self.dump_freq:
                 self.dump()
