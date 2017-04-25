@@ -67,22 +67,11 @@ class OptimizationDataHandler():
             lines = file.readlines()
 
         lines[0] = lines[0].rstrip()
-        lines[0] += ',' + number_of_vnfs + '\n'
+        lines[0] += ',' + str(number_of_vnfs) + '\n'
 
         lines[1] = lines[1].rstrip()
-        lines[1] += ',' + time_of_opt + '\n'
+        lines[1] += ',' + str(time_of_opt) + '\n'
 
         with open(self.opt_data_path, 'w') as file:
             for line in lines:
                 file.write(str(line))
-
-
-"""if __name__ == "__main__":
-
-    opt = OptimizationDataHandler('log_file.log', 'gwin')
-
-    opt.write_data('15', '23')
-    opt.write_data('45', '33')
-    opt.write_data('75', '43')
-
-    print(opt.get_opt_time('45'))"""

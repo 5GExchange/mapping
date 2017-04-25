@@ -107,9 +107,9 @@ class HybridOrchestrator():
             # What to optimize strategy
             what_to_opt_strat = config['what_to_optimize']
             if what_to_opt_strat == "reqs_since_last":
-                self.__what_to_opt = ReqsSinceLastOpt(full_log_path)
+                self.__what_to_opt = ReqsSinceLastOpt(full_log_path, resource_type)
             elif what_to_opt_strat == "all_reqs":
-                self.__what_to_opt = AllReqsOpt(full_log_path)
+                self.__what_to_opt = AllReqsOpt(full_log_path, resource_type)
             elif what_to_opt_strat == "reqs_lifetime":
                 self.__what_to_opt = ReqsBasedOnLifetime(full_log_path, resource_type)
             else:
@@ -271,7 +271,7 @@ class HybridOrchestrator():
                 self.merge_online_offline()
                 self.__what_to_opt.opt_data_handler.write_data(
                     len([n for n in self.reqs_under_optimization.nfs]),
-                    self.offline_start_time-datetime.datetime.now())
+                    datetime.timedelta(self.offline_start_time))
 
                 self.offline_start_time = None
                 log.info("Offline mapping is ready!")

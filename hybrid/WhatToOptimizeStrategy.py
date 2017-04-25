@@ -37,7 +37,7 @@ class AbstractWhatToOptimizeStrategy:
 class ReqsSinceLastOpt(AbstractWhatToOptimizeStrategy):
 
     def __init__(self, full_log_path, resource_type):
-        super(ReqsSinceLastOpt, self).__init__(full_log_path)
+        super(ReqsSinceLastOpt, self).__init__(full_log_path, resource_type)
         self.optimized_reqs = None
 
     def reqs_to_optimize(self, sum_req, remaining_request_lifetimes):
