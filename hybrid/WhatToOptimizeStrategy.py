@@ -1,7 +1,7 @@
 import copy
 from abc import ABCMeta, abstractmethod
 import logging
-import datetime
+from datetime import datetime, timedelta
 from hybrid.OptimizationDataHandler import *
 from simulation.OrchestratorAdaptor import *
 try:
@@ -91,14 +91,16 @@ class ReqsBasedOnLifetime (AbstractWhatToOptimizeStrategy):
         need_to_optimize = copy.deepcopy(sum_req)
 
         for service in remaining_request_lifetimes:
-            if service['dead_time'] < (datetime.datetime.now() + opt_time):
-                for nf in remaining_request_lifetimes.nfs:
+            a = service['dead_time']
+            b = (datetime.now() + timedelta(opt_time))
+            if a < b:
+                for nf in service['SG'].nfs:
                     need_to_optimize.del_node(nf.id)
-                for req in remaining_request_lifetimes.reqs:
+                for req in service['SG'].reqs:
                     need_to_optimize.del_edge(req.src.node.id,
                                                 req.dst.node.id,
                                                 id=req.id)
-                for sap in remaining_request_lifetimes.saps:
+                for sap in service['SG'].saps:
                     if sap.id in need_to_optimize.network:
                         if need_to_optimize.network.out_degree(sap.id) + \
                                 need_to_optimize.network.in_degree(sap.id) == 0:

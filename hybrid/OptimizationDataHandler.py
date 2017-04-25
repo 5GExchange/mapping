@@ -59,7 +59,7 @@ class OptimizationDataHandler():
                 id += 1
 
             for k in time:
-                result += int(k)
+                result += float(k)
             return result/len(time)
 
     def write_data(self, number_of_vnfs, time_of_opt):

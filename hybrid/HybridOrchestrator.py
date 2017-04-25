@@ -271,7 +271,7 @@ class HybridOrchestrator():
                 self.merge_online_offline()
                 self.__what_to_opt.opt_data_handler.write_data(
                     len([n for n in self.reqs_under_optimization.nfs]),
-                    datetime.timedelta(self.offline_start_time))
+                    (time.time() - self.offline_start_time ))
 
                 self.offline_start_time = None
                 log.info("Offline mapping is ready!")
@@ -469,7 +469,7 @@ class HybridOrchestrator():
                   self.offline_mapping_thread = threading.Thread(None,
                               self.do_offline_mapping, "Offline mapping thread", [])
                   log.info("Start offline optimalization!")
-                  self.offline_start_time = datetime.datetime.now()
+                  self.offline_start_time = time.time()
                   self.offline_mapping_thread.start()
                   #Balazs This is not necessary, there would be 2 joins after each other
                   # online_mapping_thread.join()
