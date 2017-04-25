@@ -350,7 +350,6 @@ class MappingSolutionFramework():
             # Adding successfully mapped request to the remaining_request_lifetimes
             service_life_element = {"dead_time": datetime.datetime.now() +
                                                  datetime.timedelta(0, life_time),
-                                    "life_time": life_time,
                                     "SG": service_graph, "req_num": req_num}
 
             self.__remaining_request_lifetimes.append(service_life_element)
@@ -359,7 +358,7 @@ class MappingSolutionFramework():
             self.counters.successful_mapping_happened()
 
             #TODO: szepiteni ezt a reszt
-            if len(self.__remaining_request_lifetimes) == 300:
+            if len(self.__remaining_request_lifetimes) == 10:
                 log.info("300. telitett allapot!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 self.dump()
                 i = 0
@@ -368,7 +367,7 @@ class MappingSolutionFramework():
                     self.__orchestrator_adaptor.dump_mapped_nffg(
                         self.counters.sim_iter, "telitett"+str(i), self.sim_number,
                         self.orchestrator_type, elem['SG'])
-                    lifes.append(elem['life_time'])
+                    lifes.append(elem['dead_time']-datetime.datetime.now())
                     i += 1
 
                 with open('life_list.json', 'w') as outfile:
@@ -467,7 +466,7 @@ class MappingSolutionFramework():
 
     def __clean_expired_requests(self,time):
         # Delete expired SCs
-        self.counters.purging_all_expired_requests()
+        purge_needed = False
         for service in self.__remaining_request_lifetimes:
             if service['dead_time'] < time:
                 if not purge_needed:
