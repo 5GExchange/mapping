@@ -36,15 +36,18 @@ import milp.milp_solution_in_nffg as offline_mapping
 class AbstractOrchestratorAdaptor(object):
     __metaclass__ = ABCMeta
 
-    def __init__(self, suffix):
+    def __init__(self, suffix, log):
       self.dump_suffix = suffix
       self.path = None
+      self.log = log
 
     def del_service(self, request, resource):
         for i in request.nfs:
             i.operation = NFFG.OP_DELETE
         for req in request.reqs:
+          self.log.debug("Trying to delete EdgeReq %s on path %s"%(req, req.sg_path))
           resource.del_edge(req.src.node.id, req.dst.node.id, id=req.id)
+
         return online_mapping.MAP(request, resource, mode=NFFG.MODE_DEL,
                                   keep_input_unchanged=True)
 
@@ -66,8 +69,8 @@ class AbstractOrchestratorAdaptor(object):
 
 class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
-    def __init__(self, deleted_services, full_log_path, config_file_path):
-        super(OnlineOrchestratorAdaptor, self).__init__("online")
+    def __init__(self, deleted_services, full_log_path, config_file_path, log):
+        super(OnlineOrchestratorAdaptor, self).__init__("online", log)
         self.config = ConfigObj(config_file_path)
 
     def MAP(self, request, resource):
@@ -84,11 +87,13 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
 class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
-    def __init__(self, resource, deleted_services, full_log_path, config_file_path):
-        super(HybridOrchestratorAdaptor, self).__init__("hybrid")
+    def __init__(self, resource, deleted_services, full_log_path, config_file_path,  resource_type, remaining_request_lifetimes, log):
+        super(HybridOrchestratorAdaptor, self).__init__("hybrid", log)
         self.concrete_hybrid_orchestrator = \
           hybrid_mapping.HybridOrchestrator(resource, config_file_path,
-                                            deleted_services, full_log_path)
+                                            deleted_services, full_log_path,
+                                            resource_type,
+                                            remaining_request_lifetimes)
 
     def MAP(self, request, resource):
         return self.concrete_hybrid_orchestrator.MAP(request, resource)
@@ -99,12 +104,12 @@ class OfflineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
     def __init__(self, deleted_services, full_log_path,
                  config_file_path, optimize_already_mapped_nfs,
                  migration_handler_name, migration_coeff,
-                 load_balance_coeff, edge_cost_coeff,
-                 **migration_handler_kwargs):
-        super(OfflineOrchestratorAdaptor, self).__init__("offline")
+                 load_balance_coeff, edge_cost_coeff, log,
+                 **opt_params):
+        super(OfflineOrchestratorAdaptor, self).__init__("offline", log)
         self.optimize_already_mapped_nfs = optimize_already_mapped_nfs
         self.migration_handler_name = migration_handler_name
-        self.migration_handler_kwargs = migration_handler_kwargs
+        self.optional_params = opt_params
         self.migration_coeff = float(migration_coeff)
         self.load_balance_coeff = float(load_balance_coeff)
         self.edge_cost_coeff = float(edge_cost_coeff)
@@ -116,5 +121,5 @@ class OfflineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
             migration_handler_name=self.migration_handler_name,
             migration_coeff=self.migration_coeff,
             load_balance_coeff=self.load_balance_coeff,
-            edge_cost_coeff=self.edge_cost_coeff,
-            **self.migration_handler_kwargs)
+            edge_cost_coeff=self.edge_cost_coeff, logger=self.log,
+            **self.optional_params)

@@ -423,7 +423,7 @@ def getPicoTopo():
 
     nffg.add_undirected_link(sw.add_port(), inf2.add_port(), **linkres)
     nffg.add_undirected_link(inf1.add_port(), inf2.add_port(), **linkres)
-    nffg.add_undirected_link(inf2.add_port(), sap.add_port(), **linkres)
+    nffg.add_undirected_link(inf2.add_port(), sap.add_port(id=1), **linkres)
     inf1 = inf2 
     
   return nffg
@@ -479,7 +479,7 @@ def getSNDlib_dfn_gwin(gwin_path = "dfn-gwin.gml", save_to_file=False,
       else:
         nameid = getName(n+"SAP")
       sap = nffg.add_sap(id=nameid, name=nameid)
-      nffg.add_undirected_link(sap.add_port(), sw.add_port(), **acclinkres)
+      nffg.add_undirected_link(sap.add_port(id=1), sw.add_port(), **acclinkres)
   
   # save it to file
   if save_to_file:

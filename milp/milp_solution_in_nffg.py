@@ -46,7 +46,10 @@ log.setLevel(logging.DEBUG)
 def get_MIP_solution (reqnffgs, netnffg, migration_handler,
                       migration_coeff=None,
                       load_balance_coeff=None,
-                      edge_cost_coeff=None):
+                      edge_cost_coeff=None,
+                      time_limit=None,
+                      mip_gap_limit=None,
+                      node_limit=None):
   """
   Executes the MIP mapping for the input requests and network NFFGs.
   Returns the mapped structure and the references to the mapped requests.
@@ -62,7 +65,10 @@ def get_MIP_solution (reqnffgs, netnffg, migration_handler,
   mc = ModelCreator(scen, migration_handler)
   mc.init_model_creator(migration_coeff=migration_coeff,
                         load_balance_coeff=load_balance_coeff,
-                        edge_cost_coeff=edge_cost_coeff)
+                        edge_cost_coeff=edge_cost_coeff,
+                        time_limit=time_limit,
+                        mip_gap_limit=mip_gap_limit,
+                        node_limit=node_limit)
   if isFeasibleStatus(mc.run_milp()):
     solution = mc.solution
     # TODO: throws undeterministic exception on node and link bandwitdth MILP variable checking with check_deviation
@@ -72,16 +78,17 @@ def get_MIP_solution (reqnffgs, netnffg, migration_handler,
       raise Exception(
         "MILP shouldn't have produced multiple mappings, because the input "
         "request NFFGs were merged together into one request NFFG")
+    log.info("Gurobi Status after MILP termination: %s"%mc.status)
     return solution.mapping_of_request.values()[0]
 
 
 def add_saps_if_needed_for_link (link, nffg):
   if link.dst.node.type == 'SAP' and link.dst.node.id not in nffg.network:
     added_sap1 = nffg.add_sap(sap_obj=link.dst.node)
-    log.debug("SAP added: %s" % added_sap1)
+    # log.debug("SAP added: %s, ports: %s" % (added_sap1,added_sap1.ports))
   if link.src.node.type == 'SAP' and link.src.node.id not in nffg.network:
     added_sap2 = nffg.add_sap(sap_obj=link.src.node)
-    log.debug("SAP added: %s" % added_sap2)
+    # log.debug("SAP added: %s" % added_sap2)
 
 
 def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
@@ -89,7 +96,10 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
                                   migration_coeff=None,
                                   load_balance_coeff=None,
                                   edge_cost_coeff=None,
-                                  reopt=True):
+                                  reopt=True,
+                                  time_limit=None,
+                                  mip_gap_limit=None,
+                                  node_limit=None):
   """
   At this point the VNFs of 'net' should only represent the occupied
   resources and reqs the request NFFGs to be mapped!
@@ -173,7 +183,10 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
   mapping_of_req = get_MIP_solution([request_for_milp], net, migration_handler,
                                     migration_coeff=migration_coeff,
                                     load_balance_coeff=load_balance_coeff,
-                                    edge_cost_coeff=edge_cost_coeff)
+                                    edge_cost_coeff=edge_cost_coeff,
+                                    time_limit=time_limit,
+                                    mip_gap_limit=mip_gap_limit,
+                                    node_limit=node_limit)
 
   log.debug("TIMING: %ss has passed with MILP calculation" % (
     time.time() - current_time))
@@ -218,10 +231,11 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
   for req in request_for_milp.reqs:
     if not mappedNFFG.network.has_edge(req.src.node.id, req.dst.node.id,
                                        key=req.id):
-      log.debug("Adding requirement link on path %s back to the output."%
-                req.sg_path)
-      log.debug("SAPs in mappedNFFG: %s"%[s for s in mappedNFFG.saps])
+      # log.debug("Adding requirement link on path %s back to the output."%
+      #           req.sg_path)
+      # log.debug("SAPs in mappedNFFG: %s"%[s for s in mappedNFFG.saps])
       add_saps_if_needed_for_link(req, mappedNFFG)
+      mappedNFFG.add_req(req.src, req.dst, req=req)
 
   # replace Infinity values
   helper.purgeNFFGFromInfinityValues(mappedNFFG)
@@ -236,6 +250,7 @@ def convert_mip_solution_to_nffg (reqs, net, file_inputs=False,
 def MAP (request, resource, optimize_already_mapped_nfs=True,
          migration_handler_name=None, migration_coeff=None,
          load_balance_coeff=None, edge_cost_coeff=None,
+         time_limit=None, mip_gap_limit=None, node_limit=None, logger=None,
          **migration_handler_kwargs):
   """
   Starts an offline optimization of the 'resource', which may contain NFs for
@@ -244,6 +259,9 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
   If 'optimize_already_mapped_nfs' is set to false, 'request' should contain
   only NF-s which are net yet mapped to resource.
 
+  :param mip_gap_limit: termination optimality condition for the MILP
+  :param time_limit: termination execution time condition for the MILP
+  :param node_limit:
   :param optimize_already_mapped_nfs:
   :param request:
   :param resource:
@@ -254,8 +272,13 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
   # Make heuristic and MILP even in number of large object deepcopies
   # This would also be required for correct behaviour (Maybe the mapping
   # shouldn't change the input NFFG)
-  # request = copy.deepcopy(request) - should receive a copy, it wants to modify it!
+  request = copy.deepcopy(request)
   resource = copy.deepcopy(resource)
+
+  # overwrite logger object if we got one from the caller!
+  if logger is not None:
+    global log
+    log = logger
 
   migration_handler = None
   req_nf_ids = [nf.id for nf in request.nfs]
@@ -264,6 +287,7 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
     # request for reoptimization!
     for vnf in resource.nfs:
       if vnf.id not in req_nf_ids:
+        # log.debug("Adding NF %s to request for reoptimization."%vnf.id)
         request.add_nf(vnf)
 
     NFFGToolBox.recreate_all_sghops(resource)
@@ -271,6 +295,7 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
     for sg in resource.sg_hops:
       if not request.network.has_edge(sg.src.node.id, sg.dst.node.id,
                                       key=sg.id):
+        # log.debug("Adding SGHop %s to request from resource."%sg.id)
         add_saps_if_needed_for_link(sg, request)
         request.add_sglink(sg.src, sg.dst, hop=sg)
 
@@ -280,12 +305,18 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
     log.debug("e2e reqs in request:%s, e2e reqs in resource, e.g: %s"%
               ([r.sg_path for r in request.reqs],
                [r.sg_path for r in resource.reqs][:20]))
+    # log.debug("SAPs in resource: %s" % [s for s in resource.saps])
     for req in resource.reqs:
-      # all possible SAPs are added already!
-      log.debug("Adding requirement link on path %s between %s and %s to request to preserve it "
-                "during reoptimization"%(req.sg_path, req.src, req.dst))
-      add_saps_if_needed_for_link(req, resource)
-      request.add_req(req.src, req.dst, req=req)
+      # all possible SAPs should be added already!
+      if not request.network.has_edge(req.src.node.id, req.dst.node.id,
+                                       key=req.id):
+        # log.debug("Adding requirement link on path %s between %s and %s to request to preserve it "
+        #         "during reoptimization"%(req.sg_path, req.src, req.dst))
+        add_saps_if_needed_for_link(req, request)
+        # bandwidth requirement of the already mapped SGHops are stored by
+        # the resource graph!
+        req.bandwidth = 0.0
+        request.add_req(req.src, req.dst, req=req)
 
     # We have to deal with migration in this case only.
     if migration_handler_name is not None and type(
@@ -312,7 +343,9 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
                                             migration_coeff=migration_coeff,
                                             load_balance_coeff=load_balance_coeff,
                                             edge_cost_coeff=edge_cost_coeff,
-                                            reopt=optimize_already_mapped_nfs)
+                                            reopt=optimize_already_mapped_nfs,
+                                            time_limit=time_limit, mip_gap_limit=mip_gap_limit,
+                                            node_limit=node_limit)
   if mappedNFFG is not None:
     try:
       mappedNFFG.calculate_available_node_res()
@@ -328,9 +361,10 @@ def MAP (request, resource, optimize_already_mapped_nfs=True,
 
 if __name__ == '__main__':
   req, net = None, None
-  with open('dictwtf-req.nffg', "r") as f:
-    req = NFFG.parse(f.read())
-  with open('dictwtf-net.nffg', "r") as f:
+  # with open('dictwtf-req.nffg', "r") as f:
+  #   req = NFFG.parse(f.read())
+  req = NFFG()
+  with open('../simulation/test72offline/dump_nffg_22_change_72_Fri-Apr-21-164844-2017.nffg', "r") as f:
     net = NFFG.parse(f.read())
 
   # print "\nMIGRATION-TEST: Simple MILP: \n"

@@ -922,9 +922,12 @@ class CoreAlgorithm(object):
       # layer
       nffg.network.node[vnfid].status = self.req.node[vnfid].status
       nodenf = nffg.network.node[vnfid]
+      self.log.debug("Retrieving VNF %s from output resource for output "
+                    "generation"%vnfid)
     else:
       nodenf = copy.deepcopy(self.req.node[vnfid])
       nffg.add_node(nodenf)
+      self.log.debug("Copying VNF %s from request to output resource"%vnfid)
 
     return nodenf
 
