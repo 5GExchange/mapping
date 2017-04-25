@@ -152,6 +152,15 @@ class HybridOrchestrator():
             self.load_balance_coeff = float(config['load_balance_coeff'])
             self.edge_cost_coeff = float(config['edge_cost_coeff'])
 
+            self.optional_milp_params = {}
+            if 'time_limit' in config:
+              self.optional_milp_params['time_limit'] = int(config['time_limit'])
+            if 'mip_gap_limit' in config:
+              self.optional_milp_params['mip_gap_limit'] = float(config['mip_gap_limit'])
+            if 'node_limit' in config:
+              self.optional_milp_params['node_limit'] = int(config['node_limit'])
+            self.optional_milp_params.update(**config['migration_handler_kwargs'])
+
     def merge_all_request(self, request):
         self.sum_req_protector.start_writing_res_nffg("Appending new request to the "
                                                       "sum of requests")
@@ -264,7 +273,7 @@ class HybridOrchestrator():
                 self.res_offline = offline_mapping.MAP(
                     NFFG(), self.res_offline, True,
                     self.mig_handler, self.migration_coeff, self.load_balance_coeff,
-                    self.edge_cost_coeff)
+                    self.edge_cost_coeff, **self.optional_milp_params)
 
                 # Need to del_exp_reqs_from_res_offline and merge
                 log.info("Try to merge online and offline")
