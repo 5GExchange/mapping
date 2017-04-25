@@ -14,6 +14,7 @@
 
 # Embedded file name: /home/dj/escape/mapping/simulation/ResourceGetter.py
 import string
+import json
 from abc import ABCMeta, abstractmethod
 
 try:
@@ -40,6 +41,12 @@ class AbstractResourceGetter:
     def GetNFFG(self):
         pass
 
+class FromFileResourceGetter(AbstractResourceGetter):
+
+    def GetNFFG(self):
+        full_gwin_nffg = NFFG.parse_from_file('full_gwin2.nffg')
+
+        return full_gwin_nffg
 
 class PicoResourceGetter(AbstractResourceGetter):
 
@@ -70,7 +77,7 @@ class CarrierTopoGetter(AbstractResourceGetter):
                                     [80, 120, 160], [32000, 64000], [150], 4000,
                                     4)})
     topoparams = 3 * topoparams
-    return CarrierTopoBuilder.getCarrierTopo(topoparams)
+    return CarrierTopoBuilder.getCarrierTopo(topoparams, increment_port_ids=True)
 
 
 

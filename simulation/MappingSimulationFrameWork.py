@@ -13,6 +13,7 @@
 # limitations under the License.
 import Queue
 import datetime
+import pprint
 import shutil
 import logging
 import threading
@@ -145,6 +146,7 @@ class MappingSolutionFramework():
         log.info(" | Equilibrium: " + str(config['equilibrium']))
         log.info(" | Equilibrium radius: " + str(config['equilibrium_radius']))
         log.info(" | Request queue size: " + str(int(config['req_queue_size'])))
+        log.info(" | Full configuration object dumped: \n" + str(pprint.pformat(dict(config))))
         log.info(" ----------------------------------------")
 
         self.dump_freq = int(config['dump_freq'])
@@ -168,6 +170,8 @@ class MappingSolutionFramework():
             self.__resource_getter = GwinResourceGetter()
         elif resource_type == "carrier":
             self.__resource_getter = CarrierTopoGetter()
+        elif resource_type == "gwin_full":
+            self.__resource_getter = FromFileResourceGetter()
         else:
             log.error("Invalid 'topology' in the simulation.cfg file!")
             raise RuntimeError(
@@ -222,6 +226,21 @@ class MappingSolutionFramework():
         self.__remaining_request_lifetimes = []
         self.numpyrandom = N.random.RandomState(request_seed)
 
+        # Init counters
+        """
+        if resource_type == "gwin_full":
+            # TODO:
+            log.info(" Start NFFG")
+            for sc in self.__network_topology.reqs:
+                scale_radius = (1.0 / 300.0)
+                # meaning: the scale_radius is the expected value of the exponential distribution
+                life_time = self.numpyrandom.exponential(scale_radius)
+                service_life_element = {"dead_time": datetime.datetime.now() +
+                                                     datetime.timedelta(0, life_time),
+                                        "SG": sc, "req_num": req_num}
+                self.__remaining_request_lifetimes.append(service_life_element)
+        """
+
         # Orchestrator
         if self.orchestrator_type == "online":
             log.info(" ---- Online specific configurations -----")
@@ -238,7 +257,7 @@ class MappingSolutionFramework():
             self.__orchestrator_adaptor = OnlineOrchestratorAdaptor(
                                             self.deleted_services,
                                             self.full_log_path,
-                                            config_file_path)
+                                            config_file_path, log)
         elif self.orchestrator_type == "hybrid":
             log.info(" ---- Hybrid specific configurations -----")
             log.info(" | What to optimize: " + str(config['what_to_optimize']))
@@ -278,7 +297,7 @@ class MappingSolutionFramework():
                                             self.full_log_path,
                                             config_file_path,
                                             resource_type,
-                                            self.__remaining_request_lifetimes)
+                                            self.__remaining_request_lifetimes, log)
         elif self.orchestrator_type == "offline":
             log.info(" ---- Offline specific configurations -----")
             log.info(" | Optimize already mapped nfs " + config['optimize_already_mapped_nfs'])
@@ -291,14 +310,24 @@ class MappingSolutionFramework():
             log.info(" | Migration cost handler given: " + config[
                 'migration_handler_name'] if 'migration_handler_name' in config else "None")
 
+            opt_params = {}
+            if 'time_limit' in config:
+                opt_params['time_limit'] = int(config['time_limit'])
+            if 'mip_gap_limit' in config:
+                opt_params['mip_gap_limit'] = float(config['mip_gap_limit'])
+            if 'node_limit' in config:
+                opt_params['node_limit'] = int(config['node_limit'])
+
+            opt_params.update(**config['migration_handler_kwargs'])
+
             self.__orchestrator_adaptor = OfflineOrchestratorAdaptor(
                 self.deleted_services,
                 self.full_log_path,
                 config_file_path,
                 bool(config['optimize_already_mapped_nfs']),
                 config['migration_handler_name'], config['migration_coeff'],
-                config['load_balance_coeff'], config['edge_cost_coeff'],
-                **config['migration_handler_kwargs'])
+                config['load_balance_coeff'], config['edge_cost_coeff'], log,
+                **opt_params)
         else:
             log.error("Invalid 'orchestrator' in the simulation.cfg file!")
             raise RuntimeError(
@@ -315,7 +344,7 @@ class MappingSolutionFramework():
             # Give a copy for the mapping, so in case it fails, we dont have to
             # reset the prerocessed/modified resource
             self.__network_topology = self.__orchestrator_adaptor.MAP(
-                service_graph, copy.deepcopy(self.__network_topology))
+                copy.deepcopy(service_graph), copy.deepcopy(self.__network_topology))
             log.info("Time passed with one mapping response: %s s"%
                      (datetime.datetime.now() - current_time))
             # Adding successfully mapped request to the remaining_request_lifetimes
@@ -328,6 +357,25 @@ class MappingSolutionFramework():
 
             self.counters.successful_mapping_happened()
 
+            #TODO: szepiteni ezt a reszt
+            if len(self.__remaining_request_lifetimes) == 300:
+                log.info("300. telitett allapot!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                self.dump()
+                i = 0
+                lifes = []
+                now = datetime.datetime.now()
+                for elem in self.__remaining_request_lifetimes:
+                    self.__orchestrator_adaptor.dump_mapped_nffg(
+                        self.counters.sim_iter, "telitett"+str(i), self.sim_number,
+                        self.orchestrator_type, elem['SG'])
+                    delta = elem['dead_time']-now
+                    delta = delta.total_seconds()
+                    lifes.append(delta)
+                    i += 1
+
+                with open('life_list.json', 'w') as outfile:
+                    json.dump(lifes, outfile)
+
             if not self.counters.dump_iter % self.dump_freq:
                 self.dump()
 
@@ -339,10 +387,16 @@ class MappingSolutionFramework():
             # we continue working, the __network_topology is in the last valid state
 
             self.counters.unsuccessful_mapping_happened()
-
+        except uet.UnifyException as ue:
+            log.error("Mapping failed: %s", ue.msg)
+            raise
         except Exception as e:
             log.error("Mapping failed: %s", e)
             raise
+        # Try to dump even if unsucessful mapping happened, because the dum_iter
+        # could have been increased due to exired requests.
+        if not self.counters.dump_iter % self.dump_freq:
+            self.dump()
 
     def dump(self):
         log.info("Dump NFFG to file after the " + str(self.counters.dump_iter) +
@@ -413,11 +467,14 @@ class MappingSolutionFramework():
 
         log.info("End mapping thread!")
 
-    def __clean_expired_requests(self, time):
+    def __clean_expired_requests(self,time):
         # Delete expired SCs
-
+        purge_needed = False
         for service in self.__remaining_request_lifetimes:
             if service['dead_time'] < time:
+                if not purge_needed:
+                    self.counters.purging_all_expired_requests()
+                    purge_needed = True
                 self.__del_service(service, service['req_num'])
                 self.deleted_services.append(service)
                 self.counters.purging_all_expired_requests()

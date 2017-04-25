@@ -528,7 +528,10 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
                                 all_saps_ending)
 
                 sg_path = []
-                sap1port = sap1.add_port()
+                if 1 in sap1.ports:
+                    sap1port = sap1.ports[1]
+                else:
+                    sap1port = sap1.add_port(id=1)
                 last_req_port = sap1port
                 vnf_cnt = next(self.gen_seq()) % chain_maxlen + 1
                 for vnf in xrange(0, vnf_cnt):
@@ -560,7 +563,10 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
                         sg_path.append(sglink.id)
                         last_req_port = nf.add_port(id=2)
 
-                sap2port = sap2.add_port()
+                if 1 in sap2.ports:
+                    sap2port = sap2.ports[1]
+                else:
+                    sap2port = sap2.add_port(id=1)
                 sg_link_id = ".".join(
                     ("sghop", str(test_lvl), str(current_sg_link_cnt)))
                 sglink = nffg.add_sglink(last_req_port, sap2port, id=sg_link_id)
@@ -568,7 +574,7 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
                 sg_path.append(sglink.id)
                 minlat = self.min_lat
                 maxlat = self.max_lat
-                nffg.add_req(sap1port, sap2port,
+                nffg.add_req(sap1port, sap2port, id="edge_req_"+str(test_lvl),
                              delay=self.rnd.uniform(minlat, maxlat),
                              bandwidth=self.rnd.random() * max_bw,
                              sg_path=sg_path)
