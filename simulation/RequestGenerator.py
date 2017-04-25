@@ -574,7 +574,7 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
                 sg_path.append(sglink.id)
                 minlat = self.min_lat
                 maxlat = self.max_lat
-                nffg.add_req(sap1port, sap2port,
+                nffg.add_req(sap1port, sap2port, id="edge_req_"+str(test_lvl),
                              delay=self.rnd.uniform(minlat, maxlat),
                              bandwidth=self.rnd.random() * max_bw,
                              sg_path=sg_path)
