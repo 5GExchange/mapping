@@ -228,6 +228,7 @@ class MappingSolutionFramework():
         self.numpyrandom = N.random.RandomState(request_seed)
 
         # Init counters
+        self.counters = SimulationCounters()
 
         if resource_type == "gwin_full":
             #TODO: life_time creator missing
@@ -355,7 +356,7 @@ class MappingSolutionFramework():
             raise RuntimeError(
                 "Invalid 'orchestrator' in the simulation.cfg file! "
                 "Please choose one of the followings: online, hybrid, offline")
-        self.counters = SimulationCounters()
+
 
     def __mapping(self, service_graph, life_time, req_num):
         current_time = datetime.datetime.now()
