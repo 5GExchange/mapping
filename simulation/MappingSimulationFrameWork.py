@@ -171,6 +171,7 @@ class MappingSolutionFramework():
         elif resource_type == "carrier":
             self.__resource_getter = CarrierTopoGetter()
         elif resource_type == "gwin_full":
+            log.info("Starting NFFG initalization")
             self.__resource_getter = FromFileResourceGetter()
         else:
             log.error("Invalid 'topology' in the simulation.cfg file!")
@@ -227,19 +228,38 @@ class MappingSolutionFramework():
         self.numpyrandom = N.random.RandomState(request_seed)
 
         # Init counters
-        """
+
         if resource_type == "gwin_full":
-            # TODO:
-            log.info(" Start NFFG")
-            for sc in self.__network_topology.reqs:
-                scale_radius = (1.0 / 300.0)
-                # meaning: the scale_radius is the expected value of the exponential distribution
-                life_time = self.numpyrandom.exponential(scale_radius)
+            #TODO: life_time creator missing
+            with open('full_gwin_datas/life_list.json') as data_file:
+                life_list = json.load(data_file)
+
+            nffg_iter = 0
+            for life_time in life_list:
+                try:
+                    sc = NFFG.parse_from_file('full_gwin_datas/dump_nffg_262_telitett'+str(nffg_iter)+'_1010_Wed-Apr-26-180233-2017.nffg')
+                except:
+                    sc = NFFG.parse_from_file(
+                        'full_gwin_datas/dump_nffg_262_telitett' + str(nffg_iter) + '_1010_Wed-Apr-26-180234-2017.nffg')
+
                 service_life_element = {"dead_time": datetime.datetime.now() +
                                                      datetime.timedelta(0, life_time),
-                                        "SG": sc, "req_num": req_num}
+                                        "SG": sc, "req_num": nffg_iter+1}
                 self.__remaining_request_lifetimes.append(service_life_element)
-        """
+                nffg_iter += 1
+
+            for nf in self.__remaining_request_lifetimes:
+                for nodes in nf['SG'].nfs:
+                    asd = False
+                    for mapped_nf in self.__network_topology.nfs:
+                        if nodes.id == mapped_nf.id:
+                            log.debug(nodes.id + " VNF MAPPED!!!")
+                            asd = True
+                            break
+                    if not asd:
+                        log.debug(nodes.id + " VNF MISSING FROM THE ORIGINAL NFFG!!!")
+            log.info(" NFFG initalization done!")
+
 
         # Orchestrator
         if self.orchestrator_type == "online":
@@ -340,6 +360,8 @@ class MappingSolutionFramework():
         try:
             log.debug("# of VNFs in resource graph: %s" % len(
                 [n for n in self.__network_topology.nfs]))
+            log.debug("# of reqs in resource graph: %s" % len(
+                [n for n in self.__network_topology.reqs]))
 
             # Give a copy for the mapping, so in case it fails, we dont have to
             # reset the prerocessed/modified resource
@@ -353,14 +375,42 @@ class MappingSolutionFramework():
                                     "SG": service_graph, "req_num": req_num}
 
             self.__remaining_request_lifetimes.append(service_life_element)
+            """
+            for nf in self.__remaining_request_lifetimes:
+                for nodes in nf['SG'].nfs:
+                    asd = False
+                    for mapped_nf in self.__network_topology.nfs:
+                        if nodes.id == mapped_nf.id:
+                            log.debug(nodes.id + " VNF MAPPED!!!")
+                            asd = True
+                            break
+                    if not asd:
+                        log.debug(nodes.id + " VNF MISSING FROM THE ORIGINAL NFFG!!!")
+            """
             log.info("Mapping thread: Mapping service_request_"+ str(req_num) + " successful +")
 
             self.counters.successful_mapping_happened()
 
             #TODO: szepiteni ezt a reszt
-            if len(self.__remaining_request_lifetimes) == 300:
-                log.info("300. telitett allapot!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                self.dump()
+            """
+            if len(self.__remaining_request_lifetimes) == 250 and not os.path.isfile('life_list.json'):
+                log.info("250. telitett allapot!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
+                for nf in self.__remaining_request_lifetimes:
+                    for nodes in nf['SG'].nfs:
+                        asd = False
+                        for mapped_nf in self.__network_topology.nfs:
+                            if nodes.id == mapped_nf.id:
+                                log.debug(nodes.id + " VNF MAPPED!!!")
+                                asd = True
+                                break
+                        if not asd:
+                            log.debug(nodes.id + " VNF MISSING FROM THE ORIGINAL NFFG!!!")
+
+                self.__orchestrator_adaptor.dump_mapped_nffg(
+                        self.counters.sim_iter, "FULLOS", self.sim_number,
+                        self.orchestrator_type, self.__network_topology)
+                log.info("Fullos NFFG logged!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                 i = 0
                 lifes = []
                 now = datetime.datetime.now()
@@ -368,6 +418,7 @@ class MappingSolutionFramework():
                     self.__orchestrator_adaptor.dump_mapped_nffg(
                         self.counters.sim_iter, "telitett"+str(i), self.sim_number,
                         self.orchestrator_type, elem['SG'])
+
                     delta = elem['dead_time']-now
                     delta = delta.total_seconds()
                     lifes.append(delta)
@@ -376,6 +427,7 @@ class MappingSolutionFramework():
                 with open('life_list.json', 'w') as outfile:
                     json.dump(lifes, outfile)
 
+            """
             if not self.counters.dump_iter % self.dump_freq:
                 self.dump()
 
@@ -410,6 +462,8 @@ class MappingSolutionFramework():
         try:
             log.debug("# of VNFs in resource graph: %s" % len(
                 [n for n in self.__network_topology.nfs]))
+            log.debug("# of reqs in resource graph: %s" % len(
+                [n for n in self.__network_topology.reqs]))
 
             log.info("Try to delete " + str(sim_iter) + ". sc")
             self.__network_topology = self.__orchestrator_adaptor.del_service(service['SG'],

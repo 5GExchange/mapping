@@ -44,7 +44,7 @@ class AbstractResourceGetter:
 class FromFileResourceGetter(AbstractResourceGetter):
 
     def GetNFFG(self):
-        full_gwin_nffg = NFFG.parse_from_file('full_gwin2.nffg')
+        full_gwin_nffg = NFFG.parse_from_file('full_gwin_datas/fullos.nffg')
 
         return full_gwin_nffg
 
