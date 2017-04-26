@@ -1,18 +1,20 @@
 import os
-import copy
+from configobj import ConfigObj
 import logging
 log = logging.getLogger(" OptimizationDataHandler ")
 
 
 class OptimizationDataHandler():
 
-    def __init__(self, full_log_path, resource_type):
+    def __init__(self, full_log_path, config_file_path, resource_type):
         formatter = logging.Formatter(
             '%(asctime)s | OptimizationDataHandler | %(levelname)s | \t%(message)s')
         hdlr = logging.FileHandler(full_log_path)
         hdlr.setFormatter(formatter)
         log.addHandler(hdlr)
         log.setLevel(logging.DEBUG)
+        config = ConfigObj(config_file_path)
+        self.parameter = int(config['optdatahandler_param'])
 
         if not os.path.exists('optimization_data'):
             os.mkdir('optimization_data')
@@ -47,24 +49,31 @@ class OptimizationDataHandler():
             time = []
             result = 0.0
             id = 0
-
             vnf_numbers = lines[0].rstrip().split(",")
             opt_times = lines[1].rstrip().split(",")
 
-            # TODO: a kereses intervalluma config fajlbol allithato legyen
             for i in vnf_numbers:
-
-                if int(i) > int(target_vnf_number)-20  and int(i) < int(target_vnf_number) + 20:
+                if (int(i) > int(target_vnf_number) - self.parameter) and \
+                        (int(i) < int(target_vnf_number) + self.parameter):
                     time.append(opt_times[id])
                 id += 1
 
             for k in time:
                 result += float(k)
-            return result/len(time)
+
+            if len(time) > 0:
+                log.debug("OptDataHandler: " + str(target_vnf_number) +
+                          " VNF avg opt time: " + str(result/len(time)))
+                return result/len(time)
+            else:
+                log.debug("OptDataHandler: There is no such value in the database")
+                return 0
 
     def write_data(self, number_of_vnfs, time_of_opt):
         with open(self.opt_data_path, 'r') as file:
             lines = file.readlines()
+
+        time_of_opt = round(time_of_opt, 2)
 
         lines[0] = lines[0].rstrip()
         lines[0] += ',' + str(number_of_vnfs) + '\n'

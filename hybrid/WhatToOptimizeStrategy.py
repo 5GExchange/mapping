@@ -18,14 +18,14 @@ log = logging.getLogger(" WhatToOptStrat")
 class AbstractWhatToOptimizeStrategy:
     __metaclass__ = ABCMeta
 
-    def __init__(self, full_log_path, resource_type):
+    def __init__(self, full_log_path, config_file_path, resource_type):
         formatter = logging.Formatter(
             '%(asctime)s | WhatToOptStrat | %(levelname)s | \t%(message)s')
         hdlr = logging.FileHandler(full_log_path)
         hdlr.setFormatter(formatter)
         log.addHandler(hdlr)
         log.setLevel(logging.DEBUG)
-        self.opt_data_handler = OptimizationDataHandler(full_log_path,
+        self.opt_data_handler = OptimizationDataHandler(full_log_path, config_file_path,
                                                         resource_type)
     @abstractmethod
     def reqs_to_optimize(self, sum_req, remaining_request_lifetimes):
@@ -36,13 +36,12 @@ class AbstractWhatToOptimizeStrategy:
 
 class ReqsSinceLastOpt(AbstractWhatToOptimizeStrategy):
 
-    def __init__(self, full_log_path, resource_type):
-        super(ReqsSinceLastOpt, self).__init__(full_log_path, resource_type)
+    def __init__(self, full_log_path, config_file_path, resource_type):
+        super(ReqsSinceLastOpt, self).__init__(full_log_path, config_file_path, resource_type)
         self.optimized_reqs = None
 
     def reqs_to_optimize(self, sum_req, remaining_request_lifetimes):
         """
-        
         Return SUM_reqs - optimized requests
         :param sum_req: 
         :return: 
@@ -83,17 +82,15 @@ class AllReqsOpt(AbstractWhatToOptimizeStrategy):
 
 class ReqsBasedOnLifetime (AbstractWhatToOptimizeStrategy):
 
-    def __init__(self, full_log_path, resource_type):
-        super(ReqsBasedOnLifetime, self).__init__(full_log_path, resource_type)
+    def __init__(self, full_log_path, config_file_path, resource_type):
+        super(ReqsBasedOnLifetime, self).__init__(full_log_path, config_file_path, resource_type)
 
     def reqs_to_optimize(self, sum_req, remaining_request_lifetimes):
         opt_time = self.opt_data_handler.get_opt_time(len(remaining_request_lifetimes))
         need_to_optimize = copy.deepcopy(sum_req)
 
         for service in remaining_request_lifetimes:
-            a = service['dead_time']
-            b = (datetime.now() + timedelta(opt_time))
-            if a < b:
+            if service['dead_time'] < (datetime.now() + timedelta(seconds=opt_time)):
                 for nf in service['SG'].nfs:
                     need_to_optimize.del_node(nf.id)
                 for req in service['SG'].reqs:
