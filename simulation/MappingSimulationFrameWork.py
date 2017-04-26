@@ -247,6 +247,8 @@ class MappingSolutionFramework():
                                         "SG": sc, "req_num": nffg_iter+1}
                 self.__remaining_request_lifetimes.append(service_life_element)
                 nffg_iter += 1
+                self.counters.successful_mapping_happened()
+
 
             for nf in self.__remaining_request_lifetimes:
                 for nodes in nf['SG'].nfs:
