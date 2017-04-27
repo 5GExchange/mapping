@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import sys, getopt
 import copy
 import time
+import datetime
 
 def get_data(file_list, type):
 
@@ -13,40 +14,55 @@ def get_data(file_list, type):
     refused_reqs = []
     mapped_requests_dict = dict()
     mapped_requests_dict["request_list"] = []
+    mapped_requests_dict["incoming_time"] = []
     mapped_requests_dict["name"] = ""
     running_requests_dict = dict()
     running_requests_dict["request_list"] = []
+    running_requests_dict["incoming_time"] = []
     running_requests_dict["name"] = ""
     refused_requests_dict = dict()
     refused_requests_dict["request_list"] = []
+    refused_requests_dict["incoming_time"] = []
     refused_requests_dict["name"] = ""
 
     for file in file_list:
+        start_time = 0
         for line in open(file):
+            if start_time == 0:
+                start_time = datetime.datetime.strptime(line[:22], '%Y-%m-%d %H:%M:%S,%f')
             if "Mapped service_requests count:" in line:
-                line = line[line.find("Mapped service_requests count:")+31:]
-                mapped_requests_dict["request_list"].append(int(line))
+                count = line[line.find("Mapped service_requests count:")+31:]
+                mapped_requests_dict["request_list"].append(int(count))
+                sec = ((datetime.datetime.strptime(line[:22], '%Y-%m-%d %H:%M:%S,%f')) - start_time).total_seconds()
+                mapped_requests_dict["incoming_time"].append(sec)
             elif "Running service_requests count:" in line:
-                line = line[line.find("Running service_requests count:")+32:]
-                running_requests_dict["request_list"].append(int(line))
+                count = line[line.find("Running service_requests count:")+32:]
+                running_requests_dict["request_list"].append(int(count))
+                sec = ((datetime.datetime.strptime(line[:22], '%Y-%m-%d %H:%M:%S,%f')) - start_time).total_seconds()
+                running_requests_dict["incoming_time"].append(sec)
             elif "Refused service_requests count:" in line:
-                line = line[line.find("Refused service_requests count:")+32:]
-                refused_requests_dict["request_list"].append(int(line))
+                count = line[line.find("Refused service_requests count:")+32:]
+                refused_requests_dict["request_list"].append(int(count))
+                sec = ((datetime.datetime.strptime(line[:22], '%Y-%m-%d %H:%M:%S,%f')) - start_time).total_seconds()
+                refused_requests_dict["incoming_time"].append(sec)
 
         mapped_requests_dict["name"] = type+str(file_list.index(file))
         mapped_reqs.append(copy.copy(mapped_requests_dict))
         mapped_requests_dict["name"] = ""
         mapped_requests_dict["request_list"] = []
+        mapped_requests_dict["incoming_time"] = []
 
         running_requests_dict["name"] = type + str(file_list.index(file))
         running_reqs.append(copy.copy(running_requests_dict))
         running_requests_dict["name"] = ""
         running_requests_dict["request_list"] = []
+        running_requests_dict["incoming_time"] = []
 
         refused_requests_dict["name"] = type + str(file_list.index(file))
         refused_reqs.append(copy.copy(refused_requests_dict))
         refused_requests_dict["name"] = ""
         refused_requests_dict["request_list"] = []
+        refused_requests_dict["incoming_time"] = []
 
     return mapped_reqs, running_reqs, refused_reqs
 
@@ -64,7 +80,6 @@ def separte_files(log_files,method):
 
 def main(argv):
 
-    bad_log = False
     mapped_online_req_list = None
     mapped_offline_req_list = None
     mapped_hybrid_req_list = None
@@ -94,8 +109,6 @@ def main(argv):
             offline_log_files = arg
         elif opt in ("--hybrid_log_files="):
             hybrid_log_files = arg
-        elif opt in ("--bad_log"):
-            bad_log = True
         else:
             print 'Bad parameters! Use python create_plots.py --help'
             sys.exit()
@@ -103,93 +116,29 @@ def main(argv):
     try:
         online_files = separte_files(online_log_files,"Online")
         mapped_online_req_list, running_online_req_list,refused_online_req_list = get_data(online_files,"Online")
-    except:
+    except Exception as e:
+        print e
         print "The program runs without online log file."
 
     try:
         offline_files = separte_files(offline_log_files,"Offline")
         mapped_offline_req_list, running_offline_req_list, refused_offline_req_list = get_data(offline_files, "Offline")
-    except:
+    except Exception as e:
+        print e
         print "The program runs without offline log file."
 
     try:
         hybrid_files = separte_files(hybrid_log_files,"Hybrid")
         mapped_hybrid_req_list, running_hybrid_req_list, refused_hybrid_req_list = get_data(hybrid_files, "Hybrid")
-    except:
+    except Exception as e:
+        print e
         print "The program runs without hybrid log file."
 
-    #Mapped requests bugfix --------------------------------------------------------------------------------------------------------------
-    if bad_log:
-        #Online
-        try:
-            mapped_online = dict()
-            mapped_online_req_list = []
-            for element in refused_online_req_list:
-                mapped_online["name"] = []
-                mapped_online["request_list"] = []
-                previous = 0
-                lista_elem = 0
-                for i in element["request_list"]:
-                    if i != previous:
-                        mapped_online["request_list"].append(lista_elem)
-                    else:
-                        lista_elem = lista_elem + 1
-                        mapped_online["request_list"].append(lista_elem)
-                    previous = copy.copy(i)
-
-                mapped_online["name"] = "Online" + str(refused_online_req_list.index(element)+1)
-                mapped_online_req_list.append(copy.copy(mapped_online))
-        except:
-            pass
-
-        # Offline
-        try:
-            mapped_offline = dict()
-            mapped_offline_req_list = []
-            for element in refused_offline_req_list:
-                mapped_offline["name"] = []
-                mapped_offline["request_list"] = []
-                previous = 0
-                lista_elem = 0
-                for i in element["request_list"]:
-                    if i != previous:
-                        mapped_offline["request_list"].append(lista_elem)
-                    else:
-                        lista_elem = lista_elem + 1
-                        mapped_offline["request_list"].append(lista_elem)
-                    previous = copy.copy(i)
-
-                mapped_offline["name"] = "offline" + str(refused_offline_req_list.index(element)+1)
-                mapped_offline_req_list.append(copy.copy(mapped_offline))
-        except:
-            pass
-
-        # hybrid
-        try:
-            mapped_hybrid = dict()
-            mapped_hybrid_req_list = []
-            for element in refused_hybrid_req_list:
-                mapped_hybrid["name"] = []
-                mapped_hybrid["request_list"] = []
-                previous = 0
-                lista_elem = 0
-                for i in element["request_list"]:
-                    if i != previous:
-                        mapped_hybrid["request_list"].append(lista_elem)
-                    else:
-                        lista_elem = lista_elem + 1
-                        mapped_hybrid["request_list"].append(lista_elem)
-                    previous = copy.copy(i)
-
-                mapped_hybrid["name"] = "hybrid" + str(refused_hybrid_req_list.index(element)+1)
-                mapped_hybrid_req_list.append(copy.copy(mapped_hybrid))
-        except:
-            pass
-    # --------------------------------------------------------------------------------------------------------------
-
+    """
     mapped_requests_dict = dict()
     mapped_requests_dict["request_list"] = []
     mapped_requests_dict["name"] = ""
+    """
 
     #Create mapped picture
     if mapped_online_req_list is not None:
@@ -208,6 +157,25 @@ def main(argv):
     plt.legend(loc=4)
     plt.savefig("mapped_requests" +  str (time.ctime()).\
             replace(' ', '_').replace(':', '-') + ".png")
+    plt.clf()
+
+    # Create mapped picture with time axis
+    if mapped_online_req_list is not None:
+        for element in mapped_online_req_list:
+            plt.plot(element["incoming_time"], element["request_list"], label=element["name"])
+    if mapped_offline_req_list is not None:
+        for element in mapped_offline_req_list:
+            plt.plot(element["incoming_time"], element["request_list"], label=element["name"])
+    if mapped_hybrid_req_list is not None:
+        for element in mapped_hybrid_req_list:
+            plt.plot(element["incoming_time"], element["request_list"], label=element["name"])
+
+    plt.title('Accepted incoming service requests')
+    plt.ylabel('Accepted requests count')
+    plt.xlabel('Sec')
+    plt.legend(loc=4)
+    plt.savefig("mapped_requests_with_time_axis_" + str(time.ctime()). \
+                replace(' ', '_').replace(':', '-') + ".png")
     plt.clf()
 
     #Create Running picture
@@ -229,6 +197,25 @@ def main(argv):
             replace(' ', '_').replace(':', '-') + ".png")
     plt.clf()
 
+    # Create Running picture with time axis
+    if running_online_req_list is not None:
+        for element in running_online_req_list:
+            plt.plot(element["incoming_time"], element["request_list"], label=element["name"])
+    if running_offline_req_list is not None:
+        for element in running_offline_req_list:
+            plt.plot(element["incoming_time"], element["request_list"], label=element["name"])
+    if running_hybrid_req_list is not None:
+        for element in running_hybrid_req_list:
+            plt.plot(element["incoming_time"], element["request_list"], label=element["name"])
+
+    plt.title('Currently running (mapped) requests in the NFFG')
+    plt.ylabel('Requests count')
+    plt.xlabel('Sec')
+    plt.legend(loc=4)
+    plt.savefig("running_requests_with_time_axis" + str(time.ctime()). \
+                replace(' ', '_').replace(':', '-') + ".png")
+    plt.clf()
+
 
     #Create refused picture
     if refused_online_req_list is not None:
@@ -247,6 +234,24 @@ def main(argv):
     plt.legend(loc=4)
     plt.savefig("refused_requests" +  str (time.ctime()).\
             replace(' ', '_').replace(':', '-') + ".png")
+
+    # Create refused picture with time
+    if refused_online_req_list is not None:
+        for element in refused_online_req_list:
+            plt.plot(element["incoming_time"], element["request_list"], label=element["name"])
+    if refused_offline_req_list is not None:
+        for element in refused_offline_req_list:
+            plt.plot(element["incoming_time"], element["request_list"], label=element["name"])
+    if refused_hybrid_req_list is not None:
+        for element in refused_hybrid_req_list:
+            plt.plot(element["incoming_time"], element["request_list"], label=element["name"])
+
+    plt.title('Refused requests during the simulation')
+    plt.ylabel('Refused requests count')
+    plt.xlabel('Sec')
+    plt.legend(loc=4)
+    plt.savefig("refused_requests_with_time_axis" + str(time.ctime()). \
+                replace(' ', '_').replace(':', '-') + ".png")
 
     print("Creating plots are DONE :)")
 
