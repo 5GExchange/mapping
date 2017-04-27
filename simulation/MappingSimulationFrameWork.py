@@ -136,7 +136,7 @@ class MappingSolutionFramework():
         log.info(" | Orchestrator: " + str(config['orchestrator']))
         log.info(" | Dump freq: " + str(config['dump_freq']))
         log.info(" | Request arrival lambda: " + str(config['request_arrival_lambda']))
-        log.info(" | Request lifetime lambda: " + str(config['request_lifetime_lambda']))
+        log.info(" | Request flifetime lambda: " + str(config['request_lifetime_lambda']))
         log.info(" | Request max latency: " + str(config['request_max_lat']))
         log.info(" | Request min latency: " + str(config['request_min_lat']))
         log.info(" | Request nf types: " + str(config['request_nf_type_count']))

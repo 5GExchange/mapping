@@ -27,9 +27,18 @@ def get_data(file_list, type):
 
     for file in file_list:
         start_time = 0
+        name = ""
         for line in open(file):
             if start_time == 0:
                 start_time = datetime.datetime.strptime(line[:22], '%Y-%m-%d %H:%M:%S,%f')
+            if "| Orchestrator:" in line:
+                name = line[line.find("| Orchestrator:")+15:]
+            if "| What to optimize:" in line:
+                name += "_" + line[line.find("| What to optimize:")+19:]
+            if "| When to optimize:" in line:
+                name += "_" + line[line.find("| When to optimize:")+19:]
+            if "| Optimize strategy:" in line:
+                name += "_" + line[line.find("| Optimize strategy:")+20:]
             if "Mapped service_requests count:" in line:
                 count = line[line.find("Mapped service_requests count:")+31:]
                 mapped_requests_dict["request_list"].append(int(count))
@@ -46,19 +55,19 @@ def get_data(file_list, type):
                 sec = ((datetime.datetime.strptime(line[:22], '%Y-%m-%d %H:%M:%S,%f')) - start_time).total_seconds()
                 refused_requests_dict["incoming_time"].append(sec)
 
-        mapped_requests_dict["name"] = type+str(file_list.index(file))
+        mapped_requests_dict["name"] = (name+"_"+str(file_list.index(file))).replace("\n","")
         mapped_reqs.append(copy.copy(mapped_requests_dict))
         mapped_requests_dict["name"] = ""
         mapped_requests_dict["request_list"] = []
         mapped_requests_dict["incoming_time"] = []
 
-        running_requests_dict["name"] = type + str(file_list.index(file))
+        running_requests_dict["name"] = (name+"_"+str(file_list.index(file))).replace("\n","")
         running_reqs.append(copy.copy(running_requests_dict))
         running_requests_dict["name"] = ""
         running_requests_dict["request_list"] = []
         running_requests_dict["incoming_time"] = []
 
-        refused_requests_dict["name"] = type + str(file_list.index(file))
+        refused_requests_dict["name"] = (name+"_"+str(file_list.index(file))).replace("\n","")
         refused_reqs.append(copy.copy(refused_requests_dict))
         refused_requests_dict["name"] = ""
         refused_requests_dict["request_list"] = []
@@ -134,12 +143,6 @@ def main(argv):
         print e
         print "The program runs without hybrid log file."
 
-    """
-    mapped_requests_dict = dict()
-    mapped_requests_dict["request_list"] = []
-    mapped_requests_dict["name"] = ""
-    """
-
     #Create mapped picture
     if mapped_online_req_list is not None:
         for element in mapped_online_req_list:
@@ -150,13 +153,13 @@ def main(argv):
     if mapped_hybrid_req_list is not None:
         for element in mapped_hybrid_req_list:
             plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
-
+    plt.grid('on')
     plt.title('Accepted incoming service requests')
     plt.ylabel('Accepted requests count')
     plt.xlabel('Incoming requests')
-    plt.legend(loc=4)
+    lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1))
     plt.savefig("mapped_requests" +  str (time.ctime()).\
-            replace(' ', '_').replace(':', '-') + ".png")
+            replace(' ', '_').replace(':', '-') + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
     plt.clf()
 
     # Create mapped picture with time axis
@@ -169,13 +172,13 @@ def main(argv):
     if mapped_hybrid_req_list is not None:
         for element in mapped_hybrid_req_list:
             plt.plot(element["incoming_time"], element["request_list"], label=element["name"])
-
+    plt.grid('on')
     plt.title('Accepted incoming service requests')
     plt.ylabel('Accepted requests count')
     plt.xlabel('Sec')
-    plt.legend(loc=4)
+    lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1))
     plt.savefig("mapped_requests_with_time_axis_" + str(time.ctime()). \
-                replace(' ', '_').replace(':', '-') + ".png")
+                replace(' ', '_').replace(':', '-') + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
     plt.clf()
 
     #Create Running picture
@@ -188,13 +191,13 @@ def main(argv):
     if running_hybrid_req_list is not None:
         for element in running_hybrid_req_list:
             plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
-
+    plt.grid('on')
     plt.title('Currently running (mapped) requests in the NFFG')
     plt.ylabel('Requests count')
     plt.xlabel('Incoming requests')
-    plt.legend(loc=4)
+    lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1))
     plt.savefig("running_requests" +  str (time.ctime()).\
-            replace(' ', '_').replace(':', '-') + ".png")
+            replace(' ', '_').replace(':', '-') + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
     plt.clf()
 
     # Create Running picture with time axis
@@ -207,13 +210,13 @@ def main(argv):
     if running_hybrid_req_list is not None:
         for element in running_hybrid_req_list:
             plt.plot(element["incoming_time"], element["request_list"], label=element["name"])
-
+    plt.grid('on')
     plt.title('Currently running (mapped) requests in the NFFG')
     plt.ylabel('Requests count')
     plt.xlabel('Sec')
-    plt.legend(loc=4)
+    lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1))
     plt.savefig("running_requests_with_time_axis" + str(time.ctime()). \
-                replace(' ', '_').replace(':', '-') + ".png")
+                replace(' ', '_').replace(':', '-') + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
     plt.clf()
 
 
@@ -231,9 +234,25 @@ def main(argv):
     plt.title('Refused requests during the simulation')
     plt.ylabel('Refused requests count')
     plt.xlabel('Incoming requests')
-    plt.legend(loc=4)
+    lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1))
+    plt.grid('on')
+
+    """
+    col_labels = ['Configuration']
+    row_labels = ['hybrid0']
+    table_vals = [[11]]
+    # the rectangle is where I want to place the table
+    the_table = plt.table(cellText=table_vals,
+                          colWidths=[0.1] * 3,
+                          rowLabels=row_labels,
+                          colLabels=col_labels,
+                          loc='lower right',
+                          bbox=[0.1,-0.3,0.2,0.2])
+    plt.show()
+    """
     plt.savefig("refused_requests" +  str (time.ctime()).\
-            replace(' ', '_').replace(':', '-') + ".png")
+            replace(' ', '_').replace(':', '-') + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
+    plt.clf()
 
     # Create refused picture with time
     if refused_online_req_list is not None:
@@ -245,13 +264,13 @@ def main(argv):
     if refused_hybrid_req_list is not None:
         for element in refused_hybrid_req_list:
             plt.plot(element["incoming_time"], element["request_list"], label=element["name"])
-
+    plt.grid('on')
     plt.title('Refused requests during the simulation')
     plt.ylabel('Refused requests count')
     plt.xlabel('Sec')
-    plt.legend(loc=4)
+    lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1))
     plt.savefig("refused_requests_with_time_axis" + str(time.ctime()). \
-                replace(' ', '_').replace(':', '-') + ".png")
+                replace(' ', '_').replace(':', '-') + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
 
     print("Creating plots are DONE :)")
 
