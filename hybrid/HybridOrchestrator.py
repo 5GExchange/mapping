@@ -182,6 +182,7 @@ class HybridOrchestrator():
         self.set_online_resource_graph(resource, request)
         # keep_input_unchanged=True makes it unnecessary
         # temp_res_online = copy.deepcopy(self.res_online)
+
         try:
             # propagate_e2e_reqs must be turned False (so they are not tried to
             # be splitted and the e2e versions removed!) We want to keep them in

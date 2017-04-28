@@ -75,8 +75,7 @@ def get_data(file_list, type):
 
     return mapped_reqs, running_reqs, refused_reqs
 
-def separte_files(log_files,method):
-
+def separte_files(log_files, method):
     files = []
     log_files += ","
     while "," in log_files:
@@ -130,14 +129,14 @@ def main(argv):
         print "The program runs without online log file."
 
     try:
-        offline_files = separte_files(offline_log_files,"Offline")
+        offline_files = separte_files(offline_log_files, "Offline")
         mapped_offline_req_list, running_offline_req_list, refused_offline_req_list = get_data(offline_files, "Offline")
     except Exception as e:
         print e
         print "The program runs without offline log file."
 
     try:
-        hybrid_files = separte_files(hybrid_log_files,"Hybrid")
+        hybrid_files = separte_files(hybrid_log_files, "Hybrid")
         mapped_hybrid_req_list, running_hybrid_req_list, refused_hybrid_req_list = get_data(hybrid_files, "Hybrid")
     except Exception as e:
         print e

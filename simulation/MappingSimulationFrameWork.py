@@ -18,7 +18,7 @@ import shutil
 import logging
 import threading
 import sys
-import json
+import psutil
 import copy
 import os
 from time import sleep
@@ -359,6 +359,10 @@ class MappingSolutionFramework():
 
 
     def __mapping(self, service_graph, life_time, req_num):
+
+        # Log available memory
+        log.info("System available memory: " + str(memory_usage_psutil()) + " GB")
+
         current_time = datetime.datetime.now()
         try:
             log.debug("# of VNFs in resource graph: %s" % len(
@@ -607,6 +611,11 @@ def test_sg_consumer(test, request_list, consumption_time, maxiter):
                 expired_reqs.append(req_num)
         running_reqs = filter(lambda x: x[1] not in expired_reqs, running_reqs)
 
+
+def memory_usage_psutil():
+    # return the available memory in GB
+    mem = psutil.virtual_memory()
+    return ((float(mem.available)/1024)/1024)/1024
 
 if __name__ == "__main__":
     request_list = Queue.Queue()
