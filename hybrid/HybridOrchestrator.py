@@ -294,7 +294,7 @@ class HybridOrchestrator():
                     len([n for n in self.reqs_under_optimization.nfs]),
                     (time.time() - self.offline_start_time ))
 
-                self.offline_start_time = None
+                self.offline_start_time = 0
                 log.info("Offline mapping is ready!")
 
             except uet.MappingException as e:
