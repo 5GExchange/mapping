@@ -7,6 +7,7 @@ import copy
 import time
 import datetime
 
+
 def get_data(file_list, type):
 
     mapped_reqs = []

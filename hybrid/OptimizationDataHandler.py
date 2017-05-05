@@ -43,44 +43,53 @@ class OptimizationDataHandler():
             time = 0
             return time
         else:
+            try:
+                with open(self.opt_data_path, 'r') as file:
+                    lines = file.readlines()
+
+                time = []
+                result = 0.0
+                id = 0
+                vnf_numbers = lines[0].rstrip().split(",")
+                opt_times = lines[1].rstrip().split(",")
+
+                for i in vnf_numbers:
+                    if (int(i) > int(target_vnf_number) - self.parameter) and \
+                            (int(i) < int(target_vnf_number) + self.parameter):
+                        time.append(opt_times[id])
+                    id += 1
+
+                for k in time:
+                    result += float(k)
+
+                if len(time) > 0:
+                    log.debug("OptDataHandler: " + str(target_vnf_number) +
+                              " VNF avg opt time: " + str(result/len(time)))
+                    return result/len(time)
+                else:
+                    log.debug("OptDataHandler: There is no such value in the database")
+                    return 0
+            except Exception as e:
+                log.error("OptDataHandler: get_opt_time error -  %s", e)
+                raise
+
+
+    def write_data(self, number_of_vnfs, time_of_opt):
+        try:
             with open(self.opt_data_path, 'r') as file:
                 lines = file.readlines()
 
-            time = []
-            result = 0.0
-            id = 0
-            vnf_numbers = lines[0].rstrip().split(",")
-            opt_times = lines[1].rstrip().split(",")
+            time_of_opt = round(time_of_opt, 2)
 
-            for i in vnf_numbers:
-                if (int(i) > int(target_vnf_number) - self.parameter) and \
-                        (int(i) < int(target_vnf_number) + self.parameter):
-                    time.append(opt_times[id])
-                id += 1
+            lines[0] = lines[0].rstrip()
+            lines[0] += ',' + str(number_of_vnfs) + '\n'
 
-            for k in time:
-                result += float(k)
+            lines[1] = lines[1].rstrip()
+            lines[1] += ',' + str(time_of_opt) + '\n'
 
-            if len(time) > 0:
-                log.debug("OptDataHandler: " + str(target_vnf_number) +
-                          " VNF avg opt time: " + str(result/len(time)))
-                return result/len(time)
-            else:
-                log.debug("OptDataHandler: There is no such value in the database")
-                return 0
-
-    def write_data(self, number_of_vnfs, time_of_opt):
-        with open(self.opt_data_path, 'r') as file:
-            lines = file.readlines()
-
-        time_of_opt = round(time_of_opt, 2)
-
-        lines[0] = lines[0].rstrip()
-        lines[0] += ',' + str(number_of_vnfs) + '\n'
-
-        lines[1] = lines[1].rstrip()
-        lines[1] += ',' + str(time_of_opt) + '\n'
-
-        with open(self.opt_data_path, 'w') as file:
-            for line in lines:
-                file.write(str(line))
+            with open(self.opt_data_path, 'w') as file:
+                for line in lines:
+                    file.write(str(line))
+        except Exception as e:
+            log.error("OptDataHandler: write_data error -  %s", e)
+            raise
