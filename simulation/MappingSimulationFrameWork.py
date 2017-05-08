@@ -13,19 +13,15 @@
 # limitations under the License.
 import Queue
 import datetime
+import logging
 import pprint
 import shutil
-import logging
-import threading
-import sys
-import psutil
-import copy
-import os
-from time import sleep
 import subprocess
+import sys
+import threading
+from time import sleep
 
-import numpy as N
-from configobj import ConfigObj
+import psutil
 
 try:
   # runs when mapping files are called from ESCAPE
@@ -47,7 +43,7 @@ log = logging.getLogger(" Simulator")
 
 class SimulationCounters():
 
-    def __init__(self):
+    def __init__(self, premapped_request_count):
         """
         Initializes all the counters
         """
@@ -58,8 +54,8 @@ class SimulationCounters():
         self.mapped_array = [0]
         self.refused_requests = 0
         self.refused_array = [0]
-        self.running_requests = 0
-        self.running_array = [0]
+        self.running_requests = premapped_request_count
+        self.running_array = [premapped_request_count]
 
     def _log_running_refused_mapped_counters(self):
         log.info("Simulation iteration count: "+str(self.sim_iter))
@@ -220,7 +216,15 @@ class MappingSolutionFramework():
             # path requirements as well!
             self.__resource_getter = LoadedResourceGetter(log,
                                                           config['loaded_nffg_path'])
-            # TODO: get request lifetimes for the SGs
+            # denote premapped request numbers with negative numbers.
+            req_num = 0
+            for service_graph in self.__resource_getter.getRunningSGs():
+                req_num -= 1
+                service_life_element = {"dead_time": datetime.datetime.now() +
+                                                     datetime.timedelta(0, 1000000),
+                                        "SG": service_graph, "req_num": req_num}
+                self.__remaining_request_lifetimes.append(service_life_element)
+                # TODO: get request lifetimes for the SGs
         else:
             log.error("Invalid 'topology' in the simulation.cfg file!")
             raise RuntimeError(
@@ -231,7 +235,7 @@ class MappingSolutionFramework():
         self.__network_topology = copy.deepcopy(self.__network_topology_bare)
 
         # Init counters
-        self.counters = SimulationCounters()
+        self.counters = SimulationCounters(len(self.__remaining_request_lifetimes))
 
         # Orchestrator
         if self.orchestrator_type == "online":
