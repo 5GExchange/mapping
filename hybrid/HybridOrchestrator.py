@@ -21,6 +21,8 @@ import milp.milp_solution_in_nffg as offline_mapping
 import alg1.MappingAlgorithms as online_mapping
 import alg1.UnifyExceptionTypes as uet
 import Queue
+from memory_profiler import profile
+from memory_profiler import memory_usage
 log = logging.getLogger(" Hybrid Orchestrator")
 
 
@@ -170,6 +172,8 @@ class HybridOrchestrator():
               self.optional_milp_params['node_limit'] = int(config['node_limit'])
             self.optional_milp_params.update(**config['migration_handler_kwargs'])
 
+            self.offline_mapping_num = 0
+
     def merge_all_request(self, request):
         self.sum_req_protector.start_writing_res_nffg("Appending new request to the "
                                                       "sum of requests")
@@ -213,8 +217,14 @@ class HybridOrchestrator():
                       "Unhandled exception cought during online mapping :( ")
             raise
 
+    fp = open('memory_profiler.log', 'a')
+    @profile(stream=fp)
     def do_offline_mapping(self):
+
+            mem_in_beginning = 0
             try:
+                mem_in_beginning = memory_usage(-1, interval=1, timeout=1)
+                log.debug("Total MEMORY usage in the beginning of the do_offline_mapping: "+ str(mem_in_beginning)+" MB")
                 self.offline_status = HybridOrchestrator.OFFLINE_STATE_RUNNING
                 # WARNING: we can't lock both of them at the same time, cuz that can cause deadlock
                 # If both of them needs to be locked make the order: res_online -> sum_req!
@@ -286,6 +296,10 @@ class HybridOrchestrator():
                     self.mig_handler, self.migration_coeff, self.load_balance_coeff,
                     self.edge_cost_coeff, **self.optional_milp_params)
 
+                mem_usage = memory_usage(-1, interval=1, timeout=1)
+                log.debug("Total MEMORY usage in the end of the do_offline_mapping: " + str(mem_usage) + " MB")
+                log.debug("Total MEMORY difference: " + str(mem_usage[0] - mem_in_beginning[0]) + " MB")
+
                 # Need to del_exp_reqs_from_res_offline and merge
                 log.info("Try to merge online and offline")
                 # the merge MUST set the state before releasing the writing lock
@@ -298,12 +312,18 @@ class HybridOrchestrator():
                 log.info("Offline mapping is ready!")
 
             except uet.MappingException as e:
+                mem_usage = memory_usage(-1, interval=1, timeout=1)
+                log.debug("Total MEMORY usage after mapping error of the do_offline_mapping: " + str(mem_usage)+" MB")
+                log.debug("Total MEMORY difference: " + str(mem_usage[0] - mem_in_beginning[0]) + " MB")
                 log.warn(e.msg)
                 log.warn("Mapping thread: "
                           "Offline mapping: Unable to mapping offline!")
                 # Balazs: in case the MILP fails with MappingException we can continue working.
                 self.offline_status = HybridOrchestrator.OFFLINE_STATE_INIT
             except Exception as e:
+                mem_usage = memory_usage(-1, interval=1, timeout=1)
+                log.debug("Total MEMORY usage after error of the do_offline_mapping: " + str(mem_usage)+" MB")
+                log.debug("Total MEMORY difference: " + str(mem_usage[0] - mem_in_beginning[0]) + " MB")
                 if hasattr(e, 'msg'):
                   msg = e.msg
                 else:
