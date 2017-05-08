@@ -78,6 +78,7 @@ class HybridOrchestrator():
                  resource_type, remaining_request_lifetimes):
 
             config = ConfigObj(config_file_path)
+            HybridOrchestrator.log_path = config_file_path
 
             formatter = logging.Formatter(
                 '%(asctime)s | Hybrid Orches | %(levelname)s | \t%(message)s')
@@ -224,8 +225,8 @@ class HybridOrchestrator():
                       "Unhandled exception cought during online mapping :( ")
             raise
 
-    fp = open('memory_profiler.log', 'a')
-    @profile(stream=fp)
+    #fp = open('memory_profiler.log', 'a')
+    #@profile(stream=fp)
     def do_offline_mapping(self):
 
             mem_in_beginning = 0
