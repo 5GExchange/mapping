@@ -218,8 +218,8 @@ class MappingSolutionFramework():
         elif resource_type == "loaded_topology":
             # this must contain already mapped Service Graphs with the given
             # path requirements as well!
-            self.__resource_getter = FromFileResourceGetter(log,
-                config['loaded_nffg_path'])
+            self.__resource_getter = LoadedResourceGetter(log,
+                                                          config['loaded_nffg_path'])
             # TODO: get request lifetimes for the SGs
         else:
             log.error("Invalid 'topology' in the simulation.cfg file!")

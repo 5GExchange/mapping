@@ -42,9 +42,10 @@ class AbstractResourceGetter:
         pass
 
 
-class FromFileResourceGetter(AbstractResourceGetter):
+class LoadedResourceGetter(AbstractResourceGetter):
 
     def __init__(self, log, resource_path):
+        log.info("Reading loaded resource topology from file...")
         self.loaded_resource_nffg = NFFG.parse_from_file(resource_path)
 
     def GetNFFG(self):
