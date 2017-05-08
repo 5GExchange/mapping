@@ -18,7 +18,8 @@ log = logging.getLogger(" WhatToOptStrat")
 class AbstractWhatToOptimizeStrategy:
     __metaclass__ = ABCMeta
 
-    def __init__(self, full_log_path, config_file_path, resource_type):
+    def __init__(self, full_log_path, config_file_path, resource_type,
+                 remaining_request_lifetimes):
         formatter = logging.Formatter(
             '%(asctime)s | WhatToOptStrat | %(levelname)s | \t%(message)s')
         hdlr = logging.FileHandler(full_log_path)
@@ -27,8 +28,10 @@ class AbstractWhatToOptimizeStrategy:
         log.setLevel(logging.DEBUG)
         self.opt_data_handler = OptimizationDataHandler(full_log_path, config_file_path,
                                                         resource_type)
+        self.remaining_request_lifetimes = remaining_request_lifetimes
+
     @abstractmethod
-    def reqs_to_optimize(self, sum_req, remaining_request_lifetimes):
+    def reqs_to_optimize(self, sum_req):
         # needs to return a copy of the to be optimized request graph (so
         # the HybridOrchestrator could handle sum_req independently of the offline optimization)!
         raise NotImplementedError("Abstract function!")
@@ -36,11 +39,13 @@ class AbstractWhatToOptimizeStrategy:
 
 class ReqsSinceLastOpt(AbstractWhatToOptimizeStrategy):
 
-    def __init__(self, full_log_path, config_file_path, resource_type):
-        super(ReqsSinceLastOpt, self).__init__(full_log_path, config_file_path, resource_type)
+    def __init__(self, full_log_path, config_file_path, resource_type,
+                 remaining_request_lifetimes):
+        super(ReqsSinceLastOpt, self).__init__(full_log_path, config_file_path,
+                                               resource_type, remaining_request_lifetimes)
         self.optimized_reqs = None
 
-    def reqs_to_optimize(self, sum_req, remaining_request_lifetimes):
+    def reqs_to_optimize(self, sum_req):
         """
         Return SUM_reqs - optimized requests
         :param sum_req: 
@@ -76,20 +81,27 @@ class ReqsSinceLastOpt(AbstractWhatToOptimizeStrategy):
 
 class AllReqsOpt(AbstractWhatToOptimizeStrategy):
 
-    def reqs_to_optimize(self, sum_req, remaining_request_lifetimes):
+    def __init__(self, full_log_path, config_file_path, resource_type,
+                 remaining_request_lifetimes):
+        super(AllReqsOpt, self).__init__(full_log_path, config_file_path,
+                                         resource_type, remaining_request_lifetimes)
+
+    def reqs_to_optimize(self, sum_req):
        return copy.deepcopy(sum_req)
 
 
 class ReqsBasedOnLifetime (AbstractWhatToOptimizeStrategy):
 
-    def __init__(self, full_log_path, config_file_path, resource_type):
-        super(ReqsBasedOnLifetime, self).__init__(full_log_path, config_file_path, resource_type)
+    def __init__(self, full_log_path, config_file_path, resource_type,
+                 remaining_request_lifetimes):
+        super(ReqsBasedOnLifetime, self).__init__(full_log_path, config_file_path,
+                                                  resource_type, remaining_request_lifetimes)
 
-    def reqs_to_optimize(self, sum_req, remaining_request_lifetimes):
-        opt_time = self.opt_data_handler.get_opt_time(len(remaining_request_lifetimes))
+    def reqs_to_optimize(self, sum_req):
+        opt_time = self.opt_data_handler.get_opt_time(len(self.remaining_request_lifetimes))
         need_to_optimize = copy.deepcopy(sum_req)
 
-        for service in remaining_request_lifetimes:
+        for service in self.remaining_request_lifetimes:
             if service['dead_time'] < (datetime.now() + timedelta(seconds=opt_time)):
                 for nf in service['SG'].nfs:
                     need_to_optimize.del_node(nf.id)
