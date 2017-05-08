@@ -46,7 +46,7 @@ class AbstractRequestGenerator:
         pass
 
     @abstractmethod
-    def get_expected_lifetime(self, requests_alive):
+    def get_request_lifetime(self, requests_alive):
         pass
 
     def _shareVNFFromEarlierSG(self, nffg, running_nfs, nfs_this_sc, p):
@@ -148,7 +148,7 @@ class TestReqGen(AbstractRequestGenerator):
 
                 return nffg
 
-    def get_expected_lifetime(self, requests_alive):
+    def get_request_lifetime(self, requests_alive):
         scale_radius = (1 / self.request_lifetime_lambda)
         life_time = self.numpyrandom.exponential(scale_radius)
         return life_time
@@ -234,7 +234,7 @@ class SimpleReqGen(AbstractRequestGenerator):
 
                 return nffg
 
-    def get_expected_lifetime(self, requests_alive):
+    def get_request_lifetime(self, requests_alive):
         scale_radius = (1 / self.request_lifetime_lambda)
         exp_time = self.numpyrandom.exponential(scale_radius)
         life_time = exp_time
@@ -322,7 +322,7 @@ class MultiReqGen(AbstractRequestGenerator):
 
                 return nffg
 
-    def get_expected_lifetime(self, requests_alive):
+    def get_request_lifetime(self, requests_alive):
         scale_radius = (1 / self.request_lifetime_lambda)
         exp_time = self.numpyrandom.exponential(scale_radius)
         life_time = exp_time
@@ -602,11 +602,18 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
 
                 return nffg
 
-    def get_expected_lifetime(self, requests_alive):
+    def get_request_lifetime(self, requests_alive):
+        """
+        Calculates a request lifetime based on an exponential distribution
+        parameterized by the currently alive requests.
+        :param requests_alive:
+        :return:
+        """
         scale_radius = (1.0 / self.get_request_lifetime_rate(requests_alive))
         # meaning: the scale_radius is the expected value of the exponential distribution
         life_time = self.numpyrandom.exponential(scale_radius)
         return life_time
+
 
 if __name__ == '__main__':
     # for cr in xrange(7, 50, 3):

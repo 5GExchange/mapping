@@ -13,8 +13,8 @@
 # limitations under the License.
 
 # Embedded file name: /home/dj/escape/mapping/simulation/ResourceGetter.py
+import copy
 import string
-import json
 from abc import ABCMeta, abstractmethod
 
 try:
@@ -41,12 +41,60 @@ class AbstractResourceGetter:
     def GetNFFG(self):
         pass
 
-class FromFileResourceGetter(AbstractResourceGetter):
+
+class LoadedResourceGetter(AbstractResourceGetter):
+
+    def __init__(self, log, resource_path):
+        log.info("Reading loaded resource topology from file...")
+        # WARNING: all IDs of SG components needs to be different from the
+        # ID-s which will be used during the mapping! (it is a problem,
+        # if a dumped NFFG is used from an earlier configuration)
+        self.log = log
+        self.loaded_resource_nffg = NFFG.parse_from_file(resource_path)
+        self.log.info("Recreating SGhops based on flowrules in the loaded topology...")
+        NFFGToolBox.recreate_all_sghops(self.loaded_resource_nffg)
+
+    def getRunningSGs(self):
+      """
+      Retrieves the set of SGs which are mapped already.
+      :return: list of NFFGs
+      """
+      running_sgs = []
+      for req in self.loaded_resource_nffg.reqs:
+        mapped_sg = NFFG()
+        mapped_sg.add_sap(sap_obj=copy.deepcopy(req.src.node))
+        if req.dst.node.id not in mapped_sg:
+          mapped_sg.add_sap(sap_obj=copy.deepcopy(req.dst.node))
+
+        for sg_hop_id in req.sg_path:
+          # retrieve the SGHop objects
+          for sghop in self.loaded_resource_nffg.sg_hops:
+            if sghop.id == sg_hop_id:
+              break
+          else:
+            raise Exception("SGHop with ID %s couldn't be found in loaded "
+                            "resource topology!")
+          # add both ends of an SG HOP
+          if sghop.src.node.id not in mapped_sg:
+            mapped_sg.add_nf(nf=copy.deepcopy(sghop.src.node))
+          if sghop.dst.node.id not in mapped_sg:
+            mapped_sg.add_nf(nf=copy.deepcopy(sghop.dst.node))
+
+          # add the SGHop itself
+          if not mapped_sg.network.has_edge(sghop.src.node.id,
+                                            sghop.dst.node.id, key=sghop.id):
+            mapped_sg.add_sglink(sghop.src, sghop.dst, hop=copy.deepcopy(sghop))
+
+        # add the Edgereq Itself
+        mapped_sg.add_req(req.src, req.dst, req=copy.deepcopy(req))
+        running_sgs.append(mapped_sg)
+
+      return running_sgs
 
     def GetNFFG(self):
-        full_gwin_nffg = NFFG.parse_from_file('full_gwin_datas/fullos.nffg')
 
-        return full_gwin_nffg
+        return self.loaded_resource_nffg
+
 
 class PicoResourceGetter(AbstractResourceGetter):
 

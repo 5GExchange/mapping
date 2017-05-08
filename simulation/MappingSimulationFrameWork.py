@@ -13,19 +13,16 @@
 # limitations under the License.
 import Queue
 import datetime
+import json
+import logging
 import pprint
 import shutil
-import logging
-import threading
-import sys
-import psutil
-import copy
-import os
-from time import sleep
 import subprocess
+import sys
+import threading
+from time import sleep
 
-import numpy as N
-from configobj import ConfigObj
+import psutil
 
 try:
   # runs when mapping files are called from ESCAPE
@@ -47,7 +44,7 @@ log = logging.getLogger(" Simulator")
 
 class SimulationCounters():
 
-    def __init__(self):
+    def __init__(self, premapped_request_count):
         """
         Initializes all the counters
         """
@@ -58,8 +55,8 @@ class SimulationCounters():
         self.mapped_array = [0]
         self.refused_requests = 0
         self.refused_array = [0]
-        self.running_requests = 0
-        self.running_array = [0]
+        self.running_requests = premapped_request_count
+        self.running_array = [premapped_request_count]
 
     def _log_running_refused_mapped_counters(self):
         log.info("Simulation iteration count: "+str(self.sim_iter))
@@ -162,26 +159,6 @@ class MappingSolutionFramework():
         # This is used to let the orchestrators know which SGs have been expired.
         self.deleted_services = []
 
-        # Resource
-        resource_type = config['topology']
-        if resource_type == "pico":
-            self.__resource_getter = PicoResourceGetter()
-        elif resource_type == "gwin":
-            self.__resource_getter = GwinResourceGetter()
-        elif resource_type == "carrier":
-            self.__resource_getter = CarrierTopoGetter()
-        elif resource_type == "gwin_full":
-            log.info("Starting NFFG initalization")
-            self.__resource_getter = FromFileResourceGetter()
-        else:
-            log.error("Invalid 'topology' in the simulation.cfg file!")
-            raise RuntimeError(
-                "Invalid 'topology' in the simulation.cfg file! "
-                "Please choose one of the followings: pico, gwin, carrier")
-
-        self.__network_topology_bare = self.__resource_getter.GetNFFG()
-        self.__network_topology = copy.deepcopy(self.__network_topology_bare)
-
         # Request
         request_type = config['request_type']
         request_seed = int(config['request_seed'])
@@ -227,44 +204,47 @@ class MappingSolutionFramework():
         self.__remaining_request_lifetimes = []
         self.numpyrandom = N.random.RandomState(request_seed)
 
-        # Init counters
-        self.counters = SimulationCounters()
-
-
-        # TODO: handle lifetime in gwin_full
-        if resource_type == "gwin_full":
-            #TODO: life_time creator missing
-            with open('full_gwin_datas/life_list.json') as data_file:
-                life_list = json.load(data_file)
-
-            nffg_iter = 0
-            for life_time in life_list:
-                try:
-                    sc = NFFG.parse_from_file('full_gwin_datas/dump_nffg_262_telitett'+str(nffg_iter)+'_1010_Wed-Apr-26-180233-2017.nffg')
-                except:
-                    sc = NFFG.parse_from_file(
-                        'full_gwin_datas/dump_nffg_262_telitett' + str(nffg_iter) + '_1010_Wed-Apr-26-180234-2017.nffg')
-
-                service_life_element = {"dead_time": datetime.datetime.now() +
+        # Resource
+        resource_type = config['topology']
+        if resource_type == "pico":
+            self.__resource_getter = PicoResourceGetter()
+        elif resource_type == "gwin":
+            self.__resource_getter = GwinResourceGetter()
+        elif resource_type == "carrier":
+            self.__resource_getter = CarrierTopoGetter()
+        elif resource_type == "loaded_topology":
+            # this must contain already mapped Service Graphs with the given
+            # path requirements as well!
+            self.__resource_getter = LoadedResourceGetter(log,
+                                                          config['loaded_nffg_path'])
+            # denote premapped request numbers with negative numbers.
+            req_num = 0
+            starting_time_of_remapped_lives = None
+            for service_graph in self.__resource_getter.getRunningSGs():
+                if req_num == 0:
+                    starting_time_of_remapped_lives = datetime.datetime.now()
+                req_num -= 1
+                life_time = self.__request_generator.get_request_lifetime(-1 * req_num)
+                log.debug("Generated lifetime for premapped SG %s is %s s"%
+                          (req_num, life_time))
+                log.debug("Adding premapped SG to the system on path: %s" %
+                          next(service_graph.reqs).sg_path)
+                service_life_element = {"dead_time":  starting_time_of_remapped_lives +
                                                      datetime.timedelta(0, life_time),
-                                        "SG": sc, "req_num": nffg_iter+1}
+                                        "SG": service_graph, "req_num": req_num}
                 self.__remaining_request_lifetimes.append(service_life_element)
-                nffg_iter += 1
-                self.counters.running_requests += 1
 
+        else:
+            log.error("Invalid 'topology' in the simulation.cfg file!")
+            raise RuntimeError(
+                "Invalid 'topology' in the simulation.cfg file! "
+                "Please choose one of the followings: pico, gwin, carrier")
 
-            for nf in self.__remaining_request_lifetimes:
-                for nodes in nf['SG'].nfs:
-                    asd = False
-                    for mapped_nf in self.__network_topology.nfs:
-                        if nodes.id == mapped_nf.id:
-                            log.debug(nodes.id + " VNF MAPPED!!!")
-                            asd = True
-                            break
-                    if not asd:
-                        log.debug(nodes.id + " VNF MISSING FROM THE ORIGINAL NFFG!!!")
-            log.info(" NFFG initalization done!")
+        self.__network_topology_bare = self.__resource_getter.GetNFFG()
+        self.__network_topology = copy.deepcopy(self.__network_topology_bare)
 
+        # Init counters
+        self.counters = SimulationCounters(len(self.__remaining_request_lifetimes))
 
         # Orchestrator
         if self.orchestrator_type == "online":
@@ -384,59 +364,11 @@ class MappingSolutionFramework():
                                     "SG": service_graph, "req_num": req_num}
 
             self.__remaining_request_lifetimes.append(service_life_element)
-            """
-            for nf in self.__remaining_request_lifetimes:
-                for nodes in nf['SG'].nfs:
-                    asd = False
-                    for mapped_nf in self.__network_topology.nfs:
-                        if nodes.id == mapped_nf.id:
-                            log.debug(nodes.id + " VNF MAPPED!!!")
-                            asd = True
-                            break
-                    if not asd:
-                        log.debug(nodes.id + " VNF MISSING FROM THE ORIGINAL NFFG!!!")
-            """
+
             log.info("Mapping thread: Mapping service_request_"+ str(req_num) + " successful +")
 
             self.counters.successful_mapping_happened()
 
-            #TODO: szepiteni ezt a reszt
-            """
-            if len(self.__remaining_request_lifetimes) == 250 and not os.path.isfile('life_list.json'):
-                log.info("250. telitett allapot!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-
-                for nf in self.__remaining_request_lifetimes:
-                    for nodes in nf['SG'].nfs:
-                        asd = False
-                        for mapped_nf in self.__network_topology.nfs:
-                            if nodes.id == mapped_nf.id:
-                                log.debug(nodes.id + " VNF MAPPED!!!")
-                                asd = True
-                                break
-                        if not asd:
-                            log.debug(nodes.id + " VNF MISSING FROM THE ORIGINAL NFFG!!!")
-
-                self.__orchestrator_adaptor.dump_mapped_nffg(
-                        self.counters.sim_iter, "FULLOS", self.sim_number,
-                        self.orchestrator_type, self.__network_topology)
-                log.info("Fullos NFFG logged!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                i = 0
-                lifes = []
-                now = datetime.datetime.now()
-                for elem in self.__remaining_request_lifetimes:
-                    self.__orchestrator_adaptor.dump_mapped_nffg(
-                        self.counters.sim_iter, "telitett"+str(i), self.sim_number,
-                        self.orchestrator_type, elem['SG'])
-
-                    delta = elem['dead_time']-now
-                    delta = delta.total_seconds()
-                    lifes.append(delta)
-                    i += 1
-
-                with open('life_list.json', 'w') as outfile:
-                    json.dump(lifes, outfile)
-
-            """
             if not self.counters.dump_iter % self.dump_freq:
                 self.dump()
 
@@ -499,7 +431,7 @@ class MappingSolutionFramework():
             request_list_element = self.__request_list.get()
             request = request_list_element['request']
             #life_time = request_list_element['life_time']
-            life_time = self.__request_generator.get_expected_lifetime(self.counters.running_requests)
+            life_time = self.__request_generator.get_request_lifetime(self.counters.running_requests)
             req_num = request_list_element['req_num']
             log.debug("make_mapping: generate %s lifetime for request %s" % (life_time, req_num))
 
