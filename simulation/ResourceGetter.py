@@ -41,12 +41,16 @@ class AbstractResourceGetter:
     def GetNFFG(self):
         pass
 
+
 class FromFileResourceGetter(AbstractResourceGetter):
 
-    def GetNFFG(self):
-        full_gwin_nffg = NFFG.parse_from_file('full_gwin_datas/fullos.nffg')
+    def __init__(self, log, resource_path):
+        self.loaded_resource_nffg = NFFG.parse_from_file(resource_path)
 
-        return full_gwin_nffg
+    def GetNFFG(self):
+
+        return self.loaded_resource_nffg
+
 
 class PicoResourceGetter(AbstractResourceGetter):
 
