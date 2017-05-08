@@ -90,7 +90,7 @@ class HybridOrchestrator():
             self.res_offline = copy.deepcopy(RG)
             self.deleted_services = deleted_services
 
-            #TODO: ellenorizni hogy itt nem e copy-t kell atadni
+            # Note: hybrid orchestrator may only read this parameter
             self.remaining_request_lifetimes = remaining_request_lifetimes
 
             # All request in one NFFG
@@ -107,11 +107,14 @@ class HybridOrchestrator():
             # What to optimize strategy
             what_to_opt_strat = config['what_to_optimize']
             if what_to_opt_strat == "reqs_since_last":
-                self.__what_to_opt = ReqsSinceLastOpt(full_log_path, config_file_path, resource_type)
+                self.__what_to_opt = ReqsSinceLastOpt(full_log_path, config_file_path,
+                                                      resource_type, remaining_request_lifetimes)
             elif what_to_opt_strat == "all_reqs":
-                self.__what_to_opt = AllReqsOpt(full_log_path, config_file_path, resource_type)
+                self.__what_to_opt = AllReqsOpt(full_log_path, config_file_path,
+                                                resource_type, remaining_request_lifetimes)
             elif what_to_opt_strat == "reqs_lifetime":
-                self.__what_to_opt = ReqsBasedOnLifetime(full_log_path, config_file_path, resource_type)
+                self.__what_to_opt = ReqsBasedOnLifetime(full_log_path, config_file_path,
+                                                         resource_type, remaining_request_lifetimes)
             else:
                 raise ValueError(
                     'Invalid what_to_opt_strat type! Please choose one of the '
@@ -223,8 +226,7 @@ class HybridOrchestrator():
                 # read what shall we optimize.
                 self.sum_req_protector.start_reading_res_nffg("Determine set of requests to optimize")
                 self.del_exp_reqs_from_sum_req()
-                self.reqs_under_optimization = self.__what_to_opt.reqs_to_optimize(self.SUM_req,
-                                                                                   self.remaining_request_lifetimes)
+                self.reqs_under_optimization = self.__what_to_opt.reqs_to_optimize(self.SUM_req)
                 tmp_sum_req = copy.deepcopy(self.SUM_req)
                 self.sum_req_protector.finish_reading_res_nffg("Got requests to optimize")
                 log.debug("SAP count in request %s and in resource: %s, resource total size: %s" %

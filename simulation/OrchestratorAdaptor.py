@@ -87,7 +87,8 @@ class OnlineOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
 class HybridOrchestratorAdaptor(AbstractOrchestratorAdaptor):
 
-    def __init__(self, resource, deleted_services, full_log_path, config_file_path,  resource_type, remaining_request_lifetimes, log):
+    def __init__(self, resource, deleted_services, full_log_path, config_file_path,
+                 resource_type, remaining_request_lifetimes, log):
         super(HybridOrchestratorAdaptor, self).__init__("hybrid", log)
         self.concrete_hybrid_orchestrator = \
           hybrid_mapping.HybridOrchestrator(resource, config_file_path,
