@@ -42,7 +42,11 @@ class AbstractRequestGenerator:
         self.numpyrandom = N.random.RandomState(seed)
 
     @abstractmethod
-    def get_request(self, resource_graph, test_lvl, requests_alive):
+    def get_request(self, resource_graph, test_lvl):
+        pass
+
+    @abstractmethod
+    def get_expected_lifetime(self, requests_alive):
         pass
 
     def _shareVNFFromEarlierSG(self, nffg, running_nfs, nfs_this_sc, p):
@@ -75,7 +79,7 @@ class TestReqGen(AbstractRequestGenerator):
     def __init__(self, request_lifetime_lambda, nf_type_count, seed):
         super(TestReqGen, self).__init__(request_lifetime_lambda, nf_type_count, seed)
 
-    def get_request(self, resource_graph, test_lvl, requests_alive):
+    def get_request(self, resource_graph, test_lvl):
         all_saps_ending = [s.id for s in resource_graph.saps]
         all_saps_beginning = [s.id for s in resource_graph.saps]
         running_nfs = OrderedDict()
@@ -138,12 +142,16 @@ class TestReqGen(AbstractRequestGenerator):
                 for tmp in xrange(0, scid + 1):
                     current_nfs.extend(new_nfs)
 
-                scale_radius = (1 / self.request_lifetime_lambda)
-                exp_time = self.numpyrandom.exponential(scale_radius)
-                life_time = exp_time
+                # scale_radius = (1 / self.request_lifetime_lambda)
+                # exp_time = self.numpyrandom.exponential(scale_radius)
+                # life_time = exp_time
 
-                return nffg, life_time
+                return nffg
 
+    def get_expected_lifetime(self, requests_alive):
+        scale_radius = (1 / self.request_lifetime_lambda)
+        life_time = self.numpyrandom.exponential(scale_radius)
+        return life_time
 
 class SimpleReqGen(AbstractRequestGenerator):
 
@@ -152,7 +160,7 @@ class SimpleReqGen(AbstractRequestGenerator):
         self.min_lat = min_lat
         self.max_lat = max_lat
 
-    def get_request(self, resource_graph, test_lvl, requests_alive):
+    def get_request(self, resource_graph, test_lvl):
         all_saps_ending = [s.id for s in resource_graph.saps]
         all_saps_beginning = [s.id for s in resource_graph.saps]
         running_nfs = OrderedDict()
@@ -220,19 +228,24 @@ class SimpleReqGen(AbstractRequestGenerator):
                 new_nfs = [vnf for vnf in nfs_this_sc if vnf not in current_nfs]
                 for tmp in xrange(0, scid + 1):
                     current_nfs.extend(new_nfs)
-                scale_radius = (1 / self.request_lifetime_lambda)
-                exp_time = self.numpyrandom.exponential(scale_radius)
-                life_time = exp_time
+                # scale_radius = (1 / self.request_lifetime_lambda)
+                # exp_time = self.numpyrandom.exponential(scale_radius)
+                # life_time = exp_time
 
-                return nffg, life_time
+                return nffg
 
+    def get_expected_lifetime(self, requests_alive):
+        scale_radius = (1 / self.request_lifetime_lambda)
+        exp_time = self.numpyrandom.exponential(scale_radius)
+        life_time = exp_time
+        return life_time
 
 class MultiReqGen(AbstractRequestGenerator):
 
     def __init__(self, request_lifetime_lambda, nf_type_count, seed):
         super(MultiReqGen, self).__init__(request_lifetime_lambda, nf_type_count, seed)
 
-    def get_request(self, resource_graph, test_lvl, requests_alive):
+    def get_request(self, resource_graph, test_lvl):
         all_saps_ending = [s.id for s in resource_graph.saps]
         all_saps_beginning = [s.id for s in resource_graph.saps]
         running_nfs = OrderedDict()
@@ -303,12 +316,17 @@ class MultiReqGen(AbstractRequestGenerator):
                 for tmp in xrange(0, scid + 1):
                     current_nfs.extend(new_nfs)
 
-                scale_radius = (1 / self.request_lifetime_lambda)
-                exp_time = self.numpyrandom.exponential(scale_radius)
-                life_time = exp_time
+                #scale_radius = (1 / self.request_lifetime_lambda)
+                #exp_time = self.numpyrandom.exponential(scale_radius)
+                #life_time = exp_time
 
-                return nffg, life_time
+                return nffg
 
+    def get_expected_lifetime(self, requests_alive):
+        scale_radius = (1 / self.request_lifetime_lambda)
+        exp_time = self.numpyrandom.exponential(scale_radius)
+        life_time = exp_time
+        return life_time
 
 class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
     """
@@ -488,7 +506,7 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
         else:
             return self.request_lifetime_lambda_cache[k]
 
-    def get_request (self, resource_graph, test_lvl, requests_alive):
+    def get_request (self, resource_graph, test_lvl):
         all_saps_ending = [s.id for s in resource_graph.saps]
         all_saps_beginning = [s.id for s in resource_graph.saps]
         running_nfs = OrderedDict()
@@ -581,12 +599,14 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
                 new_nfs = [vnf for vnf in nfs_this_sc if vnf not in current_nfs]
                 for tmp in xrange(0, scid + 1):
                     current_nfs.extend(new_nfs)
-                scale_radius = (1.0 / self.get_request_lifetime_rate(requests_alive))
-                # meaning: the scale_radius is the expected value of the exponential distribution
-                exp_time = self.numpyrandom.exponential(scale_radius)
 
-                return nffg, exp_time
+                return nffg
 
+    def get_expected_lifetime(self, requests_alive):
+        scale_radius = (1.0 / self.get_request_lifetime_rate(requests_alive))
+        # meaning: the scale_radius is the expected value of the exponential distribution
+        life_time = self.numpyrandom.exponential(scale_radius)
+        return life_time
 
 if __name__ == '__main__':
     # for cr in xrange(7, 50, 3):

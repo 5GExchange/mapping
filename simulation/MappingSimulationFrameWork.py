@@ -230,6 +230,8 @@ class MappingSolutionFramework():
         # Init counters
         self.counters = SimulationCounters()
 
+
+        # TODO: handle lifetime in gwin_full
         if resource_type == "gwin_full":
             #TODO: life_time creator missing
             with open('full_gwin_datas/life_list.json') as data_file:
@@ -496,8 +498,11 @@ class MappingSolutionFramework():
         while req_gen_thread.is_alive() or not self.__request_list.empty():
             request_list_element = self.__request_list.get()
             request = request_list_element['request']
-            life_time = request_list_element['life_time']
+            #life_time = request_list_element['life_time']
+            life_time = self.__request_generator.get_expected_lifetime(self.counters.running_requests)
             req_num = request_list_element['req_num']
+            log.debug("make_mapping: generate %s lifetime for request %s" % (life_time, req_num))
+
             self.__request_list.task_done()
 
             if req_num > last_req_num + 1:
@@ -551,10 +556,10 @@ class MappingSolutionFramework():
         while sim_running:
 
             # Get request
-            service_graph, life_time = \
-                self.__request_generator.get_request(self.__network_topology_bare,
-                                                     request_gen_iter,
-                                                     self.counters.running_requests)
+            service_graph = \
+                    self.__request_generator.get_request(self.__network_topology_bare,
+                                                     request_gen_iter)
+
             # Discrete working
             if self.__discrete_simulation:
                 pass
@@ -562,14 +567,11 @@ class MappingSolutionFramework():
             else:
                 if self.__request_list.qsize() > self.req_queue_size:
                     log.info("Request Generator thread: discarding generated "
-                            "request %s with lifetime %s because the queue is full!"%
-                             (request_gen_iter, life_time))
+                            "request %s, because the queue is full!"%
+                             (request_gen_iter))
                 else:
                     log.info("Request Generator thread: Add request " + str(request_gen_iter))
-                    log.debug("Request Generator thread: Generated lifetime of "
-                              "request %s is %s s"%(request_gen_iter, life_time))
                     request_list_element = {"request": service_graph,
-                                            "life_time": life_time,
                                             "req_num": request_gen_iter}
                     self.__request_list.put(request_list_element)
 
@@ -587,29 +589,6 @@ class MappingSolutionFramework():
                 # will be needed during the simulation
                 sim_running = False
                 log.info("Stop request generator thread")
-
-
-def test_sg_consumer(test, request_list, consumption_time, maxiter):
-    running_reqs = []
-    for i in xrange(0,maxiter):
-        request_list_element = request_list.get()
-        request = request_list_element['request']
-        life_time = request_list_element['life_time']
-        req_num = request_list_element['req_num']
-        request_list.task_done()
-
-        test.counters.running_requests = len(running_reqs)
-        log.debug("TEST: Number of requests in the system: %s"%
-                  test.counters.running_requests)
-        sleep(consumption_time)
-        current_time = time.time()
-        running_reqs.append((current_time+life_time, req_num))
-
-        expired_reqs = []
-        for death_time, req_num in running_reqs:
-            if death_time < current_time:
-                expired_reqs.append(req_num)
-        running_reqs = filter(lambda x: x[1] not in expired_reqs, running_reqs)
 
 
 def memory_usage_psutil():
