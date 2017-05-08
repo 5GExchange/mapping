@@ -98,6 +98,10 @@ class HybridOrchestrator():
             # what to opt and online mapping have to gather all requests there
             self.sum_req_protector = ResNFFGProtector("sum_req", True)
             self.SUM_req = NFFG()
+            # if there are initial requests in the remaining lifetimes, we have
+            # to gather them into SUM_req
+            for request in self.remaining_request_lifetimes:
+              self.merge_all_request(request['SG'])
             self.offline_mapping_thread = None
             self.offline_status = HybridOrchestrator.OFFLINE_STATE_INIT
             self.reoptimized_resource = None
