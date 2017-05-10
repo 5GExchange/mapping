@@ -20,7 +20,6 @@ import shutil
 import subprocess
 import sys
 import threading
-from time import sleep
 
 import psutil
 
@@ -147,6 +146,7 @@ class MappingSolutionFramework():
         log.info(" ----------------------------------------")
 
         self.dump_freq = int(config['dump_freq'])
+        self.last_dump_number = None
         self.max_number_of_iterations = int(config['max_number_of_iterations'])
         self.request_arrival_lambda = float(config['request_arrival_lambda'])
         self.wait_all_req_expire = bool(config['wait_all_req_expire'])
@@ -392,12 +392,17 @@ class MappingSolutionFramework():
             self.dump()
 
     def dump(self):
-        log.info("Dump NFFG to file after the " + str(self.counters.dump_iter) +
-                 ". NFFG change")
-        # NOTE: instead of dump_iter we give sim_iter to dumping function!!
-        self.__orchestrator_adaptor.dump_mapped_nffg(
-            self.counters.sim_iter, "change", self.sim_number,
-            self.orchestrator_type, self.__network_topology)
+        # It can happen that no change happens for a couple of iterations (no
+        #  deletion, no successful mapping) and dump_iter doesn't increase
+        # and we dump the same NFFG for multiple times.
+        if self.counters.dump_iter != self.last_dump_number:
+            self.last_dump_number = self.counters.dump_iter
+            log.info("Dump NFFG to file after the " + str(self.counters.dump_iter) +
+                     ". NFFG change")
+            # NOTE: instead of dump_iter we give sim_iter to dumping function!!
+            self.__orchestrator_adaptor.dump_mapped_nffg(
+                self.counters.sim_iter, "change", self.sim_number,
+                self.orchestrator_type, self.__network_topology)
 
     def __del_service(self, service, sim_iter):
         try:
