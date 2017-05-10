@@ -285,6 +285,20 @@ class HybridOrchestrator():
                 log.debug("Adding %s path requirements to offline resource."
                           %len([r for r in self.reqs_under_optimization.reqs]))
                 for req in self.reqs_under_optimization.reqs:
+                  # skip adding the EdgeReq if its SGHop is in not_top_opt_nfs
+                  # (this may happen if a request expired since we last checked)
+                  if len([s for s in self.reqs_under_optimization.sg_hops]) > 0:
+                    # if there are no SGHops, no problem can happen due to this
+                    sghop_of_edgereq = None
+                    for sghop in self.reqs_under_optimization.sg_hops:
+                      if sghop.id == req.sg_path[0]:
+                        sghop_of_edgereq = sghop
+                        break
+                    if sghop_of_edgereq.id in [sg.id for sg in reqs_not_to_be_opt.sg_hops]:
+                      log.debug("Skipping adding EdgeReq on path %s to offline "
+                                "resource"%req.sg_path)
+                      continue
+
                   if not self.res_offline.network.has_edge(req.src.node.id,
                                                            req.dst.node.id, key=req.id):
                     # Bandwidth requirements of SGhops are already known by the

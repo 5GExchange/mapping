@@ -476,11 +476,12 @@ class MappingSolutionFramework():
         for service in self.__remaining_request_lifetimes:
             if service['dead_time'] < time:
                 if not purge_needed:
+                    # this needs to be done only once, when at least one
+                    # expired request was found
                     self.counters.purging_all_expired_requests()
                     purge_needed = True
                 self.__del_service(service, service['req_num'])
                 self.deleted_services.append(service)
-                self.counters.purging_all_expired_requests()
                 log.debug("Number of requests in the deleted_services list: %s"
                           %len(self.deleted_services))
 
