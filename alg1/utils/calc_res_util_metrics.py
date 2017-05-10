@@ -30,7 +30,8 @@ and calculates the average and deviation of link/node resources for all
 resource types. Prints them in ascending order of test levels in CSV format.
 Removes the uncompressed NFFG after it is finished with its processing.
    -h                               Print this help message.
-   -l <<NFFG location>>             Location of the *.nffg files.
+   -l <<NFFG location>>             Location of the *.nffg files. Also used to
+                                    save figures in a folder under this path.
    --prefix=<<string>>              File names should look like
    --suffix=<<string>>              "prefix<<NUM>>suffix<<optional variable string>>.nffg"
    --single_nffg=<<path>>           If given, a single uncompressed NFFG is
