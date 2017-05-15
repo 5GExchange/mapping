@@ -18,10 +18,10 @@ import logging
 import pprint
 import shutil
 import subprocess
-import sys
 import threading
 
 import psutil
+import sys
 
 try:
   # runs when mapping files are called from ESCAPE
@@ -198,6 +198,14 @@ class MappingSolutionFramework():
             self.__request_generator = SimpleMoreDeterministicReqGen(
                 self.request_lifetime_lambda, nf_type_count, request_seed,
                 minlat, maxlat)
+        elif request_type == "simple_immortal":
+            minlat = float(config['request_min_lat'])
+            maxlat = float(config['request_max_lat'])
+            initial_immortal_req_count = int(config['immortal_req_count'])
+            self.__request_generator = \
+                SimpleDeterministicInitiallyImmortalReqGen(
+                self.request_lifetime_lambda, nf_type_count, request_seed,
+                    initial_immortal_req_count, minlat, maxlat)
         else:
             log.error("Invalid 'request_type' in the simulation.cfg file!")
             raise RuntimeError(

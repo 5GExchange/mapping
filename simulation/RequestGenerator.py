@@ -511,6 +511,27 @@ class SimpleMoreDeterministicReqGen(AbstractRequestGenerator):
         return life_time
 
 
+class SimpleDeterministicInitiallyImmortalReqGen(SimpleMoreDeterministicReqGen):
+
+    def __init__(self, request_lifetime_lambda, nf_type_count, seed,
+                 initial_request_count, min_lat=60, max_lat=220):
+        super(SimpleDeterministicInitiallyImmortalReqGen, self).__init__(
+            request_lifetime_lambda, nf_type_count, seed)
+        self.min_lat = min_lat
+        self.max_lat = max_lat
+        self.initial_request_count = initial_request_count
+        self.lifetime_getting_counter = 0
+
+    def get_request_lifetime(self, requests_alive):
+        if self.initial_request_count >= self.lifetime_getting_counter:
+            # this is 10 years in seconds (floatmax is too large)
+            self.lifetime_getting_counter += 1
+            return 321408000.0
+        else:
+            return super(SimpleDeterministicInitiallyImmortalReqGen,
+                         self).get_request_lifetime(requests_alive)
+
+
 if __name__ == '__main__':
     # for cr in xrange(7, 50, 3):
     # cr = 14
