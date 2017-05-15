@@ -153,6 +153,7 @@ class TestReqGen(AbstractRequestGenerator):
         life_time = self.numpyrandom.exponential(scale_radius)
         return life_time
 
+
 class SimpleReqGen(AbstractRequestGenerator):
 
     def __init__(self, request_lifetime_lambda, nf_type_count, seed, min_lat=60, max_lat=220):
@@ -239,6 +240,7 @@ class SimpleReqGen(AbstractRequestGenerator):
         exp_time = self.numpyrandom.exponential(scale_radius)
         life_time = exp_time
         return life_time
+
 
 class MultiReqGen(AbstractRequestGenerator):
 
@@ -327,6 +329,7 @@ class MultiReqGen(AbstractRequestGenerator):
         exp_time = self.numpyrandom.exponential(scale_radius)
         life_time = exp_time
         return life_time
+
 
 class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
     """
@@ -612,6 +615,113 @@ class SimpleReqGenKeepActiveReqsFixed(AbstractRequestGenerator):
         scale_radius = (1.0 / self.get_request_lifetime_rate(requests_alive))
         # meaning: the scale_radius is the expected value of the exponential distribution
         life_time = self.numpyrandom.exponential(scale_radius)
+        return life_time
+
+
+class SimpleMoreDeterministicReqGen(AbstractRequestGenerator):
+    """
+    Only the request chain length and the latency is generated randomly, the
+    other parameters are fix. So in this request the number of VNFs can be a
+    universal metric.
+    """
+
+    def __init__ (self, request_lifetime_lambda, nf_type_count, seed,
+                  min_lat=60, max_lat=220):
+        super(SimpleMoreDeterministicReqGen, self).__init__(request_lifetime_lambda,
+                                                            nf_type_count, seed)
+        self.min_lat = min_lat
+        self.max_lat = max_lat
+
+    def get_request (self, resource_graph, test_lvl):
+        all_saps_ending = [s.id for s in resource_graph.saps]
+        all_saps_beginning = [s.id for s in resource_graph.saps]
+        running_nfs = OrderedDict()
+        multiSC = False
+        chain_maxlen = 8
+        loops = False
+        use_saps_once = False
+        vnf_sharing_probabilty = 0.0
+        sc_count = 1
+        max_bw = 5.0
+        current_sg_link_cnt = 1
+
+        while len(all_saps_ending) > sc_count and len(
+           all_saps_beginning) > sc_count:
+            nffg = NFFG(id='Benchmark-Req-' + str(test_lvl) + '-Piece')
+            current_nfs = []
+            for scid in xrange(0, sc_count):
+                nfs_this_sc = []
+                sap1 = nffg.add_sap(
+                    id=all_saps_beginning.pop() if use_saps_once else
+                    self.rnd.choice(
+                        all_saps_beginning))
+                sap2 = None
+                if loops:
+                    sap2 = sap1
+                else:
+                    tmpid = all_saps_ending.pop() if use_saps_once else \
+                        self.rnd.choice(
+                        all_saps_ending)
+                    while True:
+                        if tmpid != sap1.id:
+                            sap2 = nffg.add_sap(id=tmpid)
+                            break
+                        else:
+                            tmpid = all_saps_ending.pop() if use_saps_once \
+                                else self.rnd.choice(
+                                all_saps_ending)
+
+                sg_path = []
+                sap1port = sap1.add_port()
+                last_req_port = sap1port
+                vnf_cnt = next(self.gen_seq()) % chain_maxlen + 1
+                for vnf in xrange(0, vnf_cnt):
+                    p = self.rnd.random()
+                    if self.rnd.random() < vnf_sharing_probabilty and len(
+                       running_nfs) > 0 and not multiSC:
+                        vnf_added, nf = self._shareVNFFromEarlierSG(nffg,
+                                                                    running_nfs,
+                                                                    nfs_this_sc,
+                                                                    p)
+                    else:
+                        nf = nffg.add_nf(id='-'.join(
+                            ('Test', str(test_lvl), 'SC', str(scid), 'VNF',
+                             str(vnf))), func_type=self.rnd.choice(
+                            self.nf_types), cpu=2, mem=600, storage=4)
+                        vnf_added = True
+                    if vnf_added:
+                        nfs_this_sc.append(nf)
+                        newport = nf.add_port(id=1)
+                        sg_link_id = ".".join(
+                            ("sghop", str(test_lvl), str(current_sg_link_cnt)))
+                        sglink = nffg.add_sglink(last_req_port, newport,
+                                                 id=sg_link_id)
+                        current_sg_link_cnt += 1
+                        sg_path.append(sglink.id)
+                        last_req_port = nf.add_port(id=2)
+
+                sap2port = sap2.add_port()
+                sg_link_id = ".".join(
+                    ("sghop", str(test_lvl), str(current_sg_link_cnt)))
+                sglink = nffg.add_sglink(last_req_port, sap2port, id=sg_link_id)
+                current_sg_link_cnt += 1
+                sg_path.append(sglink.id)
+                minlat = self.min_lat
+                maxlat = self.max_lat
+                nffg.add_req(sap1port, sap2port,
+                             delay=self.rnd.uniform(minlat, maxlat),
+                             bandwidth=max_bw,
+                             sg_path=sg_path)
+                new_nfs = [vnf for vnf in nfs_this_sc if vnf not in current_nfs]
+                for tmp in xrange(0, scid + 1):
+                    current_nfs.extend(new_nfs)
+
+                return nffg
+
+    def get_request_lifetime (self, requests_alive):
+        scale_radius = (1 / self.request_lifetime_lambda)
+        exp_time = self.numpyrandom.exponential(scale_radius)
+        life_time = exp_time
         return life_time
 
 

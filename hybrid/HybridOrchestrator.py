@@ -16,7 +16,6 @@ except ImportError:
 from hybrid.WhatToOptimizeStrategy import *
 from hybrid.WhenToOptimizeStrategy import *
 from hybrid.ResourceSharingStrategy import *
-from hybrid.OptimizationDataHandler import *
 import milp.milp_solution_in_nffg as offline_mapping
 import alg1.MappingAlgorithms as online_mapping
 import alg1.UnifyExceptionTypes as uet

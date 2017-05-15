@@ -139,10 +139,7 @@ class MappingSolutionFramework():
         log.info(" | Request seed: " + str(config['request_seed']))
         log.info(" | Number of iteration: " + str(config['max_number_of_iterations']))
         log.info(" | Wait all request to expire (nothing = False): " + str(config['wait_all_req_expire']))
-        log.info(" | Equilibrium: " + str(config['equilibrium']))
-        log.info(" | Equilibrium radius: " + str(config['equilibrium_radius']))
         log.info(" | Request queue size: " + str(int(config['req_queue_size'])))
-        log.info(" | Full configuration object dumped: \n" + str(pprint.pformat(dict(config))))
         log.info(" ----------------------------------------")
 
         self.dump_freq = int(config['dump_freq'])
@@ -195,11 +192,18 @@ class MappingSolutionFramework():
                 request_seed, minlat, maxlat,
                 int(config['equilibrium']), self.request_arrival_lambda,
                 **opt_params)
+        elif request_type == "more_deterministic":
+            minlat = float(config['request_min_lat'])
+            maxlat = float(config['request_max_lat'])
+            self.__request_generator = SimpleMoreDeterministicReqGen(
+                self.request_lifetime_lambda, nf_type_count, request_seed,
+                minlat, maxlat)
         else:
             log.error("Invalid 'request_type' in the simulation.cfg file!")
             raise RuntimeError(
                 "Invalid 'request_type' in the simulation.cfg file! "
-                "Please choose one of the followings: test, simple, multi")
+                "Please choose one of the followings: test, simple, multi, "
+                "simple_equilibrium, more_deterministic")
 
         self.__remaining_request_lifetimes = []
         self.numpyrandom = N.random.RandomState(request_seed)
@@ -338,6 +342,9 @@ class MappingSolutionFramework():
             raise RuntimeError(
                 "Invalid 'orchestrator' in the simulation.cfg file! "
                 "Please choose one of the followings: online, hybrid, offline")
+
+        log.info(" | Full configuration object dumped: \n" + str(
+            pprint.pformat(dict(config))))
 
 
     def __mapping(self, service_graph, life_time, req_num):
