@@ -147,7 +147,6 @@ class MappingSolutionFramework():
         self.max_number_of_iterations = int(config['max_number_of_iterations'])
         self.request_arrival_lambda = float(config['request_arrival_lambda'])
         self.wait_all_req_expire = bool(config['wait_all_req_expire'])
-        self.__discrete_simulation = bool(config['discrete_simulation'])
         self.request_lifetime_lambda = float(config['request_lifetime_lambda'])
         self.req_queue_size = int(config['req_queue_size'])
         # This stores the request waiting to be mapped
@@ -155,6 +154,12 @@ class MappingSolutionFramework():
         self.copy_of_rg_network_topology = None
         # This is used to let the orchestrators know which SGs have been expired.
         self.deleted_services = []
+
+        # Any MAP function ends before a new request arrives, no threads are
+        # started, everything is sequential.
+        self.__discrete_simulation = bool(config['discrete_simulation'])
+        # represents simulation time, NOT real time!
+        self.discrete_simulation_timer = 0.0
 
         # Request
         request_type = config['request_type']
@@ -512,25 +517,20 @@ class MappingSolutionFramework():
             service_graph = \
                     self.__request_generator.get_request(self.__network_topology_bare,
                                                      request_gen_iter)
-
-            # Discrete working
-            if self.__discrete_simulation:
-                pass
             # Not discrete working
+            if self.__request_list.qsize() > self.req_queue_size:
+                log.info("Request Generator thread: discarding generated "
+                        "request %s, because the queue is full!"%
+                         (request_gen_iter))
             else:
-                if self.__request_list.qsize() > self.req_queue_size:
-                    log.info("Request Generator thread: discarding generated "
-                            "request %s, because the queue is full!"%
-                             (request_gen_iter))
-                else:
-                    log.info("Request Generator thread: Add request " + str(request_gen_iter))
-                    request_list_element = {"request": service_graph,
-                                            "req_num": request_gen_iter}
-                    self.__request_list.put(request_list_element)
+                log.info("Request Generator thread: Add request " + str(request_gen_iter))
+                request_list_element = {"request": service_graph,
+                                        "req_num": request_gen_iter}
+                self.__request_list.put(request_list_element)
 
-                scale_radius = (1/self.request_arrival_lambda)
-                exp_time = self.numpyrandom.exponential(scale_radius)
-                time.sleep(exp_time)
+            scale_radius = (1/self.request_arrival_lambda)
+            exp_time = self.numpyrandom.exponential(scale_radius)
+            time.sleep(exp_time)
 
             log.debug("Request Generator thread: Number of requests waiting in"
                       " the queue %s"%self.__request_list.qsize())
