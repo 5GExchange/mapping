@@ -18,10 +18,10 @@ import logging
 import pprint
 import shutil
 import subprocess
+import sys
 import threading
 
 import psutil
-import sys
 
 try:
   # runs when mapping files are called from ESCAPE
@@ -97,7 +97,7 @@ class SimulationCounters():
 
 class MappingSolutionFramework():
 
-    def __init__(self, config_file_path, request_list):
+    def __init__(self, config_file_path):
         config = ConfigObj(config_file_path)
 
         self.sim_number = int(config['simulation_number'])
@@ -150,7 +150,9 @@ class MappingSolutionFramework():
         self.request_lifetime_lambda = float(config['request_lifetime_lambda'])
         self.req_queue_size = int(config['req_queue_size'])
         # This stores the request waiting to be mapped
-        self.__request_list = request_list
+        self.__request_list = Queue.Queue()
+        self.last_req_num = 0
+        self.request_gen_iter = 1
         self.copy_of_rg_network_topology = None
         # This is used to let the orchestrators know which SGs have been expired.
         self.deleted_services = []
@@ -246,8 +248,12 @@ class MappingSolutionFramework():
                           (req_num, life_time))
                 log.debug("Adding premapped SG to the system on path: %s" %
                           next(service_graph.reqs).sg_path)
-                service_life_element = {"dead_time":  starting_time_of_remapped_lives +
-                                                     datetime.timedelta(0, life_time),
+                if self.__discrete_simulation:
+                    death_time = life_time
+                else:
+                    death_time = starting_time_of_remapped_lives +\
+                                 datetime.timedelta(0, life_time)
+                service_life_element = {"dead_time": death_time,
                                         "SG": service_graph, "req_num": req_num}
                 self.__remaining_request_lifetimes.append(service_life_element)
 
@@ -379,8 +385,12 @@ class MappingSolutionFramework():
             log.info("Time passed with one mapping response: %s s"%
                      (datetime.datetime.now() - current_time))
             # Adding successfully mapped request to the remaining_request_lifetimes
-            service_life_element = {"dead_time": datetime.datetime.now() +
-                                                 datetime.timedelta(0, life_time),
+            if self.__discrete_simulation:
+                death_time = self.discrete_simulation_timer + life_time
+            else:
+                death_time = datetime.datetime.now() + \
+                             datetime.timedelta(0, life_time)
+            service_life_element = {"dead_time": death_time,
                                     "SG": service_graph, "req_num": req_num}
 
             self.__remaining_request_lifetimes.append(service_life_element)
@@ -448,49 +458,58 @@ class MappingSolutionFramework():
             log.error("Delete failed: %s", e)
             raise
 
-    def make_mapping(self):
-        log.info("Start mapping thread")
+    def make_mapping(self, req_gen_thread):
 
-        last_req_num = 0
-        while req_gen_thread.is_alive() or not self.__request_list.empty():
+        # in case of discrete simulation it is equivalent to "while True"
+        while (req_gen_thread.is_alive() if not self.__discrete_simulation
+               else True) or \
+           not self.__request_list.empty():
             request_list_element = self.__request_list.get()
             request = request_list_element['request']
-            #life_time = request_list_element['life_time']
-            life_time = self.__request_generator.get_request_lifetime(self.counters.running_requests)
+            life_time = self.__request_generator.get_request_lifetime(
+                self.counters.running_requests)
             req_num = request_list_element['req_num']
-            log.debug("make_mapping: generate %s lifetime for request %s" % (life_time, req_num))
+            log.debug("make_mapping: generate %s lifetime for request %s" %
+                      (life_time, req_num))
 
             self.__request_list.task_done()
 
-            if req_num > last_req_num + 1:
-                for discarded_req_num in xrange(last_req_num + 1, req_num):
+            if req_num > self.last_req_num + 1:
+                for discarded_req_num in xrange(self.last_req_num + 1, req_num):
                     log.info("Mapping thread: handling discarded request %s as"
                              " refused request!"%discarded_req_num)
                     self.counters.incoming_request_buffer_overflow_happened()
-            elif req_num == last_req_num + 1:
+            elif req_num == self.last_req_num + 1:
                 # we are on track, lets see if we can map it or not!
                 pass
-            elif req_num < last_req_num + 1:
+            elif req_num < self.last_req_num + 1:
                 raise Exception("Implementation error in simulation framework, "
                                 "request number should increase monotonically.")
-            last_req_num = req_num
+            self.last_req_num = req_num
 
             # TODO: remove expired requests even when mapping didn't happen!
             # Remove expired service graph requests
-            self.__clean_expired_requests(datetime.datetime.now())
+            self.__clean_expired_requests()
 
             log.debug("Number of mapping iteration is %s"%req_num)
             self.__mapping(request, life_time, req_num)
+
+            if self.__discrete_simulation:
+                return
 
         if self.wait_all_req_expire:
             # Wait for all request to expire
             while len(self.__remaining_request_lifetimes) > 0:
                 # Remove expired service graph requests
-                self.__clean_expired_requests(datetime.datetime.now())
+                self.__clean_expired_requests()
 
         log.info("End mapping thread!")
 
-    def __clean_expired_requests(self,time):
+    def __clean_expired_requests(self):
+        if self.__discrete_simulation:
+            time = self.discrete_simulation_timer
+        else:
+            time = datetime.datetime.now()
         # Delete expired SCs
         purge_needed = False
         for service in self.__remaining_request_lifetimes:
@@ -506,82 +525,75 @@ class MappingSolutionFramework():
                           %len(self.deleted_services))
 
     def create_request(self):
-        log.info("Start request generator thread")
+        """
+        Fills the request queue continuously with arriving requests. Returns
+        True when the generator didn't finish, but just put a request in the
+        queue. Returns False when the request generator is terminated.
+        :return: bool
+        """
 
         # Simulation cycle
-        sim_running = True
-        request_gen_iter = 1
-        while sim_running:
+        while True:
 
             # Get request
             service_graph = \
                     self.__request_generator.get_request(self.__network_topology_bare,
-                                                     request_gen_iter)
-            # Not discrete working
+                                                     self.request_gen_iter)
             if self.__request_list.qsize() > self.req_queue_size:
                 log.info("Request Generator thread: discarding generated "
-                        "request %s, because the queue is full!"%
-                         (request_gen_iter))
+                        "request %s, because the queue is full!" %
+                         self.request_gen_iter)
             else:
-                log.info("Request Generator thread: Add request " + str(request_gen_iter))
+                log.info("Request Generator thread: Add request " +
+                         str(self.request_gen_iter))
                 request_list_element = {"request": service_graph,
-                                        "req_num": request_gen_iter}
+                                        "req_num": self.request_gen_iter}
                 self.__request_list.put(request_list_element)
 
             scale_radius = (1/self.request_arrival_lambda)
             exp_time = self.numpyrandom.exponential(scale_radius)
-            time.sleep(exp_time)
+            if self.__discrete_simulation:
+                log.debug("Incrementing discrete simulation timer by %s"%
+                          exp_time)
+                self.discrete_simulation_timer += exp_time
+            else:
+                time.sleep(exp_time)
 
             log.debug("Request Generator thread: Number of requests waiting in"
                       " the queue %s"%self.__request_list.qsize())
             # Increase simulation iteration is done by counters
             # Increasing request generatior iteration counter
-            request_gen_iter += 1
-            if request_gen_iter > self.max_number_of_iterations:
+            self.request_gen_iter += 1
+            if self.request_gen_iter > self.max_number_of_iterations:
                 # meaning: all the requests are generated (or discarded) which
                 # will be needed during the simulation
-                sim_running = False
                 log.info("Stop request generator thread")
+                return False
 
+            if self.__discrete_simulation:
+                return True
 
-def memory_usage_psutil():
-    # return the available memory in GB
-    mem = psutil.virtual_memory()
-    return ((float(mem.available)/1024)/1024)/1024
-
-if __name__ == "__main__":
-    request_list = Queue.Queue()
-
-    if len(sys.argv) > 2:
-        log.error("Too many input parameters!")
-    elif len(sys.argv) < 2:
-        log.error("Too few input parameters!")
-    elif not os.path.isfile(sys.argv[1]):
-        log.error("Configuration file does not exist!")
-    else:
-        test = MappingSolutionFramework(sys.argv[1], request_list)
-
-        # Copy simulation.cfg to testXY dir
-        shutil.copy(sys.argv[1], test.path)
-
+    def start(self):
         try:
-            req_gen_thread = threading.Thread(None, test.create_request,
-                                            "request_generator_thread_T1")
+            if self.__discrete_simulation:
+                while self.create_request():
+                    self.make_mapping(None)
+                log.info("End discrete simulation.")
+            else:
+                req_gen_thread = threading.Thread(None, self.create_request,
+                                                  "request_generator_thread_T1")
+                log.info("Start request generator thread")
 
-            mapping_thread = threading.Thread(None, test.make_mapping,
-                                              "mapping_thread_T2")
+                mapping_thread = threading.Thread(None, self.make_mapping,
+                                                  "mapping_thread_T2",
+                                                  [req_gen_thread])
+                log.info("Start mapping thread")
 
-            # This tests the equilibrium state, consums SG-s in a constant rate
-            # test_sg_consumer_thread = threading.Thread(None, test_sg_consumer,
-            #                                            "test_sg_consumer",
-            #                                            [test, request_list, 0.01, 300000])
-            req_gen_thread.start()
-            # test_sg_consumer_thread.start()
-            mapping_thread.start()
+                req_gen_thread.start()
+                mapping_thread.start()
 
-            req_gen_thread.join()
-            # test_sg_consumer_thread.join()
-            mapping_thread.join()
+                req_gen_thread.join()
+                mapping_thread.join()
 
         except threading.ThreadError:
             log.error(" Unable to start threads")
@@ -591,16 +603,40 @@ if __name__ == "__main__":
         finally:
             # Create JSON files
             # This output is not advised to use!
-            requests = {"mapped_requests": test.counters.mapped_array,
-                        "running_requests": test.counters.running_array,
-                        "refused_requests": test.counters.refused_array}
-            full_path_json = os.path.join(test.path,
-                                          "requests" + str(time.ctime()) + ".json")
+            requests = {"mapped_requests": self.counters.mapped_array,
+                        "running_requests": self.counters.running_array,
+                        "refused_requests": self.counters.refused_array}
+            full_path_json = os.path.join(self.path,
+                                          "requests" + str(
+                                              time.ctime()) + ".json")
             with open(full_path_json, 'w') as outfile:
                 json.dump(requests, outfile)
 
             # make a dump after everything is finished to see the final state!
-            test.dump()
+            self.dump()
+
+
+def memory_usage_psutil():
+    # return the available memory in GB
+    mem = psutil.virtual_memory()
+    return ((float(mem.available)/1024)/1024)/1024
+
+
+if __name__ == "__main__":
+
+    if len(sys.argv) > 2:
+        log.error("Too many input parameters!")
+    elif len(sys.argv) < 2:
+        log.error("Too few input parameters!")
+    elif not os.path.isfile(sys.argv[1]):
+        log.error("Configuration file does not exist!")
+    else:
+        test = MappingSolutionFramework(sys.argv[1])
+
+        # Copy simulation.cfg to testXY dir
+        shutil.copy(sys.argv[1], test.path)
+
+        test.start()
 
 
 
