@@ -70,9 +70,9 @@ class ReqsSinceLastOpt(AbstractWhatToOptimizeStrategy):
                                 need_to_optimize.network.in_degree(sap.id) == 0:
                             need_to_optimize.del_node(sap.id)
 
-                self.optimized_reqs = need_to_optimize
+                self.optimized_reqs = copy.deepcopy(sum_req)
 
-                return copy.deepcopy(need_to_optimize)
+                return need_to_optimize
         except Exception as e:
             log.error("reqs_to_optimize error" +
                       str(e.message) + str(e.__class__))
