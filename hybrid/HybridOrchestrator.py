@@ -20,7 +20,6 @@ import milp.milp_solution_in_nffg as offline_mapping
 import alg1.MappingAlgorithms as online_mapping
 import alg1.UnifyExceptionTypes as uet
 import Queue
-from memory_profiler import profile
 from memory_profiler import memory_usage
 log = logging.getLogger(" Hybrid Orchestrator")
 
@@ -115,6 +114,14 @@ class HybridOrchestrator():
             self.reoptimized_resource = None
             self.when_to_opt_param = int(float(config['when_to_opt_parameter']))
 
+            # NOTE: in non-multi threaded execution the online thread doesn't
+            #  take any locks, so all of them are free for the sequential
+            # execution of the optimization.
+            if 'hybrid_multi_thread' in config:
+              self.hybrid_multi_thread = bool(config['hybrid_multi_thread'])
+            else:
+              # defaults to True to maintain backward compatibility.
+              self.hybrid_multi_thread = True
 
             # What to optimize strategy
             what_to_opt_strat = config['what_to_optimize']
@@ -535,19 +542,23 @@ class HybridOrchestrator():
         # Start online mapping thread
         online_mapping_thread = threading.Thread(None, self.do_online_mapping,
                         "Online mapping thread", [request, resource])
-        try:
-            log.info("Start online mapping!")
-            # res_online surely shouldn't be modified while an online mapping
-            # is in progress! Until we return with its copy where the new
-            # request is also mapped.
-            self.res_online_protector.start_writing_res_nffg(
-              "Map a request in an online manner")
-            online_mapping_thread.start()
-        except Exception as e:
-            log.error(e.message)
-            log.error("Failed to start online thread")
-            #Balazs Why Raise runtime?? why not the same Exception
-            raise # RuntimeError
+
+        # in case of not multi threaded operation, the incoming request would
+        #  be lost if there is a sequential reoptimization in this turn. So
+        # the online mapping shall be executed after the optimizaton.
+        if self.hybrid_multi_thread:
+          try:
+              log.info("Start online mapping!")
+              # res_online surely shouldn't be modified while an online mapping
+              # is in progress! Until we return with its copy where the new
+              # request is also mapped.
+              self.res_online_protector.start_writing_res_nffg(
+                    "Map a request in an online manner")
+              online_mapping_thread.start()
+          except Exception as e:
+              log.error(e.message)
+              log.error("Failed to start online thread")
+              raise
 
         # Start offline mapping thread
         # check if there is anything to optimize
@@ -556,35 +567,42 @@ class HybridOrchestrator():
               try:
                   self.offline_mapping_thread = threading.Thread(None,
                               self.do_offline_mapping, "Offline mapping thread", [])
-                  log.info("Start offline optimalization!")
+                  log.info("Start offline optimization!")
                   self.offline_start_time = time.time()
                   self.offline_mapping_thread.start()
-                  #Balazs This is not necessary, there would be 2 joins after each other
-                  # online_mapping_thread.join()
+
+                  if not self.hybrid_multi_thread:
+                    self.offline_mapping_thread.join()
 
               except Exception as e:
                   log.error(e.message)
                   log.error("Failed to start offline thread")
-                  #Balazs Why Raise runtime?? why not the same Exception
-                  raise # RuntimeError
+                  raise
           else:
-              #Balazs This is not necessary, there would be 2 joins after each other
-              # online_mapping_thread.join()
               log.info("No need to optimize!")
 
-        online_mapping_thread.join()
+        if self.hybrid_multi_thread:
+          online_mapping_thread.join()
+        else:
+          # in case of non-multi threaded execution, do online after reoptimization.
+          online_mapping_thread.start()
+          online_mapping_thread.join()
 
         if not self.online_fails.empty():
             error = self.online_fails.get()
-            self.res_online_protector.finish_writing_res_nffg("Online mapping failed")
+            if self.hybrid_multi_thread:
+              self.res_online_protector.finish_writing_res_nffg("Online mapping failed")
             raise uet.MappingException(error.msg, False)
 
         res_online_to_return = copy.deepcopy(self.res_online)
-        self.res_online_protector.finish_writing_res_nffg("Online mapping finished")
+        if self.hybrid_multi_thread:
+          self.res_online_protector.finish_writing_res_nffg("Online mapping finished")
 
         # Collect the requests
         # NOTE: only after we know for sure, this request is mapped and the other
         # lock is released (to avoid deadlock)
+        # NOTE: this also causes the offline optimization to skip this request
+        # for the first time, because it will be missing from SUM_req.
         self.merge_all_request(request)
 
         return res_online_to_return
