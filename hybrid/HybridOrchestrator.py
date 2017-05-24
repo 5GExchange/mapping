@@ -35,11 +35,14 @@ class ResNFFGProtector(object):
     self.lock_name = lock_name
 
   def start_reading_res_nffg(self, read_reason):
+    started_to_wait = time.time()
     self.reader_counter_protector.acquire()
     self.readers_count += 1
     if self.readers_count == 1:
       self.res_nffg_protector.acquire()
       if self.do_logging:
+        log.debug("Time spent on waiting for lock of %s: %ss" %
+                  (self.lock_name,time.time() - started_to_wait))
         log.debug("Locking %s nffg for reading: \"%s\", number of current readers: %s"
                   %(self.lock_name, read_reason, self.readers_count))
     self.reader_counter_protector.release()
@@ -57,8 +60,11 @@ class ResNFFGProtector(object):
     self.reader_counter_protector.release()
 
   def start_writing_res_nffg(self, write_reason):
+    started_to_wait = time.time()
     self.res_nffg_protector.acquire()
     if self.do_logging:
+      log.debug("Time spent on waiting for lock of %s: %ss" %
+                (self.lock_name,time.time() - started_to_wait))
       log.debug("Locking %s nffg for writing: \"%s\"."%(self.lock_name, write_reason))
 
   def finish_writing_res_nffg(self, write_reason):
@@ -487,9 +493,15 @@ class HybridOrchestrator():
                                                      self.reoptimized_resource,
                                                      mode=NFFG.MODE_DEL,
                                                      keep_input_unchanged=True)
+                log.debug("Times passed with preparing merge: %s"%
+                          (datetime.datetime.now()-starting_time))
+                starting_time = datetime.datetime.now()
                 log.debug("merge_online_offline: Applying offline optimization...")
                 self.reoptimized_resource = NFFGToolBox.merge_nffgs(self.reoptimized_resource,
                                                                     self.res_offline)
+                log.debug(
+                  "Time passed with merging online and offline resources: %s" %
+                  (datetime.datetime.now() - starting_time))
                 starting_time = datetime.datetime.now()
                 try:
                   # Checking whether the merge was in fact successful according to resources.
@@ -513,7 +525,7 @@ class HybridOrchestrator():
                 self.offline_status = HybridOrchestrator.OFFLINE_STATE_INIT
                 raise
             finally:
-                log.debug("Time passed with merging online and offline resources: %s"%
+                log.debug("Time passed by checking merge success: %s "%
                           (datetime.datetime.now() - starting_time))
                 self.res_online_protector.finish_writing_res_nffg("Merged or failed during merging "
                                                                     "res_online and the optimized res_offline")
