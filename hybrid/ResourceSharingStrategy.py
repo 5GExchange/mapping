@@ -43,7 +43,13 @@ class AbstractResourceSharingStrategy(object):
 
 
 class DynamicMaxOnlineToAll(AbstractResourceSharingStrategy):
-    # TODO: dinamikus RG gen
+    """
+    Calculates the maximal resource utilization in every resource component,
+    and sets all elements of the offline resource graph with this value.
+
+    The online resource graph is with 100% resources.
+        -- SHOULDN'T IT BE THE REMAINING FROM THE MAXRESOURCE?
+    """
     # NOT READY YET !!!!!!!!!!
 
     def __init__(self, resource_grap, full_log_path):
@@ -85,7 +91,6 @@ class DynamicMaxOnlineToAll(AbstractResourceSharingStrategy):
                 log.error("Invalid infra type!")
                 raise
 
-
         #Calculate links
         for i, j, k, d in res_online.network.edges_iter(data=True, keys=True):
             if d.type == 'STATIC':
@@ -103,8 +108,6 @@ class DynamicMaxOnlineToAll(AbstractResourceSharingStrategy):
         for i in self.link_bw_types:
             max_link = {'type':i,'used_bw':link[i]}
             self.max_avail_link_bw.append(max_link)
-
-
 
     def get_offline_resource(self, res_online, res_offline):
         self.set_rg_max_avail_node_and_link(res_online)
@@ -128,9 +131,6 @@ class DynamicMaxOnlineToAll(AbstractResourceSharingStrategy):
                 if edge.bandwidth == bw['type']:
                     edge.bandwidth = bw['used_bw']
                     break
-
-
-
         return copy.deepcopy(res_online)
 
     def get_online_resource(self, res_online, res_offline):
