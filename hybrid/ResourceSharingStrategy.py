@@ -45,7 +45,8 @@ class AbstractResourceSharingStrategy(object):
 class DynamicMaxOnlineToAll(AbstractResourceSharingStrategy):
     """
     Calculates the maximal resource utilization in every resource component,
-    and sets all elements of the offline resource graph with this value.
+    and sets all elements of the offline resource graph with this value as the
+    available capacity.
 
     The online resource graph is with 100% resources.
         -- SHOULDN'T IT BE THE REMAINING FROM THE MAXRESOURCE?
@@ -55,13 +56,14 @@ class DynamicMaxOnlineToAll(AbstractResourceSharingStrategy):
     def __init__(self, resource_grap, full_log_path):
         super(DynamicMaxOnlineToAll, self).__init__(resource_grap, full_log_path)
 
-        self.link_bw_types = []
-        self.max_avail_node_bw = 0.0
-        self.max_avail_node_cpu = 0
-        self.max_avail_node_mem = 0.0
-        self.max_avail_node_storage = 0.0
-        self.max_avail_link_bw = []
-        self.max_avail_sw_bw = 0.0
+        self.link_bw_types = {}
+        self.max_used_node_bw = 0.0
+        self.max_used_node_cpu = 0
+        self.max_used_node_mem = 0.0
+        self.max_used_node_storage = 0.0
+        self.max_used_sw_bw = 0.0
+
+        self.float_uncertainty_addend = 1e-06
 
     def set_rg_max_avail_node_and_link(self, rs):
 
@@ -69,45 +71,59 @@ class DynamicMaxOnlineToAll(AbstractResourceSharingStrategy):
         res_online.calculate_available_node_res()
         res_online.calculate_available_link_res([])
 
+        # TODO: Percentages should be set instead of absolute values!! (currently it may increase node resourse above the originally available!)
         for i in res_online.infras:
             if i.infra_type == 'EE':
-                if i.resources.bandwidth - i.availres.bandwidth > self.max_avail_node_bw:
-                    self.max_avail_node_bw = i.resources.bandwidth - i.availres.bandwidth
+                if i.resources.bandwidth - i.availres.bandwidth > self.max_used_node_bw:
+                    self.max_used_node_bw = i.resources.bandwidth - i.availres.bandwidth
 
-                if i.resources.cpu - i.availres.cpu > self.max_avail_node_cpu:
-                    self.max_avail_node_cpu = i.resources.cpu - i.availres.cpu
+                if i.resources.cpu - i.availres.cpu > self.max_used_node_cpu:
+                    self.max_used_node_cpu = i.resources.cpu - i.availres.cpu
 
-                if i.resources.mem - i.availres.mem > self.max_avail_node_mem:
-                    self.max_avail_node_mem = i.resources.mem - i.availres.mem
+                if i.resources.mem - i.availres.mem > self.max_used_node_mem:
+                    self.max_used_node_mem = i.resources.mem - i.availres.mem
 
-                if i.resources.storage - i.availres.storage > self.max_avail_node_storage:
-                    self.max_avail_node_storage = i.resources.storage - i.availres.storage
+                if i.resources.storage - i.availres.storage > self.max_used_node_storage:
+                    self.max_used_node_storage = i.resources.storage - i.availres.storage
 
             elif i.infra_type == 'SDN-SWITCH':
-                if i.resources.bandwidth - i.availres.bandwidth > self.max_avail_sw_bw:
-                    self.max_avail_sw_bw = i.resources.bandwidth - i.availres.bandwidth
+                if i.resources.bandwidth - i.availres.bandwidth > self.max_used_sw_bw:
+                    self.max_used_sw_bw = i.resources.bandwidth - i.availres.bandwidth
 
             else:
                 log.error("Invalid infra type!")
                 raise
 
+        self.max_used_node_bw += self.float_uncertainty_addend
+        self.max_used_node_cpu += self.float_uncertainty_addend
+        self.max_used_node_mem += self.float_uncertainty_addend
+        self.max_used_node_storage += self.float_uncertainty_addend
+        self.max_used_sw_bw += self.float_uncertainty_addend
+
+        for tup in (
+           ('cpu', self.max_used_node_cpu), ('node_bw', self.max_used_node_bw),
+           ('mem', self.max_used_node_mem),
+           ('storage', self.max_used_node_storage),
+           ('sw_bw', self.max_used_sw_bw)):
+            log.debug("Maximal used %s resource to set is %s" % tup)
+
         #Calculate links
+        self.link_bw_types = {}
         for i, j, k, d in res_online.network.edges_iter(data=True, keys=True):
             if d.type == 'STATIC':
-                if d.bandwidth not in self.link_bw_types:
-                    self.link_bw_types.append(d.bandwidth)
+                if int(d.bandwidth) not in self.link_bw_types:
+                    self.link_bw_types[int(d.bandwidth)] = 0.0
 
-        link = {}
-        for i in self.link_bw_types:
-            link[i] = 0
         for i, j, k, d in res_online.network.edges_iter(data=True, keys=True):
             if d.type == 'STATIC':
-                if d.bandwidth - d.availbandwidth > link[d.bandwidth]:
-                    link[d.bandwidth] = d.bandwidth - d.availbandwidth
+                if d.bandwidth - d.availbandwidth > self.link_bw_types[int(d.bandwidth)]:
+                    self.link_bw_types[int(d.bandwidth)] = d.bandwidth - d.availbandwidth
 
         for i in self.link_bw_types:
-            max_link = {'type':i,'used_bw':link[i]}
-            self.max_avail_link_bw.append(max_link)
+            self.link_bw_types[i] += self.float_uncertainty_addend
+
+        log.debug("Max used link bandwidths by link types: %s" %
+                  self.link_bw_types)
 
     def get_offline_resource(self, res_online, res_offline):
         self.set_rg_max_avail_node_and_link(res_online)
@@ -115,23 +131,30 @@ class DynamicMaxOnlineToAll(AbstractResourceSharingStrategy):
         for i in to_offline.infras:
             new_resources = copy.deepcopy(i.resources)
             if i.infra_type == 'EE':
-                new_resources.bandwidth = self.max_avail_node_bw
-                new_resources.cpu = self.max_avail_node_cpu
-                new_resources.mem = self.max_avail_node_mem
-                new_resources.storage = self.max_avail_node_storage
-                setattr(i, 'resource',new_resources)
+                new_resources.bandwidth = self.max_used_node_bw
+                new_resources.cpu = self.max_used_node_cpu
+                new_resources.mem = self.max_used_node_mem
+                new_resources.storage = self.max_used_node_storage
+                i.resources = new_resources
             elif i.infra_type == 'SDN-SWITCH':
-                new_resources.bandwidth = self.max_avail_sw_bw
-                setattr(i, 'resource', new_resources)
+                new_resources.bandwidth = self.max_used_sw_bw
+                i.resources = new_resources
             else:
                 log.error("Invalid infra type!")
                 raise
         for i, j, k, edge in to_offline.network.edges_iter(data=True, keys=True):
-            for bw in self.max_avail_link_bw:
-                if edge.bandwidth == bw['type']:
-                    edge.bandwidth = bw['used_bw']
-                    break
-        return copy.deepcopy(res_online)
+            edge.bandwidth = self.link_bw_types[int(edge.bandwidth)]
+        # copy the actual NF mappings from res_online to the res_offline with
+        # decreased maximal capacities.
+        to_offline = NFFGToolBox.merge_nffgs(to_offline, res_online)
+        try:
+            to_offline.calculate_available_node_res()
+            to_offline.calculate_available_link_res([])
+        except RuntimeError as re:
+            log.error("Offline resource would return invalid mapping after "
+                      "copying the actual mapping state: %s"%re.message)
+            raise
+        return to_offline
 
     def get_online_resource(self, res_online, res_offline):
         return copy.deepcopy(res_online)

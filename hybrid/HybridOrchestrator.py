@@ -94,7 +94,25 @@ class HybridOrchestrator():
             # Protects the res_online
             self.res_online_protector = ResNFFGProtector("res_online", True)
             self.res_online = None
-            self.res_offline = copy.deepcopy(RG)
+            self.res_offline = None
+            self.received_resource = None
+
+            self.bare_resource_100 = copy.deepcopy(RG)
+            # Delete all NFs if there are maybe initial ones in RG. This
+            # removes most of the SGHops as well
+            for nf_id in [n.id for n in self.bare_resource_100.nfs]:
+              self.bare_resource_100.del_node(nf_id)
+            # Remove the remaining SGHops
+            for sgh in [sg for sg in self.bare_resource_100.sg_hops]:
+              self.bare_resource_100.del_edge(sgh.src, sgh.dst, id=sgh.id)
+            # Remove possible edge_reqs
+            for req in [r for r in self.bare_resource_100.reqs]:
+              self.bare_resource_100.del_edge(req.src, req.dst, id=req.id)
+            # Clear all flowrules
+            for infra in self.bare_resource_100.infras:
+              for p in infra.ports:
+                p.clear_flowrules()
+
             self.deleted_services = deleted_services
 
             # Note: hybrid orchestrator may only read this parameter
@@ -159,14 +177,12 @@ class HybridOrchestrator():
                                    'fixed_req_count, fixed_time, '
                                    'periodical_model_based, always')
 
-            # Mapped RG
-            self.resource_graph = RG
             # Resource sharing strategy
             resource_share_strat = config['resource_share_strat']
             if resource_share_strat == "double_hundred":
-                self.__res_sharing_strat = DoubleHundred(self.resource_graph, full_log_path)
+                self.__res_sharing_strat = DoubleHundred(self.bare_resource_100, full_log_path)
             elif resource_share_strat == "dynamic":
-                self.__res_sharing_strat = DynamicMaxOnlineToAll(self.resource_graph, full_log_path)
+                self.__res_sharing_strat = DynamicMaxOnlineToAll(self.bare_resource_100, full_log_path)
             else:
                 raise ValueError(
                     'Invalid resource_share_strat type! Please choose '
@@ -202,8 +218,8 @@ class HybridOrchestrator():
         self.sum_req_protector.finish_writing_res_nffg("New request %s appended to "
                                                        "sum req" % request)
 
-    def do_online_mapping(self, request, resource):
-        self.set_online_resource_graph(resource, request)
+    def do_online_mapping(self, request):
+        self.set_online_resource_graph(request)
         # keep_input_unchanged=True makes it unnecessary
         # temp_res_online = copy.deepcopy(self.res_online)
 
@@ -366,6 +382,7 @@ class HybridOrchestrator():
                 raise
 
     def del_exp_reqs_from_nffg(self, self_nffg_name):
+      if getattr(self, self_nffg_name) is not None:
         try:
           for i in self.deleted_services:
               delete = False
@@ -434,7 +451,7 @@ class HybridOrchestrator():
       for i in self.deleted_services:
         self.remove_sg_from_sum_req(i['SG'])
 
-    def set_online_resource_graph(self, resource, request):
+    def set_online_resource_graph(self, request):
         # Resource sharing strategy
         try:
             log.debug("Setting online resource for sharing between "
@@ -442,7 +459,7 @@ class HybridOrchestrator():
             if self.offline_status == HybridOrchestrator.OFFLINE_STATE_RUNNING or \
                   self.offline_status == HybridOrchestrator.OFFLINE_STATE_INIT:
               # The online_res may be under merge OR offline reoptimization is idle because it was not needed.
-              self.res_online = self.__res_sharing_strat.get_online_resource(resource,
+              self.res_online = self.__res_sharing_strat.get_online_resource(self.received_resource,
                                                                              self.res_offline)
               log.debug("Setting online resource based on received resource "
                         "for request %s!"%request.id)
@@ -462,14 +479,17 @@ class HybridOrchestrator():
             log.error(e.message)
             log.error("Unhandled Exception catched during resource sharing.")
             raise
-        log.debug("Setting online resource")
+        log.debug("Examples of online resource capacities: %s"%
+                  [(i.id, i.resources) for i in self.res_online.infras][:10])
 
     def set_offline_resource_graph(self):
       # Resources sharing startegy
       self.res_online_protector.start_reading_res_nffg("Setting offline resource")
-      self.res_offline = self.__res_sharing_strat.get_offline_resource(self.res_online,
+      self.res_offline = self.__res_sharing_strat.get_offline_resource(self.received_resource,
                                                                        self.res_offline)
       self.del_exp_reqs_from_nffg("res_offline")
+      log.debug("Examples of offline resource capacities: %s"%
+                [(i.id, i.resources) for i in self.res_offline.infras][:10])
       self.res_online_protector.finish_reading_res_nffg("Offline resource was set")
 
     def merge_online_offline(self):
@@ -484,7 +504,10 @@ class HybridOrchestrator():
                 self.del_exp_reqs_from_nffg("res_offline")
 
                 # res_online always contains only the alive and currently mapped requests!
-                self.reoptimized_resource = copy.deepcopy(self.res_online)
+                # Put the online mapping onto the bare 100% topology, the res_online is not
+                # changed, and the resource capacities of the 'target' are returned.
+                self.reoptimized_resource = NFFGToolBox.merge_nffgs(
+                  copy.deepcopy(self.bare_resource_100), self.res_online)
                 # Balazs: Delete requests from res_online, which are possibly migrated
                 # NOTE: if an NF to be deleted doesn't exist in the substrate DEL mode ignores it.
                 log.debug("merge_online_offline: Removing NFs to be migrated from "
@@ -511,7 +534,10 @@ class HybridOrchestrator():
                   (datetime.datetime.now() - starting_time))
                 starting_time = datetime.datetime.now()
                 try:
-                  # Checking whether the merge was in fact successful according to resources.
+                    log.debug("Examples of reoptimized resource capacities: %s"%
+                              [(i.id, i.resources) for i in
+                               self.reoptimized_resource.infras][:10])
+                    # Checking whether the merge was in fact successful according to resources.
                     self.reoptimized_resource.calculate_available_node_res()
                     self.reoptimized_resource.calculate_available_link_res([])
 
@@ -539,9 +565,13 @@ class HybridOrchestrator():
 
     def MAP(self, request, resource):
 
+        # store received resource so the offline and online could use it
+        # disregarding their order of initiation.
+        self.received_resource = resource
+
         # Start online mapping thread
         online_mapping_thread = threading.Thread(None, self.do_online_mapping,
-                        "Online mapping thread", [request, resource])
+                        "Online mapping thread", [request])
 
         # in case of not multi threaded operation, the incoming request would
         #  be lost if there is a sequential reoptimization in this turn. So
@@ -594,7 +624,15 @@ class HybridOrchestrator():
               self.res_online_protector.finish_writing_res_nffg("Online mapping failed")
             raise uet.MappingException(error.msg, False)
 
-        res_online_to_return = copy.deepcopy(self.res_online)
+        # res_online may have less than 100% of capacities due to resource
+        # sharing strategies, so we need to copy the mapping to the bare
+        # resource. If an optimization has finished before this online
+        # mapping was executed, the online algorithm used the reaoptimized
+        # mapping already
+        res_online_to_return = NFFGToolBox.merge_nffgs(
+          copy.deepcopy(self.bare_resource_100), self.res_online)
+        log.debug("Examples of the returned resource capacities: %s"%
+                  [(i.id, i.resources) for i in res_online_to_return.infras][:10])
         if self.hybrid_multi_thread:
           self.res_online_protector.finish_writing_res_nffg("Online mapping finished")
 
