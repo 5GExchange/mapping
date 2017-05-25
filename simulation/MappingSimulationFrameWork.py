@@ -1,4 +1,4 @@
-# Copyright 2017 Balazs Nemeth
+# Copyright 2017 Balazs Nemeth, Mark Szalay, Janos Doka
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
