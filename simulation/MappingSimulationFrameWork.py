@@ -122,6 +122,8 @@ class MappingSolutionFramework():
         log.info("Configuration file: " + str(config_file_path))
         log.info("Git current commit: " + str(git_commit))
         log.info("Git current branch: " + str(str(git_branch)))
+        log.info(" | Full configuration object dumped: \n" + str(
+            pprint.pformat(dict(config))))
         log.info(" ----------------------------------------")
         log.info(" Start simulation")
         log.info(" ------ Simulation configurations -------")
@@ -361,10 +363,6 @@ class MappingSolutionFramework():
             raise RuntimeError(
                 "Invalid 'orchestrator' in the simulation.cfg file! "
                 "Please choose one of the followings: online, hybrid, offline")
-
-        log.info(" | Full configuration object dumped: \n" + str(
-            pprint.pformat(dict(config))))
-
 
     def __mapping(self, service_graph, life_time, req_num):
 

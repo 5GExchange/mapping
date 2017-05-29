@@ -14,9 +14,6 @@
 
 import threading
 
-import datetime
-from configobj import ConfigObj
-
 try:
   # runs when mapping files are called from ESCAPE
   from escape.nffg_lib.nffg import NFFG, NFFGToolBox
@@ -30,6 +27,7 @@ except ImportError:
 from hybrid.WhatToOptimizeStrategy import *
 from hybrid.WhenToOptimizeStrategy import *
 from hybrid.ResourceSharingStrategy import *
+from hybrid.WhenToApplyOptimization import *
 import milp.milp_solution_in_nffg as offline_mapping
 import alg1.MappingAlgorithms as online_mapping
 import alg1.UnifyExceptionTypes as uet
@@ -91,6 +89,7 @@ class HybridOrchestrator():
     OFFLINE_STATE_INIT = 0
     OFFLINE_STATE_RUNNING = 1
     OFFLINE_STATE_FINISHED = 2
+    OFFLINE_STATE_MERGED = 3
 
     def __init__(self, RG, config_file_path, deleted_services, full_log_path,
                  resource_type, remaining_request_lifetimes):
@@ -222,6 +221,25 @@ class HybridOrchestrator():
               self.optional_milp_params['node_limit'] = int(config['node_limit'])
             self.optional_milp_params.update(**config['migration_handler_kwargs'])
 
+            base_when_to_apply_opt = BaseWhenToApplyOptimization(
+              [HybridOrchestrator.OFFLINE_STATE_FINISHED],
+              [HybridOrchestrator.OFFLINE_STATE_INIT,
+               HybridOrchestrator.OFFLINE_STATE_RUNNING,
+               HybridOrchestrator.OFFLINE_STATE_MERGED], log)
+            if 'when_to_apply_opt' in config:
+              if config['when_to_apply_opt'] == '':
+                self.__when_to_apply_opt = base_when_to_apply_opt
+              elif config['when_to_apply_opt'] == 'max_number':
+                self.__when_to_apply_opt = MaxNumberOfCalls(
+                  int(config['when_to_apply_opt_param']),
+                  base_when_to_apply_opt.opt_ready_states,
+                  base_when_to_apply_opt.opt_pending_states, log)
+              else:
+                raise ValueError('Invalid when_to_apply_opt type! Please choose'
+                                 ' one of the followings: max_number')
+            else:
+              self.__when_to_apply_opt = base_when_to_apply_opt
+
             self.offline_mapping_num = 0
 
     def merge_all_request(self, request):
@@ -291,6 +309,7 @@ class HybridOrchestrator():
                            len([s for s in self.res_offline.saps]),
                            len(self.res_offline)))
 
+                starting_time = datetime.datetime.now()
                 # set mapped NF reoptimization True, and delete other NFs from
                 # res_offline which are not in reqs_under_optimization, because
                 # it is what_to_opt's responsibilty to determine the set of requests to optimize!
@@ -324,6 +343,10 @@ class HybridOrchestrator():
                                                         self.res_offline,
                                                         mode=NFFG.MODE_DEL,
                                                         keep_input_unchanged=True)
+                log.debug("Time spent with deleting requests not to be optimized "
+                          "from res_offline %s"%
+                          (datetime.datetime.now()-starting_time))
+                starting_time = datetime.datetime.now()
                 log.debug("Adding %s path requirements to offline resource."
                           %len([r for r in self.reqs_under_optimization.reqs]))
                 for req in self.reqs_under_optimization.reqs:
@@ -352,6 +375,8 @@ class HybridOrchestrator():
                     self.res_offline.add_req(req.src, req.dst, req=req)
                     # log.debug("Adding requirement with zero-ed bandwidth on "
                     #           "path %s"%req.sg_path)
+                log.debug("Time spent with adding requirement links to "
+                          "res_offline %s"%(datetime.datetime.now()-starting_time))
 
                 # we don't want to map additional requests, so set request to empty
                 self.res_offline = offline_mapping.MAP(
@@ -362,11 +387,17 @@ class HybridOrchestrator():
                 mem_usage = memory_usage(-1, interval=1, timeout=1)
                 log.debug("Total MEMORY usage in the end of the do_offline_mapping: " + str(mem_usage) + " MB")
                 log.debug("Total MEMORY difference: " + str(mem_usage[0] - mem_in_beginning[0]) + " MB")
+                self.offline_status = HybridOrchestrator.OFFLINE_STATE_FINISHED
 
-                # Need to del_exp_reqs_from_res_offline and merge
-                log.info("Try to merge online and offline")
-                # the merge MUST set the state before releasing the writing lock
-                self.merge_online_offline()
+                if self.__when_to_apply_opt.is_optimization_applicable(self.offline_status):
+                  # Need to del_exp_reqs_from_res_offline and merge
+                  # the merge MUST set the state before releasing the writing lock
+                  log.info("Merging online and offline immediately after "
+                            "offline finished")
+                  self.merge_online_offline()
+                else:
+                  log.info("Skipping merging online and offline merge, and "
+                           "delaying optimization application.")
                 self.__what_to_opt.opt_data_handler.write_data(
                     len([n for n in self.reqs_under_optimization.nfs]),
                     (time.time() - self.offline_start_time ))
@@ -470,25 +501,62 @@ class HybridOrchestrator():
         try:
             log.debug("Setting online resource for sharing between "
                       "online and offline resources")
+            optimization_applicable = \
+              self.__when_to_apply_opt.is_optimization_applicable(
+              self.offline_status)
+
+            # If we should already apply the optimization, but that is not ready yet, we have to wait for the thread to finish.
+            if optimization_applicable and self.offline_status != HybridOrchestrator.OFFLINE_STATE_FINISHED\
+                  and self.offline_mapping_thread is not None:
+              if self.offline_mapping_thread.is_alive():
+                waiting_time = time.time()
+                self.offline_mapping_thread.join()
+                log.debug("Time spent for waiting for offline optimization, "
+                          "when we already needed the result: %s s"%
+                          (time.time()-waiting_time))
+
             if self.offline_status == HybridOrchestrator.OFFLINE_STATE_RUNNING or \
-                  self.offline_status == HybridOrchestrator.OFFLINE_STATE_INIT:
+                  self.offline_status == HybridOrchestrator.OFFLINE_STATE_INIT or \
+               not optimization_applicable:
               # The online_res may be under merge OR offline reoptimization is idle because it was not needed.
               self.res_online = self.__res_sharing_strat.get_online_resource(self.received_resource,
                                                                              self.res_offline)
               log.debug("Setting online resource based on received resource "
                         "for request %s!"%request.id)
-            elif self.offline_status == HybridOrchestrator.OFFLINE_STATE_FINISHED:
-              # we need to set res_online based on the reoptimized resource not the one handled by our caller.
+            elif self.offline_status == HybridOrchestrator.OFFLINE_STATE_FINISHED and \
+               optimization_applicable:
+              # we need to check if the optimization can be merged with the
+              # online resource
+              self.merge_online_offline()
+              res_to_use = self.received_resource
+              if self.offline_status == HybridOrchestrator.OFFLINE_STATE_MERGED:
+                res_to_use = self.reoptimized_resource
+                log.debug("Setting online resource based on just now merged "
+                          "reoptimized resource for request %s!"%request.id)
+              else:
+                log.debug(
+                  "Setting onlinre resource based on received resource "
+                  "because of optimization application failure for request %s!"
+                  % request.id)
+              # use the sharing strategy on the right resource
+              self.res_online = self.__res_sharing_strat.get_online_resource(
+                res_to_use, self.res_offline)
+
+              self.offline_status = HybridOrchestrator.OFFLINE_STATE_INIT
+              self.__when_to_apply_opt.applied()
+            elif self.offline_status == HybridOrchestrator.OFFLINE_STATE_MERGED:
               # An expiration could have happened while we were merging or waiting for res_online setting.
               self.del_exp_reqs_from_nffg("reoptimized_resource")
-              # lock is not needed because offline is terminated.
               self.res_online = self.__res_sharing_strat.get_online_resource(self.reoptimized_resource,
                                                                              self.res_offline)
-              log.debug("Setting online resource based on reoptimized resource "
-                        "for request %s!"%request.id)
+              log.debug("Setting online resource based on recently "
+                        "reoptimized resource for request %s!"%request.id)
               self.offline_status = HybridOrchestrator.OFFLINE_STATE_INIT
+              self.__when_to_apply_opt.applied()
             else:
-              raise Exception("Invalid offline_status: %s"%self.offline_status)
+              raise Exception("Invalid offline_status: %s, optimization "
+                              "applicable: %s"%
+                              (self.offline_status, optimization_applicable))
         except Exception as e:
             log.error(e.message)
             log.error("Unhandled Exception catched during resource sharing.")
@@ -508,6 +576,7 @@ class HybridOrchestrator():
 
     def merge_online_offline(self):
             try:
+                log.info("Try to merge online and offline")
                 self.res_online_protector.start_writing_res_nffg("Removing SC-s which are possibly migrated and merging")
                 starting_time = datetime.datetime.now()
 
@@ -557,7 +626,7 @@ class HybridOrchestrator():
 
                     log.info("merge_online_offline : "
                              "Optimization applied successfully :)")
-                    self.offline_status = HybridOrchestrator.OFFLINE_STATE_FINISHED
+                    self.offline_status = HybridOrchestrator.OFFLINE_STATE_MERGED
                 # Balazs The calc res functions throw only RuntimeError if it is
                 # failed due to resource reservation collision!
                 except RuntimeError as e:
