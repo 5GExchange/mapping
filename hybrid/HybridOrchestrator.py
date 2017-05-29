@@ -394,7 +394,12 @@ class HybridOrchestrator():
                   # the merge MUST set the state before releasing the writing lock
                   log.info("Merging online and offline immediately after "
                             "offline finished")
+                  self.res_online_protector.start_writing_res_nffg(
+                    "Removing SC-s which are possibly migrated and merging")
                   self.merge_online_offline()
+                  self.res_online_protector.finish_writing_res_nffg(
+                    "Merged or failed during merging res_online and the "
+                    "optimized res_offline")
                 else:
                   log.info("Skipping merging online and offline merge, and "
                            "delaying optimization application.")
@@ -577,7 +582,6 @@ class HybridOrchestrator():
     def merge_online_offline(self):
             try:
                 log.info("Try to merge online and offline")
-                self.res_online_protector.start_writing_res_nffg("Removing SC-s which are possibly migrated and merging")
                 starting_time = datetime.datetime.now()
 
                 log.info("Delete expired requests from the res_offline")
@@ -643,8 +647,6 @@ class HybridOrchestrator():
             finally:
                 log.debug("Time passed by checking merge success: %s "%
                           (datetime.datetime.now() - starting_time))
-                self.res_online_protector.finish_writing_res_nffg("Merged or failed during merging "
-                                                                    "res_online and the optimized res_offline")
 
     def MAP(self, request, resource):
 
