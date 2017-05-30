@@ -594,7 +594,8 @@ class HybridOrchestrator():
                 # Put the online mapping onto the bare 100% topology, the res_online is not
                 # changed, and the resource capacities of the 'target' are returned.
                 self.reoptimized_resource = NFFGToolBox.merge_nffgs(
-                  copy.deepcopy(self.bare_resource_100), self.res_online)
+                  copy.deepcopy(self.bare_resource_100), self.res_online,
+                  copy_shallow=True)
                 # Balazs: Delete requests from res_online, which are possibly migrated
                 # NOTE: if an NF to be deleted doesn't exist in the substrate DEL mode ignores it.
                 log.debug("merge_online_offline: Removing NFs to be migrated from "
@@ -715,7 +716,8 @@ class HybridOrchestrator():
         # mapping was executed, the online algorithm used the reaoptimized
         # mapping already
         res_online_to_return = NFFGToolBox.merge_nffgs(
-          copy.deepcopy(self.bare_resource_100), self.res_online)
+          copy.deepcopy(self.bare_resource_100), self.res_online,
+          copy_shallow=True)
         log.debug("Examples of the returned resource capacities: %s"%
                   [(i.id, i.resources) for i in res_online_to_return.infras][:10])
         if self.hybrid_multi_thread:
