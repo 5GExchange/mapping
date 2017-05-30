@@ -389,7 +389,8 @@ class HybridOrchestrator():
                 log.debug("Total MEMORY difference: " + str(mem_usage[0] - mem_in_beginning[0]) + " MB")
                 self.offline_status = HybridOrchestrator.OFFLINE_STATE_FINISHED
 
-                if self.__when_to_apply_opt.is_optimization_applicable(self.offline_status):
+                if self.__when_to_apply_opt.is_optimization_applicable(
+                   self.offline_status, just_check=True):
                   # Need to del_exp_reqs_from_res_offline and merge
                   # the merge MUST set the state before releasing the writing lock
                   log.info("Merging online and offline immediately after "
@@ -616,7 +617,8 @@ class HybridOrchestrator():
                 starting_time = datetime.datetime.now()
                 log.debug("merge_online_offline: Applying offline optimization...")
                 self.reoptimized_resource = NFFGToolBox.merge_nffgs(self.reoptimized_resource,
-                                                                    self.res_offline)
+                                                                    self.res_offline,
+                                                                    copy_shallow=True)
                 log.debug(
                   "Time passed with merging online and offline resources: %s" %
                   (datetime.datetime.now() - starting_time))

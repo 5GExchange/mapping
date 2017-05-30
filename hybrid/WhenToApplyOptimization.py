@@ -27,7 +27,7 @@ class BaseWhenToApplyOptimization(object):
     self.opt_pending_states = opt_pending_states
     self.log = logger
 
-  def is_optimization_applicable (self, offline_state):
+  def is_optimization_applicable (self, offline_state, just_check=False):
     return True
 
   def applied(self):
@@ -49,15 +49,18 @@ class MaxNumberOfCalls (BaseWhenToApplyOptimization):
     self.log.debug("Initialize AtLeastFixNumberOfCalls when_to_apply_opt "
                    "strategy.")
 
-  def is_optimization_applicable(self, offline_state):
-    self.number_of_calls_happened += 1
+  def is_optimization_applicable(self, offline_state, just_check=False):
+    if not just_check:
+      self.number_of_calls_happened += 1
     self.log.debug(
       "Optimization applicability asked with offline state %s current number "
-      "of calls happened: %s" % (offline_state, self.number_of_calls_happened))
+      "of calls happened: %s, just checking: %s" %
+      (offline_state, self.number_of_calls_happened, just_check))
     is_number_reached = False
     if self.number_of_calls_happened == self.number_of_required_calls:
       is_number_reached = True
-      self.number_of_calls_happened = 0
+      if not just_check:
+        self.number_of_calls_happened = 0
     return is_number_reached
 
   def applied(self):
