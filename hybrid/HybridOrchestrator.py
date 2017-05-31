@@ -722,8 +722,6 @@ class HybridOrchestrator():
           copy_shallow=True)
         log.debug("Examples of the returned resource capacities: %s"%
                   [(i.id, i.resources) for i in res_online_to_return.infras][:10])
-        if self.hybrid_multi_thread:
-          self.res_online_protector.finish_writing_res_nffg("Online mapping finished")
 
         # Collect the requests
         # NOTE: only after we know for sure, this request is mapped and the other
@@ -731,6 +729,9 @@ class HybridOrchestrator():
         # NOTE: this also causes the offline optimization to skip this request
         # for the first time, because it will be missing from SUM_req.
         self.merge_all_request(request)
+
+        if self.hybrid_multi_thread:
+          self.res_online_protector.finish_writing_res_nffg("Online mapping finished")
 
         return res_online_to_return
 
