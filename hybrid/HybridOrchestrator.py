@@ -125,6 +125,14 @@ class HybridOrchestrator():
             for infra in self.bare_resource_100.infras:
               for p in infra.ports:
                 p.clear_flowrules()
+                try:
+                  NFFGToolBox._find_infra_link(self.bare_resource_100, p, True, True)
+                  NFFGToolBox._find_infra_link(self.bare_resource_100, p, False, True)
+                except RuntimeError as re:
+                  log.warn(
+                    "InfraPort of %s may not have in/outbound link "
+                    "connected to it, message: %s" % (infra.id, re.message))
+                  infra.del_port(p.id)
 
             self.deleted_services = deleted_services
 
@@ -293,7 +301,6 @@ class HybridOrchestrator():
             try:
                 mem_in_beginning = memory_usage(-1, interval=1, timeout=1)
                 log.debug("Total MEMORY usage in the beginning of the do_offline_mapping: "+ str(mem_in_beginning)+" MB")
-                self.offline_status = HybridOrchestrator.OFFLINE_STATE_RUNNING
                 # WARNING: we can't lock both of them at the same time, cuz that can cause deadlock
                 # If both of them needs to be locked make the order: res_online -> sum_req!
                 self.set_offline_resource_graph()
@@ -686,6 +693,7 @@ class HybridOrchestrator():
                   self.offline_mapping_thread = threading.Thread(None,
                               self.do_offline_mapping, "Offline mapping thread", [])
                   log.info("Start offline optimization!")
+                  self.offline_status = HybridOrchestrator.OFFLINE_STATE_RUNNING
                   self.offline_start_time = time.time()
                   self.offline_mapping_thread.start()
 
