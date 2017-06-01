@@ -8,7 +8,7 @@ import time
 import datetime
 
 
-def get_data(file_list, type):
+def get_data(file_list, type, start, finish):
 
     mapped_reqs = []
     running_reqs = []
@@ -99,12 +99,15 @@ def main(argv):
     refused_offline_req_list = None
     refused_hybrid_req_list = None
 
+    start_count = 0
+    finish_count = int('inf')
+    
     try:
         for param in argv:
             if param[0:2] != "--":
                 print 'Bad parameter: '+str(param)+'\nUse "python create_plots.py --help"'
                 sys.exit()
-        opts, args = getopt.getopt(argv,"h",["online_log_files=","offline_log_files=","hybrid_log_files=","bad_log"])
+        opts, args = getopt.getopt(argv,"hs:f:",["online_log_files=","offline_log_files=","hybrid_log_files=","bad_log"])
     except getopt.GetoptError:
         print 'create_plots.py --online_log_files=<online_log_file1,online_log_file2,...> --offline_log_files=<offline_log_file1,offline_log_file2,...> --hybrid_log_files=<hybrid_log_file1,hybrid_log_file2,...> --bad_log'
         sys.exit(2)
@@ -118,27 +121,31 @@ def main(argv):
             offline_log_files = arg
         elif opt in ("--hybrid_log_files="):
             hybrid_log_files = arg
+        elif opt == '-s':
+            start_count = int(arg)
+        elif opt == '-f':
+            finish_count = int(arg)
         else:
             print 'Bad parameters! Use python create_plots.py --help'
             sys.exit()
 
     try:
         online_files = separte_files(online_log_files,"Online")
-        mapped_online_req_list, running_online_req_list,refused_online_req_list = get_data(online_files,"Online")
+        mapped_online_req_list, running_online_req_list,refused_online_req_list = get_data(online_files,"Online",start_count, finish_count)
     except Exception as e:
         print e
         print "The program runs without online log file."
 
     try:
         offline_files = separte_files(offline_log_files, "Offline")
-        mapped_offline_req_list, running_offline_req_list, refused_offline_req_list = get_data(offline_files, "Offline")
+        mapped_offline_req_list, running_offline_req_list, refused_offline_req_list = get_data(offline_files, "Offline",start_count, finish_count)
     except Exception as e:
         print e
         print "The program runs without offline log file."
 
     try:
         hybrid_files = separte_files(hybrid_log_files, "Hybrid")
-        mapped_hybrid_req_list, running_hybrid_req_list, refused_hybrid_req_list = get_data(hybrid_files, "Hybrid")
+        mapped_hybrid_req_list, running_hybrid_req_list, refused_hybrid_req_list = get_data(hybrid_files, "Hybrid",start_count, finish_count)
     except Exception as e:
         print e
         print "The program runs without hybrid log file."
