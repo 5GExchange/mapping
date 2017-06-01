@@ -29,6 +29,7 @@ def get_data(file_list, type, start, finish):
     for file in file_list:
         start_time = 0
         name = ""
+        data_point_count = 0
         for line in open(file):
             if start_time == 0:
                 start_time = datetime.datetime.strptime(line[:22], '%Y-%m-%d %H:%M:%S,%f')
@@ -40,21 +41,23 @@ def get_data(file_list, type, start, finish):
                 name += "_" + line[line.find("| When to optimize:")+19:]
             if "| Optimize strategy:" in line:
                 name += "_" + line[line.find("| Optimize strategy:")+20:]
-            if "Mapped service_requests count:" in line:
-                count = line[line.find("Mapped service_requests count:")+31:]
-                mapped_requests_dict["request_list"].append(int(count))
-                sec = ((datetime.datetime.strptime(line[:22], '%Y-%m-%d %H:%M:%S,%f')) - start_time).total_seconds()
-                mapped_requests_dict["incoming_time"].append(sec)
-            elif "Running service_requests count:" in line:
-                count = line[line.find("Running service_requests count:")+32:]
-                running_requests_dict["request_list"].append(int(count))
-                sec = ((datetime.datetime.strptime(line[:22], '%Y-%m-%d %H:%M:%S,%f')) - start_time).total_seconds()
-                running_requests_dict["incoming_time"].append(sec)
-            elif "Refused service_requests count:" in line:
-                count = line[line.find("Refused service_requests count:")+32:]
-                refused_requests_dict["request_list"].append(int(count))
-                sec = ((datetime.datetime.strptime(line[:22], '%Y-%m-%d %H:%M:%S,%f')) - start_time).total_seconds()
-                refused_requests_dict["incoming_time"].append(sec)
+            if start <= data_point_count <= finish:
+                if "Mapped service_requests count:" in line:
+                    count = line[line.find("Mapped service_requests count:")+31:]
+                    mapped_requests_dict["request_list"].append(int(count))
+                    sec = ((datetime.datetime.strptime(line[:22], '%Y-%m-%d %H:%M:%S,%f')) - start_time).total_seconds()
+                    mapped_requests_dict["incoming_time"].append(sec)
+                elif "Running service_requests count:" in line:
+                    count = line[line.find("Running service_requests count:")+32:]
+                    running_requests_dict["request_list"].append(int(count))
+                    sec = ((datetime.datetime.strptime(line[:22], '%Y-%m-%d %H:%M:%S,%f')) - start_time).total_seconds()
+                    running_requests_dict["incoming_time"].append(sec)
+                elif "Refused service_requests count:" in line:
+                    count = line[line.find("Refused service_requests count:")+32:]
+                    refused_requests_dict["request_list"].append(int(count))
+                    sec = ((datetime.datetime.strptime(line[:22], '%Y-%m-%d %H:%M:%S,%f')) - start_time).total_seconds()
+                    refused_requests_dict["incoming_time"].append(sec)
+                data_point_count += 1
 
         mapped_requests_dict["name"] = (name+"_"+str(file_list.index(file))).replace("\n","")
         mapped_reqs.append(copy.copy(mapped_requests_dict))
