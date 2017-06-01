@@ -127,6 +127,12 @@ class HybridOrchestrator():
                 p.clear_flowrules()
                 try:
                   NFFGToolBox._find_infra_link(self.bare_resource_100, p, True, True)
+                except RuntimeError as re:
+                  log.warn(
+                    "InfraPort of %s may not have in/outbound link "
+                    "connected to it, message: %s" % (infra.id, re.message))
+                  infra.del_port(p.id)
+                try:
                   NFFGToolBox._find_infra_link(self.bare_resource_100, p, False, True)
                 except RuntimeError as re:
                   log.warn(
