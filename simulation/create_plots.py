@@ -41,6 +41,8 @@ def get_data(file_list, type, start, finish):
                 name += "_" + line[line.find("| When to optimize:")+19:]
             if "| Optimize strategy:" in line:
                 name += "_" + line[line.find("| Optimize strategy:")+20:]
+            if "Mapped service_requests count:" in line:
+                data_point_count += 1
             if start <= data_point_count <= finish:
                 if "Mapped service_requests count:" in line:
                     count = line[line.find("Mapped service_requests count:")+31:]
@@ -57,8 +59,7 @@ def get_data(file_list, type, start, finish):
                     refused_requests_dict["request_list"].append(int(count))
                     sec = ((datetime.datetime.strptime(line[:22], '%Y-%m-%d %H:%M:%S,%f')) - start_time).total_seconds()
                     refused_requests_dict["incoming_time"].append(sec)
-                data_point_count += 1
-
+                
         mapped_requests_dict["name"] = (name+"_"+str(file_list.index(file))).replace("\n","")
         mapped_reqs.append(copy.copy(mapped_requests_dict))
         mapped_requests_dict["name"] = ""
@@ -103,13 +104,13 @@ def main(argv):
     refused_hybrid_req_list = None
 
     start_count = 0
-    finish_count = int('inf')
+    finish_count = float('inf')
     
     try:
-        for param in argv:
-            if param[0:2] != "--":
-                print 'Bad parameter: '+str(param)+'\nUse "python create_plots.py --help"'
-                sys.exit()
+        # for param in argv:
+        #     if param[0:2] != "--":
+        #         print 'Bad parameter: '+str(param)+'\nUse "python create_plots.py --help"'
+        #         sys.exit()
         opts, args = getopt.getopt(argv,"hs:f:",["online_log_files=","offline_log_files=","hybrid_log_files=","bad_log"])
     except getopt.GetoptError:
         print 'create_plots.py --online_log_files=<online_log_file1,online_log_file2,...> --offline_log_files=<offline_log_file1,offline_log_file2,...> --hybrid_log_files=<hybrid_log_file1,hybrid_log_file2,...> --bad_log'
