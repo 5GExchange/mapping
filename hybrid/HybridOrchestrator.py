@@ -110,38 +110,10 @@ class HybridOrchestrator():
             self.res_offline = None
             self.received_resource = None
 
-            self.bare_resource_100 = copy.deepcopy(RG)
-            # Delete all NFs if there are maybe initial ones in RG. This
-            # removes most of the SGHops as well
-            for nf_id in [n.id for n in self.bare_resource_100.nfs]:
-              self.bare_resource_100.del_node(nf_id)
-            # Remove the remaining SGHops
-            for sgh in [sg for sg in self.bare_resource_100.sg_hops]:
-              self.bare_resource_100.del_edge(sgh.src, sgh.dst, id=sgh.id)
-            # Remove possible edge_reqs
-            for req in [r for r in self.bare_resource_100.reqs]:
-              self.bare_resource_100.del_edge(req.src, req.dst, id=req.id)
-            # Clear all flowrules
-            for infra in self.bare_resource_100.infras:
-              for p in infra.ports:
-                p.clear_flowrules()
-                port_deleted = False
-                try:
-                  NFFGToolBox._find_infra_link(self.bare_resource_100, p, True, True)
-                except RuntimeError as re:
-                  log.warn(
-                    "InfraPort of %s may not have in/outbound link "
-                    "connected to it, message: %s" % (infra.id, re.message))
-                  infra.del_port(p.id)
-                  port_deleted = True
-                if not port_deleted:
-                  try:
-                    NFFGToolBox._find_infra_link(self.bare_resource_100, p, False, True)
-                  except RuntimeError as re:
-                    log.warn(
-                      "InfraPort of %s may not have in/outbound link "
-                      "connected to it, message: %s" % (infra.id, re.message))
-                    infra.del_port(p.id)
+            # Delete all NFs if there are maybe initial ones in RG.
+            self.bare_resource_100 = \
+              NFFGToolBox.strip_nfs_flowrules_sghops_ports(
+              copy.deepcopy(RG), log)
 
             self.deleted_services = deleted_services
 

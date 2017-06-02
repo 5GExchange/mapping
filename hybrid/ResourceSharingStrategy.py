@@ -177,7 +177,12 @@ class DynamicMaxOnlineToAll(AbstractResourceSharingStrategy):
 class DoubleHundred(AbstractResourceSharingStrategy):
 
     def get_offline_resource(self, res_online, res_offline):
-        return copy.deepcopy(res_online)
+        # clean the resource from any unnecessary objects
+        to_offline = NFFGToolBox.strip_nfs_flowrules_sghops_ports(
+            copy.deepcopy(res_online), log)
+        to_offline = NFFGToolBox.merge_nffgs(to_offline, res_online)
+        # the returned copy is independent of any other NFFG objects
+        return to_offline
 
     def get_online_resource(self, res_online, res_offline):
         # For first resource sharing

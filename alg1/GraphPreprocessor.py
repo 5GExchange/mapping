@@ -868,6 +868,9 @@ class GraphPreprocessorClass(object):
     # output NFFG and these ports can be used there! Port removal here is good 
     # not to confuse anything with the invalid ports during the mapping. Other-
     # wise they would just grow with coninout REMAPs
+    # TODO: maybe it would be better to use NFFGToolBox.strip_nfs_flowrules_sghops_ports
+    # function as it uses a more reliable way to delete ports, although
+    # I don't know where could it be wrong
     if mode != NFFG.MODE_DEL:
       for link in net.links:
         if link.type == link.DYNAMIC:
