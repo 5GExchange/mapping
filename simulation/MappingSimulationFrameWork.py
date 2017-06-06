@@ -342,7 +342,7 @@ class MappingSolutionFramework():
 
             opt_params = {}
             if 'time_limit' in config:
-                opt_params['time_limit'] = int(config['time_limit'])
+                opt_params['time_limit'] = float(config['time_limit'])
             if 'mip_gap_limit' in config:
                 opt_params['mip_gap_limit'] = float(config['mip_gap_limit'])
             if 'node_limit' in config:

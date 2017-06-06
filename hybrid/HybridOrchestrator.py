@@ -203,7 +203,7 @@ class HybridOrchestrator():
 
             self.optional_milp_params = {}
             if 'time_limit' in config:
-              self.optional_milp_params['time_limit'] = int(config['time_limit'])
+              self.optional_milp_params['time_limit'] = float(config['time_limit'])
             if 'mip_gap_limit' in config:
               self.optional_milp_params['mip_gap_limit'] = float(config['mip_gap_limit'])
             if 'node_limit' in config:
