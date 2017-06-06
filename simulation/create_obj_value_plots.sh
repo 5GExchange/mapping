@@ -2,8 +2,8 @@
 
 # usage: ./create_obj_value_plots.sh <<obj_values.csv>> <<simulation_log.err>> <<output file name>>
 
-cat $2 | grep -e "DEBUG: Hybrid Orchestrator:Setting online resource based on reoptimized resource for request" |
-cut -d ' ' -f12 | cut -d '-' -f3 | awk '{print $1,",",2}' > reopts.txt
+cat $2 | grep -e "DEBUG: Hybrid Orchestrator:Setting online resource based on just now merged reoptimized resource for request " |
+cut -d ' ' -f15 | cut -d '-' -f3 | awk '{print $1,",",2}' > reopts.txt
 
 # delete 1st line of the CSV, because it is the header
 sed -i.bak -e '1d' $1
