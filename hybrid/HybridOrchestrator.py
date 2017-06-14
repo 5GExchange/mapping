@@ -519,6 +519,7 @@ class HybridOrchestrator():
                         "for request %s!"%request.id)
             elif self.offline_status == HybridOrchestrator.OFFLINE_STATE_FINISHED and \
                optimization_applicable:
+              number_of_nfs = len([n for n in self.received_resource.nfs])
               # we need to check if the optimization can be merged with the
               # online resource
               self.merge_online_offline()
@@ -535,7 +536,17 @@ class HybridOrchestrator():
               # use the sharing strategy on the right resource
               self.res_online = self.__res_sharing_strat.get_online_resource(
                 res_to_use, self.res_offline)
-
+              should_be_same_number_of_nfs = len([n for n in self.res_online.nfs])
+              if should_be_same_number_of_nfs != number_of_nfs:
+                log.error("NF in res_online but not in received_resource: %s"%
+                          (set([n.id for n in self.res_online.nfs]) -
+                           set([n.id for n in self.received_resource.nfs])))
+                log.error("NF in received_resource but not in res_online: %s" % (
+                  set([n.id for n in self.received_resource.nfs]) - set(
+                    [n.id for n in self.res_online.nfs])))
+                raise Exception("Merging messed up the number of NFs in "
+                                "res_online: nubmer before: %s current number: %s"%
+                                (number_of_nfs, should_be_same_number_of_nfs))
               self.offline_status = HybridOrchestrator.OFFLINE_STATE_INIT
               self.__when_to_apply_opt.applied()
             elif self.offline_status == HybridOrchestrator.OFFLINE_STATE_MERGED:

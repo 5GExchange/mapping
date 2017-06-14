@@ -178,8 +178,7 @@ class DoubleHundred(AbstractResourceSharingStrategy):
 
     def get_offline_resource(self, res_online, res_offline):
         # clean the resource from any unnecessary objects
-        to_offline = NFFGToolBox.strip_nfs_flowrules_sghops_ports(
-            copy.deepcopy(res_online), log)
+        to_offline = copy.deepcopy(self.bare_resource_graph)
         to_offline = NFFGToolBox.merge_nffgs(to_offline, res_online)
         # the returned copy is independent of any other NFFG objects
         return to_offline
