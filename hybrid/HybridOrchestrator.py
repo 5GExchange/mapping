@@ -91,7 +91,7 @@ class HybridOrchestrator():
     OFFLINE_STATE_FINISHED = 2
     OFFLINE_STATE_MERGED = 3
 
-    def __init__(self, RG, config_file_path, deleted_services, full_log_path,
+    def __init__(self, RG, config_file_path, full_log_path,
                  resource_type, remaining_request_lifetimes):
 
             config = ConfigObj(config_file_path)
@@ -115,10 +115,9 @@ class HybridOrchestrator():
               NFFGToolBox.strip_nfs_flowrules_sghops_ports(
               copy.deepcopy(RG), log)
 
-            self.deleted_services = deleted_services
-
-            # Note: hybrid orchestrator may only read this parameter
-            self.remaining_request_lifetimes = remaining_request_lifetimes
+            # list of request NFFG-s which are deleted. It is received with
+            # every MAP call.
+            self.deleted_services = []
 
             # All request in one NFFG
             # The sum of reqs needs to be accessed from Offline optimization to determine
@@ -127,7 +126,8 @@ class HybridOrchestrator():
             self.SUM_req = NFFG()
             # if there are initial requests in the remaining lifetimes, we have
             # to gather them into SUM_req
-            for request in self.remaining_request_lifetimes:
+            # Note: hybrid orchestrator may only read this parameter
+            for request in remaining_request_lifetimes:
               self.merge_all_request(request['SG'])
             self.offline_mapping_thread = None
             self.offline_status = HybridOrchestrator.OFFLINE_STATE_INIT
@@ -425,20 +425,20 @@ class HybridOrchestrator():
         try:
           for i in self.deleted_services:
               delete = False
-              for j in i['SG'].nfs:
+              for j in i.nfs:
                   if j.id in [nf.id for nf in getattr(self, self_nffg_name).nfs]:
                       delete = True
                       j.operation = NFFG.OP_DELETE
               if delete:
                 log.debug("Deleting NFs from %s due to expiration during the "
                           "offline optimization: %s" %
-                          (self_nffg_name, i['SG'].network.nodes()))
-                for req in i['SG'].reqs:
+                          (self_nffg_name, i.network.nodes()))
+                for req in i.reqs:
                   getattr(self, self_nffg_name).del_edge(req.src.node.id,
                                                          req.dst.node.id, id=req.id)
                   log.debug("Deleting E2E requirement from %s on path %s" %
                             (self_nffg_name, req.sg_path))
-                setattr(self, self_nffg_name, online_mapping.MAP(i['SG'],
+                setattr(self, self_nffg_name, online_mapping.MAP(i,
                                               getattr(self, self_nffg_name),
                                               mode=NFFG.MODE_DEL,
                                               keep_input_unchanged=True))
@@ -488,7 +488,7 @@ class HybridOrchestrator():
     def del_exp_reqs_from_sum_req(self):
       log.debug("Deleting expired requests from sum_req.")
       for i in self.deleted_services:
-        self.remove_sg_from_sum_req(i['SG'])
+        self.remove_sg_from_sum_req(i)
 
     def set_online_resource_graph(self, request):
         # Resource sharing strategy
@@ -525,6 +525,9 @@ class HybridOrchestrator():
               self.merge_online_offline()
               res_to_use = self.received_resource
               if self.offline_status == HybridOrchestrator.OFFLINE_STATE_MERGED:
+                # An expiration could have happened since reoptimization and the
+                # just finished mergin.
+                self.del_exp_reqs_from_nffg("reoptimized_resource")
                 res_to_use = self.reoptimized_resource
                 log.debug("Setting online resource based on just now merged "
                           "reoptimized resource for request %s!"%request.id)
@@ -550,7 +553,8 @@ class HybridOrchestrator():
               self.offline_status = HybridOrchestrator.OFFLINE_STATE_INIT
               self.__when_to_apply_opt.applied()
             elif self.offline_status == HybridOrchestrator.OFFLINE_STATE_MERGED:
-              # An expiration could have happened while we were merging or waiting for res_online setting.
+              # An expiration could have happened while we were merging or
+              # waiting for res_online setting.
               self.del_exp_reqs_from_nffg("reoptimized_resource")
               self.res_online = self.__res_sharing_strat.get_online_resource(self.reoptimized_resource,
                                                                              self.res_offline)
@@ -650,8 +654,9 @@ class HybridOrchestrator():
                 log.debug("Time passed by checking merge success: %s "%
                           (datetime.datetime.now() - starting_time))
 
-    def MAP(self, request, resource):
+    def MAP(self, request, resource, deleted_services):
 
+        self.deleted_services = deleted_services
         # store received resource so the offline and online could use it
         # disregarding their order of initiation.
         self.received_resource = resource

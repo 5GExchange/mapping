@@ -156,8 +156,6 @@ class MappingSolutionFramework():
         self.last_req_num = 0
         self.request_gen_iter = 1
         self.copy_of_rg_network_topology = None
-        # This is used to let the orchestrators know which SGs have been expired.
-        self.deleted_services = []
 
         # Any MAP function ends before a new request arrives, no threads are
         # started, everything is sequential.
@@ -285,7 +283,6 @@ class MappingSolutionFramework():
             log.info(" | bt_branching_factor: " + str(config['bt_branching_factor']))
             log.info(" -----------------------------------------")
             self.__orchestrator_adaptor = OnlineOrchestratorAdaptor(
-                                            self.deleted_services,
                                             self.full_log_path,
                                             config_file_path, log)
         elif self.orchestrator_type == "hybrid":
@@ -323,7 +320,6 @@ class MappingSolutionFramework():
             log.info(" -----------------------------------------")
             self.__orchestrator_adaptor = HybridOrchestratorAdaptor(
                                             self.__network_topology_bare,
-                                            self.deleted_services,
                                             self.full_log_path,
                                             config_file_path,
                                             resource_type,
@@ -351,7 +347,6 @@ class MappingSolutionFramework():
             opt_params.update(**config['migration_handler_kwargs'])
 
             self.__orchestrator_adaptor = OfflineOrchestratorAdaptor(
-                self.deleted_services,
                 self.full_log_path,
                 config_file_path,
                 bool(config['optimize_already_mapped_nfs']),
@@ -518,9 +513,6 @@ class MappingSolutionFramework():
                     self.counters.purging_all_expired_requests()
                     purge_needed = True
                 self.__del_service(service, service['req_num'])
-                self.deleted_services.append(service)
-                log.debug("Number of requests in the deleted_services list: %s"
-                          %len(self.deleted_services))
 
     def create_request(self):
         """
