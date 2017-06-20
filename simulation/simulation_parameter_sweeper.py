@@ -26,14 +26,13 @@ class Simulation(threading.Thread):
     threading.Thread.__init__(self)
     self.config = config
     self.semaphore = semaphore
-    self.config.filename = saving_folder + "/" + \
-                           config['simulation_number'] + ".cfg"
+    base_filename = config['simulation_number'] + config['orchestrator']
+    self.config.filename = saving_folder + "/" + base_filename + ".cfg"
     os.system("touch %s"%self.config.filename)
     self.config.write()
     self.command = "nohup python MappingSimulationFrameWork.py %s/%s 2> %s/%s > " \
-                   "/dev/null" % (saving_folder, config['simulation_number']
-                                  + ".cfg", saving_folder,
-                                  config['simulation_number'] + ".err")
+                   "/dev/null" % (saving_folder, base_filename+".cfg", saving_folder,
+                                  base_filename + ".err")
 
   def run (self):
     semaphore_logging.acquire()
