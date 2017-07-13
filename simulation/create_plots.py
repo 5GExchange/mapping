@@ -1,17 +1,16 @@
 #!/usr/bin/python
 
-import json
 import matplotlib.pyplot as plt
 import sys, getopt
 import copy
 import time
 import datetime
-import itertools
 import random
+import sys
+import os
 
 
 def get_data(file_list, type, start, finish):
-
     mapped_reqs = []
     running_reqs = []
     refused_reqs = []
@@ -82,6 +81,7 @@ def get_data(file_list, type, start, finish):
 
     return mapped_reqs, running_reqs, refused_reqs
 
+
 def separte_files(log_files, method):
     files = []
     log_files += ","
@@ -93,8 +93,8 @@ def separte_files(log_files, method):
 
     return files
 
-def main(argv):
 
+def main(argv):
     mapped_online_req_list = None
     mapped_offline_req_list = None
     mapped_hybrid_req_list = None
@@ -109,17 +109,19 @@ def main(argv):
     finish_count = float('inf')
     
     try:
-        # for param in argv:
-        #     if param[0:2] != "--":
-        #         print 'Bad parameter: '+str(param)+'\nUse "python create_plots.py --help"'
-        #         sys.exit()
-        opts, args = getopt.getopt(argv,"hs:f:",["online_log_files=","offline_log_files=","hybrid_log_files=","bad_log"])
+        opts, args = getopt.getopt(argv, "hs:f:", ["online_log_files=", "offline_log_files=", "hybrid_log_files=", "dir="])
     except getopt.GetoptError:
-        print 'create_plots.py --online_log_files=<online_log_file1,online_log_file2,...> --offline_log_files=<offline_log_file1,offline_log_file2,...> --hybrid_log_files=<hybrid_log_file1,hybrid_log_file2,...> --bad_log'
+        print 'create_plots.py --online_log_files=<online_log_file1,online_log_file2,...> ' \
+              '--offline_log_files=<offline_log_file1,offline_log_file2,...> ' \
+              '--hybrid_log_files=<hybrid_log_file1,hybrid_log_file2,...> ' \
+              '--dir=<directory name>'
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print 'create_plots.py --online_log_files=<online_log_file1,online_log_file2, ...> --offline_log_files=<offline_log_file1,offline_log_file2, ...> --hybrid_log_files=<hybrid_log_file1,hybrid_log_file2, ...> --bad_log'
+            print 'create_plots.py --online_log_files=<online_log_file1,online_log_file2,...> ' \
+                  '--offline_log_files=<offline_log_file1,offline_log_file2,...> ' \
+                  '--hybrid_log_files=<hybrid_log_file1,hybrid_log_file2,...> ' \
+                  '--dir=<directory name>'
             sys.exit()
         elif opt in ("--online_log_files="):
             online_log_files = arg
@@ -127,6 +129,8 @@ def main(argv):
             offline_log_files = arg
         elif opt in ("--hybrid_log_files="):
             hybrid_log_files = arg
+        elif opt in ("--dir="):
+            path = arg
         elif opt == '-s':
             start_count = int(arg)
         elif opt == '-f':
@@ -137,25 +141,29 @@ def main(argv):
 
     try:
         online_files = separte_files(online_log_files, "Online")
-        mapped_online_req_list, running_online_req_list,refused_online_req_list = get_data(online_files,"Online",start_count, finish_count)
-        online_files = separte_files(online_log_files,"Online")
+        mapped_online_req_list, running_online_req_list, refused_online_req_list = get_data(online_files, "Online", start_count, finish_count)
     except Exception as e:
         print e
         print "The program runs without online log file."
 
     try:
         offline_files = separte_files(offline_log_files, "Offline")
-        mapped_offline_req_list, running_offline_req_list, refused_offline_req_list = get_data(offline_files, "Offline",start_count, finish_count)
+        mapped_offline_req_list, running_offline_req_list, refused_offline_req_list = get_data(offline_files, "Offline", start_count, finish_count)
     except Exception as e:
         print e
         print "The program runs without offline log file."
 
     try:
         hybrid_files = separte_files(hybrid_log_files, "Hybrid")
-        mapped_hybrid_req_list, running_hybrid_req_list, refused_hybrid_req_list = get_data(hybrid_files, "Hybrid",start_count, finish_count)
+        mapped_hybrid_req_list, running_hybrid_req_list, refused_hybrid_req_list = get_data(hybrid_files, "Hybrid", start_count, finish_count)
     except Exception as e:
         print e
         print "The program runs without hybrid log file."
+
+    if not os.path.exists(path):
+        os.mkdir(path)
+    if path[:-1] != "/":
+        path = path + "/"
 
     colors_ls = ['red', 'blue', 'green', 'yellow', 'skyblue', 'yellowgreen', 'black', 'orange', 'magenta', 'slategray']
     lines_ls = [[8, 4, 2, 4, 2, 4], [4, 2], [], [8, 4, 4, 2], [8, 4, 2, 4], [5, 2, 10, 5], []]
@@ -174,7 +182,7 @@ def main(argv):
     hy_act_lines = []
     hy_act_marker = []
 
-    #Create mapped picture
+    # Create mapped picture
     if mapped_online_req_list is not None:
         for element in mapped_online_req_list:
             try:
@@ -250,7 +258,7 @@ def main(argv):
     plt.ylabel('Accepted requests count')
     plt.xlabel('Incoming requests')
     lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1))
-    plt.savefig("mapped_requests" + str(time.ctime()).\
+    plt.savefig(path + "mapped_requests" + str(time.ctime()).\
             replace(' ', '_').replace(':', '-') + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
     plt.clf()
 
@@ -290,11 +298,11 @@ def main(argv):
     plt.ylabel('Accepted requests count')
     plt.xlabel('Sec')
     lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1))
-    plt.savefig("mapped_requests_with_time_axis_" + str(time.ctime()). \
+    plt.savefig(path + "mapped_requests_with_time_axis_" + str(time.ctime()). \
                 replace(' ', '_').replace(':', '-') + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
     plt.clf()
 
-    #Create Running picture
+    # Create Running picture
     if running_online_req_list is not None:
         i = 0
         for element in running_online_req_list:
@@ -330,7 +338,7 @@ def main(argv):
     plt.ylabel('Requests count')
     plt.xlabel('Incoming requests')
     lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1))
-    plt.savefig("running_requests" +  str (time.ctime()).\
+    plt.savefig(path + "running_requests" + str(time.ctime()).\
             replace(' ', '_').replace(':', '-') + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
     plt.clf()
 
@@ -370,12 +378,11 @@ def main(argv):
     plt.ylabel('Requests count')
     plt.xlabel('Sec')
     lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1))
-    plt.savefig("running_requests_with_time_axis" + str(time.ctime()). \
+    plt.savefig(path + "running_requests_with_time_axis" + str(time.ctime()). \
                 replace(' ', '_').replace(':', '-') + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
     plt.clf()
 
-
-    #Create refused picture
+    # Create refused picture
     if refused_online_req_list is not None:
         i = 0
         for element in refused_online_req_list:
@@ -412,7 +419,7 @@ def main(argv):
     lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1))
     plt.grid('on')
 
-    plt.savefig("refused_requests" + str(time.ctime()).\
+    plt.savefig(path + "refused_requests" + str(time.ctime()).\
             replace(' ', '_').replace(':', '-') + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
     plt.clf()
 
@@ -452,7 +459,7 @@ def main(argv):
     plt.ylabel('Refused requests count')
     plt.xlabel('Sec')
     lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1))
-    plt.savefig("refused_requests_with_time_axis" + str(time.ctime()). \
+    plt.savefig(path + "refused_requests_with_time_axis" + str(time.ctime()). \
                 replace(' ', '_').replace(':', '-') + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
 
     print("Creating plots are DONE :)")
