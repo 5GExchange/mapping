@@ -6,6 +6,8 @@ import sys, getopt
 import copy
 import time
 import datetime
+import itertools
+import random
 
 
 def get_data(file_list, type, start, finish):
@@ -134,8 +136,9 @@ def main(argv):
             sys.exit()
 
     try:
-        online_files = separte_files(online_log_files,"Online")
+        online_files = separte_files(online_log_files, "Online")
         mapped_online_req_list, running_online_req_list,refused_online_req_list = get_data(online_files,"Online",start_count, finish_count)
+        online_files = separte_files(online_log_files,"Online")
     except Exception as e:
         print e
         print "The program runs without online log file."
@@ -154,35 +157,134 @@ def main(argv):
         print e
         print "The program runs without hybrid log file."
 
+    colors_ls = ['red', 'blue', 'green', 'yellow', 'skyblue', 'yellowgreen', 'black', 'orange', 'magenta', 'slategray']
+    lines_ls = [[8, 4, 2, 4, 2, 4], [4, 2], [], [8, 4, 4, 2], [8, 4, 2, 4], [5, 2, 10, 5], []]
+    markers_ls = ['o', 'v', '+', 's', '*', '', '|', 'x']
+    colors_iter = iter(['red', 'blue', 'green', 'yellow', 'skyblue', 'yellowgreen', 'black', 'orange', 'magenta', 'slategray'])
+    lines_iter = iter([[8, 4, 2, 4, 2, 4], [4, 2], [], [8, 4, 4, 2], [8, 4, 2, 4], [5, 2, 10, 5], []])
+    markers_iter = iter(['o', 'v', '+', 's', '*', '', '|', 'x'])
+
+    on_act_colors = []
+    on_act_lines = []
+    on_act_marker = []
+    off_act_colors = []
+    off_act_lines = []
+    off_act_marker = []
+    hy_act_colors = []
+    hy_act_lines = []
+    hy_act_marker = []
+
     #Create mapped picture
     if mapped_online_req_list is not None:
         for element in mapped_online_req_list:
-            plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
+            try:
+                color = colors_iter.next()
+            except:
+                color = random.choice(colors_ls)
+            finally:
+                on_act_colors.append(color)
+            try:
+                line = lines_iter.next()
+            except:
+                line = random.choice(lines_ls)
+            finally:
+                on_act_lines.append(line)
+            try:
+                marker = markers_iter.next()
+            except:
+                marker = random.choice(markers_ls)
+            finally:
+                on_act_marker.append(marker)
+
+            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color, label=element["name"],
+                     dashes=line, marker=marker, markersize=5, markevery=40)
+
     if mapped_offline_req_list is not None:
         for element in mapped_offline_req_list:
-            plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
+            try:
+                color = colors_iter.next()
+            except:
+                color = random.choice(colors_ls)
+            finally:
+                off_act_colors.append(color)
+            try:
+                line = lines_iter.next()
+            except:
+                line = random.choice(lines_ls)
+            finally:
+                off_act_lines.append(line)
+            try:
+                marker = markers_iter.next()
+            except:
+                marker = random.choice(markers_ls)
+            finally:
+                off_act_marker.append(marker)
+
+            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color, label=element["name"],
+                     dashes=line, marker=marker, markersize=5, markevery=40)
+
     if mapped_hybrid_req_list is not None:
         for element in mapped_hybrid_req_list:
-            plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
+            try:
+                color = colors_iter.next()
+            except:
+                color = random.choice(colors_ls)
+            finally:
+                hy_act_colors.append(color)
+            try:
+                line = lines_iter.next()
+            except:
+                line = random.choice(lines_ls)
+            finally:
+                hy_act_lines.append(line)
+            try:
+                marker = markers_iter.next()
+            except:
+                marker = random.choice(markers_ls)
+            finally:
+                hy_act_marker.append(marker)
+            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color, label=element["name"],
+                     dashes=line, marker=marker, markersize=5, markevery=40)
     plt.grid('on')
     plt.title('Accepted incoming service requests')
     plt.ylabel('Accepted requests count')
     plt.xlabel('Incoming requests')
     lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1))
-    plt.savefig("mapped_requests" +  str (time.ctime()).\
+    plt.savefig("mapped_requests" + str(time.ctime()).\
             replace(' ', '_').replace(':', '-') + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
     plt.clf()
 
     # Create mapped picture with time axis
     if mapped_online_req_list is not None:
+        i = 0
         for element in mapped_online_req_list:
-            plt.plot(element["incoming_time"], element["request_list"], label=element["name"])
+            color = on_act_colors[i]
+            line = on_act_lines[i]
+            marker = on_act_marker[i]
+            plt.plot(element["incoming_time"], element["request_list"], color=color, label=element["name"],
+                     dashes=line, marker=marker, markersize=5, markevery=40)
+            i += 1
+
     if mapped_offline_req_list is not None:
+        i = 0
         for element in mapped_offline_req_list:
-            plt.plot(element["incoming_time"], element["request_list"], label=element["name"])
+            color = off_act_colors[i]
+            line = off_act_lines[i]
+            marker = off_act_marker[i]
+            plt.plot(element["incoming_time"], element["request_list"], color=color, label=element["name"],
+                     dashes=line, marker=marker, markersize=5, markevery=40)
+            i += 1
+
     if mapped_hybrid_req_list is not None:
+        i = 0
         for element in mapped_hybrid_req_list:
-            plt.plot(element["incoming_time"], element["request_list"], label=element["name"])
+            color = hy_act_colors[i]
+            line = hy_act_lines[i]
+            marker = hy_act_marker[i]
+            plt.plot(element["incoming_time"], element["request_list"], color=color, label=element["name"],
+                     dashes=line, marker=marker, markersize=5, markevery=40)
+            i += 1
+
     plt.grid('on')
     plt.title('Accepted incoming service requests')
     plt.ylabel('Accepted requests count')
@@ -194,14 +296,35 @@ def main(argv):
 
     #Create Running picture
     if running_online_req_list is not None:
+        i = 0
         for element in running_online_req_list:
-            plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
+            color = on_act_colors[i]
+            line = on_act_lines[i]
+            marker = on_act_marker[i]
+            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color, label=element["name"],
+                     dashes=line, marker=marker, markersize=5, markevery=40)
+            i += 1
+
     if running_offline_req_list is not None:
+        i = 0
         for element in running_offline_req_list:
-            plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
+            color = off_act_colors[i]
+            line = off_act_lines[i]
+            marker = off_act_marker[i]
+            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color, label=element["name"],
+                     dashes=line, marker=marker, markersize=5, markevery=40)
+            i += 1
+
     if running_hybrid_req_list is not None:
+        i = 0
         for element in running_hybrid_req_list:
-            plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
+            color = hy_act_colors[i]
+            line = hy_act_lines[i]
+            marker = hy_act_marker[i]
+            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color, label=element["name"],
+                     dashes=line, marker=marker, markersize=5, markevery=40)
+            i += 1
+
     plt.grid('on')
     plt.title('Currently running (mapped) requests in the NFFG')
     plt.ylabel('Requests count')
@@ -213,14 +336,35 @@ def main(argv):
 
     # Create Running picture with time axis
     if running_online_req_list is not None:
+        i = 0
         for element in running_online_req_list:
-            plt.plot(element["incoming_time"], element["request_list"], label=element["name"])
+            color = on_act_colors[i]
+            line = on_act_lines[i]
+            marker = on_act_marker[i]
+            plt.plot(element["incoming_time"], element["request_list"], color=color, label=element["name"],
+                     dashes=line, marker=marker, markersize=5, markevery=40)
+            i += 1
+
     if running_offline_req_list is not None:
+        i = 0
         for element in running_offline_req_list:
-            plt.plot(element["incoming_time"], element["request_list"], label=element["name"])
+            color = off_act_colors[i]
+            line = off_act_lines[i]
+            marker = off_act_marker[i]
+            plt.plot(element["incoming_time"], element["request_list"], color=color, label=element["name"],
+                     dashes=line, marker=marker, markersize=5, markevery=40)
+            i += 1
+
     if running_hybrid_req_list is not None:
+        i = 0
         for element in running_hybrid_req_list:
-            plt.plot(element["incoming_time"], element["request_list"], label=element["name"])
+            color = hy_act_colors[i]
+            line = hy_act_lines[i]
+            marker = hy_act_marker[i]
+            plt.plot(element["incoming_time"], element["request_list"], color=color, label=element["name"],
+                     dashes=line, marker=marker, markersize=5, markevery=40)
+            i += 1
+
     plt.grid('on')
     plt.title('Currently running (mapped) requests in the NFFG')
     plt.ylabel('Requests count')
@@ -233,14 +377,34 @@ def main(argv):
 
     #Create refused picture
     if refused_online_req_list is not None:
+        i = 0
         for element in refused_online_req_list:
-            plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
+            color = on_act_colors[i]
+            line = on_act_lines[i]
+            marker = on_act_marker[i]
+            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color, label=element["name"],
+                     dashes=line, marker=marker, markersize=5, markevery=40)
+            i += 1
+
     if refused_offline_req_list is not None:
+        i = 0
         for element in refused_offline_req_list:
-            plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
+            color = off_act_colors[i]
+            line = off_act_lines[i]
+            marker = off_act_marker[i]
+            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color, label=element["name"],
+                     dashes=line, marker=marker, markersize=5, markevery=40)
+            i += 1
+
     if refused_hybrid_req_list is not None:
+        i = 0
         for element in refused_hybrid_req_list:
-            plt.plot(range(0,len(element["request_list"])), element["request_list"],label=element["name"])
+            color = hy_act_colors[i]
+            line = hy_act_lines[i]
+            marker = hy_act_marker[i]
+            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color, label=element["name"],
+                     dashes=line, marker=marker, markersize=5, markevery=40)
+            i += 1
 
     plt.title('Refused requests during the simulation')
     plt.ylabel('Refused requests count')
@@ -248,33 +412,41 @@ def main(argv):
     lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1))
     plt.grid('on')
 
-    """
-    col_labels = ['Configuration']
-    row_labels = ['hybrid0']
-    table_vals = [[11]]
-    # the rectangle is where I want to place the table
-    the_table = plt.table(cellText=table_vals,
-                          colWidths=[0.1] * 3,
-                          rowLabels=row_labels,
-                          colLabels=col_labels,
-                          loc='lower right',
-                          bbox=[0.1,-0.3,0.2,0.2])
-    plt.show()
-    """
-    plt.savefig("refused_requests" +  str (time.ctime()).\
+    plt.savefig("refused_requests" + str(time.ctime()).\
             replace(' ', '_').replace(':', '-') + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
     plt.clf()
 
     # Create refused picture with time
     if refused_online_req_list is not None:
+        i = 0
         for element in refused_online_req_list:
-            plt.plot(element["incoming_time"], element["request_list"], label=element["name"])
+            color = on_act_colors[i]
+            line = on_act_lines[i]
+            marker = on_act_marker[i]
+            plt.plot(element["incoming_time"], element["request_list"], color=color, label=element["name"],
+                     dashes=line, marker=marker, markersize=5, markevery=40)
+            i += 1
+
     if refused_offline_req_list is not None:
+        i = 0
         for element in refused_offline_req_list:
-            plt.plot(element["incoming_time"], element["request_list"], label=element["name"])
+            color = off_act_colors[i]
+            line = off_act_lines[i]
+            marker = off_act_marker[i]
+            plt.plot(element["incoming_time"], element["request_list"], color=color, label=element["name"],
+                     dashes=line, marker=marker, markersize=5, markevery=40)
+            i += 1
+
     if refused_hybrid_req_list is not None:
+        i = 0
         for element in refused_hybrid_req_list:
-            plt.plot(element["incoming_time"], element["request_list"], label=element["name"])
+            color = hy_act_colors[i]
+            line = hy_act_lines[i]
+            marker = hy_act_marker[i]
+            plt.plot(element["incoming_time"], element["request_list"], color=color, label=element["name"],
+                     dashes=line, marker=marker, markersize=5, markevery=40)
+            i += 1
+
     plt.grid('on')
     plt.title('Refused requests during the simulation')
     plt.ylabel('Refused requests count')
