@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import matplotlib.pyplot as plt
+from matplotlib import *
 import sys, getopt
 import copy
 import time
@@ -8,6 +9,8 @@ import datetime
 import random
 import sys
 import os
+import re
+import argcomplete, argparse
 
 
 def get_data(file_list, type, start, finish):
@@ -26,72 +29,214 @@ def get_data(file_list, type, start, finish):
     refused_requests_dict["request_list"] = []
     refused_requests_dict["incoming_time"] = []
     refused_requests_dict["name"] = ""
+    file_list_iter = 0
 
-    for file in file_list:
-        start_time = 0
+    for element in file_list:
+        start_time, data_point_count = 0, 0
         name = ""
-        data_point_count = 0
-        for line in open(file):
-            if start_time == 0:
-                start_time = datetime.datetime.strptime(line[:22], '%Y-%m-%d %H:%M:%S,%f')
-            if "| Orchestrator:" in line:
-                name = line[line.find("| Orchestrator:")+15:]
-            if "| What to optimize:" in line:
-                name += "_" + line[line.find("| What to optimize:")+19:]
-            if "| When to optimize:" in line:
-                name += "_" + line[line.find("| When to optimize:")+19:]
-            if "| Optimize strategy:" in line:
-                name += "_" + line[line.find("| Optimize strategy:")+20:]
-            if "Mapped service_requests count:" in line:
-                data_point_count += 1
-            if start <= data_point_count <= finish:
+        if isinstance(element, basestring) or len(element) == 1:
+            if not isinstance(element, basestring): # ez lehet nem kell ide
+                element = str(element[0])
+            for line in open(element):
+                if start_time == 0:
+                    start_time = datetime.datetime.strptime(line[:22], '%Y-%m-%d %H:%M:%S,%f')
+                if "| Orchestrator:" in line:
+                    name = line[line.find("| Orchestrator:")+15:]
+                if "| What to optimize:" in line:
+                    name += "_" + line[line.find("| What to optimize:")+19:]
+                if "| When to optimize:" in line:
+                    name += "_" + line[line.find("| When to optimize:")+19:]
+                if "| Optimize strategy:" in line:
+                    name += "_" + line[line.find("| Optimize strategy:")+20:]
                 if "Mapped service_requests count:" in line:
-                    count = line[line.find("Mapped service_requests count:")+31:]
-                    mapped_requests_dict["request_list"].append(int(count))
-                    sec = ((datetime.datetime.strptime(line[:22], '%Y-%m-%d %H:%M:%S,%f')) - start_time).total_seconds()
-                    mapped_requests_dict["incoming_time"].append(sec)
-                elif "Running service_requests count:" in line:
-                    count = line[line.find("Running service_requests count:")+32:]
-                    running_requests_dict["request_list"].append(int(count))
-                    sec = ((datetime.datetime.strptime(line[:22], '%Y-%m-%d %H:%M:%S,%f')) - start_time).total_seconds()
-                    running_requests_dict["incoming_time"].append(sec)
-                elif "Refused service_requests count:" in line:
-                    count = line[line.find("Refused service_requests count:")+32:]
-                    refused_requests_dict["request_list"].append(int(count))
-                    sec = ((datetime.datetime.strptime(line[:22], '%Y-%m-%d %H:%M:%S,%f')) - start_time).total_seconds()
-                    refused_requests_dict["incoming_time"].append(sec)
-                
-        mapped_requests_dict["name"] = (name+"_"+str(file_list.index(file))).replace("\n","")
-        mapped_reqs.append(copy.copy(mapped_requests_dict))
-        mapped_requests_dict["name"] = ""
-        mapped_requests_dict["request_list"] = []
-        mapped_requests_dict["incoming_time"] = []
+                    data_point_count += 1
+                if start <= data_point_count <= finish:
+                    if "Mapped service_requests count:" in line:
+                        count = line[line.find("Mapped service_requests count:")+31:]
+                        mapped_requests_dict["request_list"].append(int(count))
+                        sec = ((datetime.datetime.strptime(line[:22], '%Y-%m-%d %H:%M:%S,%f')) - start_time).total_seconds()
+                        mapped_requests_dict["incoming_time"].append(sec)
+                    elif "Running service_requests count:" in line:
+                        count = line[line.find("Running service_requests count:")+32:]
+                        running_requests_dict["request_list"].append(int(count))
+                        sec = ((datetime.datetime.strptime(line[:22], '%Y-%m-%d %H:%M:%S,%f')) - start_time).total_seconds()
+                        running_requests_dict["incoming_time"].append(sec)
+                    elif "Refused service_requests count:" in line:
+                        count = line[line.find("Refused service_requests count:")+32:]
+                        refused_requests_dict["request_list"].append(int(count))
+                        sec = ((datetime.datetime.strptime(line[:22], '%Y-%m-%d %H:%M:%S,%f')) - start_time).total_seconds()
+                        refused_requests_dict["incoming_time"].append(sec)
 
-        running_requests_dict["name"] = (name+"_"+str(file_list.index(file))).replace("\n","")
-        running_reqs.append(copy.copy(running_requests_dict))
-        running_requests_dict["name"] = ""
-        running_requests_dict["request_list"] = []
-        running_requests_dict["incoming_time"] = []
+            mapped_requests_dict["name"] = (name+"_"+str(file_list[file_list_iter])).replace("\n", "")
+            mapped_reqs.append(copy.copy(mapped_requests_dict))
+            mapped_requests_dict["name"] = ""
+            mapped_requests_dict["request_list"] = []
+            mapped_requests_dict["incoming_time"] = []
 
-        refused_requests_dict["name"] = (name+"_"+str(file_list.index(file))).replace("\n","")
-        refused_reqs.append(copy.copy(refused_requests_dict))
-        refused_requests_dict["name"] = ""
-        refused_requests_dict["request_list"] = []
-        refused_requests_dict["incoming_time"] = []
+            running_requests_dict["name"] = (name+"_"+str(file_list[file_list_iter])).replace("\n", "")
+            running_reqs.append(copy.copy(running_requests_dict))
+            running_requests_dict["name"] = ""
+            running_requests_dict["request_list"] = []
+            running_requests_dict["incoming_time"] = []
+
+            refused_requests_dict["name"] = (name+"_"+str(file_list[file_list_iter])).replace("\n", "")
+            refused_reqs.append(copy.copy(refused_requests_dict))
+            refused_requests_dict["name"] = ""
+            refused_requests_dict["request_list"] = []
+            refused_requests_dict["incoming_time"] = []
+
+        else:
+            start_time, data_point_count = 0, 0
+            name = ""
+            mapped_reqs_to_avg, running_reqs_to_avg, refused_reqs_to_avg = [], [], []
+            for file in element:
+                for line in open(file):
+                    if start_time == 0:
+                        start_time = datetime.datetime.strptime(line[:22], '%Y-%m-%d %H:%M:%S,%f')
+                    if "| Orchestrator:" in line:
+                        name = line[line.find("| Orchestrator:") + 15:]
+                    if "| What to optimize:" in line:
+                        name += "_" + line[line.find("| What to optimize:") + 19:]
+                    if "| When to optimize:" in line:
+                        name += "_" + line[line.find("| When to optimize:") + 19:]
+                    if "| Optimize strategy:" in line:
+                        name += "_" + line[line.find("| Optimize strategy:") + 20:]
+                    if "Mapped service_requests count:" in line:
+                        data_point_count += 1
+                    if start <= data_point_count <= finish:
+                        if "Mapped service_requests count:" in line:
+                            count = line[line.find("Mapped service_requests count:") + 31:]
+                            mapped_requests_dict["request_list"].append(int(count))
+                            sec = ((datetime.datetime.strptime(line[:22],
+                                                               '%Y-%m-%d %H:%M:%S,%f')) - start_time).total_seconds()
+                            mapped_requests_dict["incoming_time"].append(sec)
+                        elif "Running service_requests count:" in line:
+                            count = line[line.find("Running service_requests count:") + 32:]
+                            running_requests_dict["request_list"].append(int(count))
+                            sec = ((datetime.datetime.strptime(line[:22],
+                                                               '%Y-%m-%d %H:%M:%S,%f')) - start_time).total_seconds()
+                            running_requests_dict["incoming_time"].append(sec)
+                        elif "Refused service_requests count:" in line:
+                            count = line[line.find("Refused service_requests count:") + 32:]
+                            refused_requests_dict["request_list"].append(int(count))
+                            sec = ((datetime.datetime.strptime(line[:22],
+                                                               '%Y-%m-%d %H:%M:%S,%f')) - start_time).total_seconds()
+                            refused_requests_dict["incoming_time"].append(sec)
+
+                mapped_requests_dict["name"] = (name + "_AVG_" + str(file_list[file_list_iter])).replace("\n", "")
+                mapped_reqs_to_avg.append(copy.copy(mapped_requests_dict))
+                len_mapped_requests_dict = len(mapped_requests_dict["request_list"])
+
+                running_requests_dict["name"] = (name + "_AVG_" + str(file_list[file_list_iter])).replace("\n", "")
+                running_reqs_to_avg.append(copy.copy(running_requests_dict))
+                len_running_requests_dict = len(running_requests_dict["request_list"])
+
+                refused_requests_dict["name"] = (name + "_AVG_" + str(file_list[file_list_iter])).replace("\n", "")
+                refused_reqs_to_avg.append(copy.copy(refused_requests_dict))
+                len_refused_requests_dict = len(refused_requests_dict["request_list"])
+
+                mapped_requests_dict["name"] = ""
+                mapped_requests_dict["request_list"] = []
+                mapped_requests_dict["incoming_time"] = []
+                running_requests_dict["name"] = ""
+                running_requests_dict["request_list"] = []
+                running_requests_dict["incoming_time"] = []
+                refused_requests_dict["name"] = ""
+                refused_requests_dict["request_list"] = []
+                refused_requests_dict["incoming_time"] = []
+
+            # Average dicts
+            avg_mapped_requests_dict = dict()
+            avg_mapped_requests_dict["request_list"] = []
+            avg_mapped_requests_dict["incoming_time"] = []
+            avg_mapped_requests_dict["name"] = ""
+            avg_running_requests_dict = dict()
+            avg_running_requests_dict["request_list"] = []
+            avg_running_requests_dict["incoming_time"] = []
+            avg_running_requests_dict["name"] = ""
+            avg_refused_requests_dict = dict()
+            avg_refused_requests_dict["request_list"] = []
+            avg_refused_requests_dict["incoming_time"] = []
+            avg_refused_requests_dict["name"] = ""
+
+            inc_summa, req_summa, log_file_counter = 0, 0, 0
+
+            for i in range(0, len_mapped_requests_dict):
+                for m in mapped_reqs_to_avg:
+                    inc_summa += m["incoming_time"][i]
+                    req_summa += m["request_list"][i]
+                    log_file_counter += 1
+                avg_mapped_requests_dict["incoming_time"].append(round(inc_summa / log_file_counter, 2))
+                avg_mapped_requests_dict["request_list"].append(round(req_summa / log_file_counter, 2))
+                avg_mapped_requests_dict["name"] = mapped_reqs_to_avg[0]["name"]
+                inc_summa, req_summa, log_file_counter = 0, 0, 0
+
+            for i in range(0, len_running_requests_dict):
+                for m in running_reqs_to_avg:
+                    inc_summa += m["incoming_time"][i]
+                    req_summa += m["request_list"][i]
+                    log_file_counter += 1
+                avg_running_requests_dict["incoming_time"].append(round(inc_summa / log_file_counter, 2))
+                avg_running_requests_dict["request_list"].append(round(req_summa / log_file_counter, 2))
+                avg_running_requests_dict["name"] = running_reqs_to_avg[0]["name"]
+                inc_summa, req_summa, log_file_counter = 0, 0, 0
+
+            for i in range(0, len_refused_requests_dict):
+                for m in running_reqs_to_avg:
+                    inc_summa += m["incoming_time"][i]
+                    req_summa += m["request_list"][i]
+                    log_file_counter += 1
+                avg_refused_requests_dict["incoming_time"].append(round(inc_summa / log_file_counter, 2))
+                avg_refused_requests_dict["request_list"].append(round(req_summa / log_file_counter, 2))
+                avg_refused_requests_dict["name"] = refused_reqs_to_avg[0]["name"]
+                inc_summa, req_summa, log_file_counter = 0, 0, 0
+
+            mapped_reqs.append(copy.copy(avg_mapped_requests_dict))
+            running_reqs.append(copy.copy(avg_running_requests_dict))
+            refused_reqs.append(copy.copy(avg_refused_requests_dict))
+
+        file_list_iter += 1
 
     return mapped_reqs, running_reqs, refused_reqs
 
 
-def separte_files(log_files, method):
-    files = []
-    log_files += ","
-    while "," in log_files:
-        file = log_files[:log_files.find(",")]
-        files.append(file)
-        print "Read "+method+" file:"+file
-        log_files = log_files[log_files.find(",") + 1:]
+def separate_and_avg(log_files):
+    # Separate
+    result = []
+    if "[" in log_files:
+        avg_log_files = log_files.split(",")
 
-    return files
+        # where are [ and ] characters:
+        start = [i for i, s in enumerate(avg_log_files) if '[' in s]
+        end = [i for i, s in enumerate(avg_log_files) if ']' in s]
+
+        if len(start) != len(end):
+            print("The number of [ and ] is not equal!!")
+            raise
+
+        # delete special characters:
+        avg_log_files = ([s.replace('[', '') for s in avg_log_files])
+        avg_log_files = ([s.replace(']', '') for s in avg_log_files])
+
+        # merge those items in the list that were in the same parentheses
+        correction = 0
+        for k in range(0, len(start)):
+            avg_log_files[(start[k]-correction):(end[k]+1-correction)] = \
+                [','.join(avg_log_files[(start[k]-correction):(end[k]+1-correction)])]
+            correction += end[k] - start[k]
+
+        for element in avg_log_files:
+            while "." in element:
+                tmp_element = []
+                element = element.split(",")
+                for i in element:
+                    if i!='':
+                        tmp_element.append(i)
+                        element = tmp_element
+                result.append(element)
+        return result
+    else:
+        return log_files.split(",")
 
 
 def main(argv):
@@ -107,21 +252,25 @@ def main(argv):
 
     start_count = 0
     finish_count = float('inf')
-    
+    path = ""
+
     try:
-        opts, args = getopt.getopt(argv, "hs:f:", ["online_log_files=", "offline_log_files=", "hybrid_log_files=", "dir="])
+        opts, args = getopt.getopt(argv, "hs:f:", ["online_log_files=", "offline_log_files=", "hybrid_log_files=",
+                                                   "dir=", "s=", "f="])
     except getopt.GetoptError:
-        print 'create_plots.py --online_log_files=<online_log_file1,online_log_file2,...> ' \
-              '--offline_log_files=<offline_log_file1,offline_log_file2,...> ' \
-              '--hybrid_log_files=<hybrid_log_file1,hybrid_log_file2,...> ' \
-              '--dir=<directory name>'
+        print 'create_plots.py --online_log_files=<online_log_file1,[online_log_file2,online_log_file3],' \
+                  'online_log_file4 ...> ' \
+                  '--offline_log_files=<offline_log_file1,offline_log_file2,...> ' \
+                  '--hybrid_log_files=<hybrid_log_file1,hybrid_log_file2,...> ' \
+                  '--dir=<directory name> -s, -f'
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print 'create_plots.py --online_log_files=<online_log_file1,online_log_file2,...> ' \
+            print 'create_plots.py --online_log_files=<online_log_file1,[online_log_file2,online_log_file3],' \
+                  'online_log_file4 ...> ' \
                   '--offline_log_files=<offline_log_file1,offline_log_file2,...> ' \
                   '--hybrid_log_files=<hybrid_log_file1,hybrid_log_file2,...> ' \
-                  '--dir=<directory name>'
+                  '--dir=<directory name> -s, -f'
             sys.exit()
         elif opt in ("--online_log_files="):
             online_log_files = arg
@@ -140,25 +289,28 @@ def main(argv):
             sys.exit()
 
     try:
-        online_files = separte_files(online_log_files, "Online")
+        online_files = separate_and_avg(online_log_files)
         mapped_online_req_list, running_online_req_list, refused_online_req_list = get_data(online_files, "Online", start_count, finish_count)
     except Exception as e:
         print e
         print "The program runs without online log file."
 
     try:
-        offline_files = separte_files(offline_log_files, "Offline")
+        offline_files = separate_and_avg(offline_log_files)
         mapped_offline_req_list, running_offline_req_list, refused_offline_req_list = get_data(offline_files, "Offline", start_count, finish_count)
     except Exception as e:
         print e
         print "The program runs without offline log file."
 
     try:
-        hybrid_files = separte_files(hybrid_log_files, "Hybrid")
+        hybrid_files = separate_and_avg(hybrid_log_files)
         mapped_hybrid_req_list, running_hybrid_req_list, refused_hybrid_req_list = get_data(hybrid_files, "Hybrid", start_count, finish_count)
     except Exception as e:
         print e
         print "The program runs without hybrid log file."
+
+    if path == "":
+       raise ValueError("Have to give a saving directory! Example: --dir=test100")
 
     if not os.path.exists(path):
         os.mkdir(path)
@@ -172,15 +324,8 @@ def main(argv):
     lines_iter = iter([[8, 4, 2, 4, 2, 4], [4, 2], [], [8, 4, 4, 2], [8, 4, 2, 4], [5, 2, 10, 5], []])
     markers_iter = iter(['o', 'v', '+', 's', '*', '', '|', 'x'])
 
-    on_act_colors = []
-    on_act_lines = []
-    on_act_marker = []
-    off_act_colors = []
-    off_act_lines = []
-    off_act_marker = []
-    hy_act_colors = []
-    hy_act_lines = []
-    hy_act_marker = []
+    on_act_colors, on_act_lines, on_act_marker, off_act_colors, off_act_lines, off_act_marker, hy_act_colors, \
+                                                    hy_act_lines, hy_act_marker = [], [], [], [], [], [], [], [], []
 
     # Create mapped picture
     if mapped_online_req_list is not None:
@@ -189,20 +334,20 @@ def main(argv):
                 color = colors_iter.next()
             except:
                 color = random.choice(colors_ls)
-            finally:
-                on_act_colors.append(color)
+
             try:
                 line = lines_iter.next()
             except:
                 line = random.choice(lines_ls)
-            finally:
-                on_act_lines.append(line)
+
             try:
                 marker = markers_iter.next()
             except:
                 marker = random.choice(markers_ls)
             finally:
                 on_act_marker.append(marker)
+                on_act_colors.append(color)
+                on_act_lines.append(line)
 
             plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color, label=element["name"],
                      dashes=line, marker=marker, markersize=5, markevery=40)
@@ -213,20 +358,18 @@ def main(argv):
                 color = colors_iter.next()
             except:
                 color = random.choice(colors_ls)
-            finally:
-                off_act_colors.append(color)
             try:
                 line = lines_iter.next()
             except:
                 line = random.choice(lines_ls)
-            finally:
-                off_act_lines.append(line)
             try:
                 marker = markers_iter.next()
             except:
                 marker = random.choice(markers_ls)
             finally:
                 off_act_marker.append(marker)
+                off_act_colors.append(color)
+                off_act_lines.append(line)
 
             plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color, label=element["name"],
                      dashes=line, marker=marker, markersize=5, markevery=40)
@@ -237,29 +380,31 @@ def main(argv):
                 color = colors_iter.next()
             except:
                 color = random.choice(colors_ls)
-            finally:
-                hy_act_colors.append(color)
             try:
                 line = lines_iter.next()
             except:
                 line = random.choice(lines_ls)
-            finally:
-                hy_act_lines.append(line)
             try:
                 marker = markers_iter.next()
             except:
                 marker = random.choice(markers_ls)
             finally:
                 hy_act_marker.append(marker)
+                hy_act_colors.append(color)
+                hy_act_lines.append(line)
+
             plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color, label=element["name"],
                      dashes=line, marker=marker, markersize=5, markevery=40)
     plt.grid('on')
     plt.title('Accepted incoming service requests')
     plt.ylabel('Accepted requests count')
     plt.xlabel('Incoming requests')
+    plt.xticks()
     lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1))
-    plt.savefig(path + "mapped_requests" + str(time.ctime()).\
-            replace(' ', '_').replace(':', '-') + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
+    if start_count != 0 or finish_count != float('inf'):
+        plt.xlim(xmin=start_count, xmax=finish_count)
+
+    plt.savefig(path + "mapped_requests" + str(time.ctime()).replace(' ', '_').replace(':', '-') + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
     plt.clf()
 
     # Create mapped picture with time axis
@@ -297,9 +442,11 @@ def main(argv):
     plt.title('Accepted incoming service requests')
     plt.ylabel('Accepted requests count')
     plt.xlabel('Sec')
-    lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1))
-    plt.savefig(path + "mapped_requests_with_time_axis_" + str(time.ctime()). \
-                replace(' ', '_').replace(':', '-') + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
+    lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1), numpoints=1)
+
+    #TODO: fix zoom with time axis too
+    plt.savefig(path + "mapped_requests_with_time_axis_" + str(time.ctime()).replace(' ', '_').replace(':', '-') + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
+
     plt.clf()
 
     # Create Running picture
@@ -338,8 +485,10 @@ def main(argv):
     plt.ylabel('Requests count')
     plt.xlabel('Incoming requests')
     lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1))
-    plt.savefig(path + "running_requests" + str(time.ctime()).\
-            replace(' ', '_').replace(':', '-') + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
+    if start_count != 0 or finish_count != float('inf'):
+        plt.xlim(xmin=start_count, xmax=finish_count)
+    plt.savefig(path + "running_requests" + str(time.ctime()). \
+                replace(' ', '_').replace(':', '-') + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
     plt.clf()
 
     # Create Running picture with time axis
@@ -378,6 +527,8 @@ def main(argv):
     plt.ylabel('Requests count')
     plt.xlabel('Sec')
     lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1))
+
+    # TODO: fix zoom with time axis too
     plt.savefig(path + "running_requests_with_time_axis" + str(time.ctime()). \
                 replace(' ', '_').replace(':', '-') + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
     plt.clf()
@@ -417,10 +568,12 @@ def main(argv):
     plt.ylabel('Refused requests count')
     plt.xlabel('Incoming requests')
     lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1))
+    if start_count != 0 or finish_count != float('inf'):
+        plt.xlim(xmin=start_count, xmax=finish_count)
     plt.grid('on')
 
-    plt.savefig(path + "refused_requests" + str(time.ctime()).\
-            replace(' ', '_').replace(':', '-') + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
+    plt.savefig(path + "refused_requests" + str(time.ctime()). \
+                replace(' ', '_').replace(':', '-') + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
     plt.clf()
 
     # Create refused picture with time
@@ -459,6 +612,8 @@ def main(argv):
     plt.ylabel('Refused requests count')
     plt.xlabel('Sec')
     lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1))
+
+    # TODO: fix zoom with time axis too
     plt.savefig(path + "refused_requests_with_time_axis" + str(time.ctime()). \
                 replace(' ', '_').replace(':', '-') + ".png", bbox_extra_artists=(lgd,), bbox_inches='tight')
 
