@@ -32,7 +32,7 @@ def get_data(file_list, type, start, finish, nice):
         start_time, data_point_count = 0, 0
         name = ""
         if isinstance(element, basestring) or len(element) == 1:
-            if not isinstance(element, basestring): # ez lehet nem kell ide
+            if not isinstance(element, basestring):
                 element = str(element[0])
             for line in open(element):
                 if start_time == 0:
@@ -97,7 +97,7 @@ def get_data(file_list, type, start, finish, nice):
                 refused_requests_dict["name"] = ""
                 refused_requests_dict["request_list"] = []
                 refused_requests_dict["incoming_time"] = []
-
+                data_point_count = 0
                 for line in open(file):
                     if start_time == 0:
                         start_time = datetime.datetime.strptime(line[:22], '%Y-%m-%d %H:%M:%S,%f')
@@ -254,14 +254,14 @@ def main(argv):
     marker_size = 4
     try:
         opts, args = getopt.getopt(argv, "hs:f:", ["online_log_files=", "offline_log_files=", "hybrid_log_files=",
-                                                   "dir=", "s", "f", "nice", "format=", "nolegend", "markersize=",
-                                                   "markevery="])
+                                                   "dir=", "nice", "format=", "nolegend", "markersize=",
+                                                   "markevery=", "s=", "f="])
     except getopt.GetoptError:
         print 'Invalid argument!!!  create_plots.py ' \
               '--online_log_files=<online_log_file1,[online_log_file2,online_log_file3],' \
               'online_log_file4 ...> --offline_log_files=<offline_log_file1,offline_log_file2,...> ' \
               '--hybrid_log_files=<hybrid_log_file1,hybrid_log_file2,...> ' \
-              '--dir=<directory name> -s<start of interval> -f<end of interval> --nice --format=<pdf or png> ' \
+              '--dir=<directory name> --s=<start of interval> --f=<end of interval> --nice --format=<pdf or png> ' \
               '--nolegend --markersize=<recommended:5> --markevery=<recommended:40-70>'
         sys.exit(2)
     for opt, arg in opts:
@@ -270,7 +270,7 @@ def main(argv):
               '--online_log_files=<online_log_file1,[online_log_file2,online_log_file3],' \
               'online_log_file4 ...> --offline_log_files=<offline_log_file1,offline_log_file2,...> ' \
               '--hybrid_log_files=<hybrid_log_file1,hybrid_log_file2,...> ' \
-              '--dir=<directory name> -s<start of interval> -f<end of interval> --nice --format=<pdf or png> ' \
+              '--dir=<directory name> --s=<start of interval> --f=<end of interval> --nice --format=<pdf or png> ' \
               '--nolegend --markersize=<recommended:5> --markevery=<recommended:40-70>'
             sys.exit()
         elif opt in ("--online_log_files="):
@@ -281,9 +281,9 @@ def main(argv):
             hybrid_log_files = arg
         elif opt in ("--dir="):
             path = arg
-        elif opt == '-s':
+        elif opt in ("--s="):
             start_count = int(arg)
-        elif opt == '-f':
+        elif opt in ("--f="):
             finish_count = int(arg)
         elif opt in ("--nice"):
             nice = True
@@ -307,6 +307,7 @@ def main(argv):
         online_files = separate_and_avg(online_log_files)
         mapped_online_req_list, running_online_req_list, refused_online_req_list = \
             get_data(online_files, "Online", start_count, finish_count, nice)
+
     except Exception as e:
         print e
         print "The program runs without online log file."
@@ -341,6 +342,7 @@ def main(argv):
     colors_iter = iter(['red', 'blue', 'green', 'yellow', 'skyblue', 'yellowgreen', 'black', 'orange', 'magenta', 'slategray'])
     lines_iter = iter([[8, 4, 2, 4, 2, 4], [4, 2], [], [8, 4, 4, 2], [8, 4, 2, 4], [5, 2, 10, 5], []])
     markers_iter = iter(['o', 'v', '+', 's', '*', '', '|', 'x'])
+    ticks = []
 
     on_act_colors, on_act_lines, on_act_marker, off_act_colors, off_act_lines, off_act_marker, hy_act_colors, \
                                                     hy_act_lines, hy_act_marker = [], [], [], [], [], [], [], [], []
@@ -352,12 +354,10 @@ def main(argv):
                 color = colors_iter.next()
             except:
                 color = random.choice(colors_ls)
-
             try:
                 line = lines_iter.next()
             except:
                 line = random.choice(lines_ls)
-
             try:
                 marker = markers_iter.next()
             except:
@@ -367,8 +367,9 @@ def main(argv):
                 on_act_colors.append(color)
                 on_act_lines.append(line)
 
-            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color, label=element["name"],
-                     dashes=line, marker=marker, markersize=marker_size, markevery=mark_every)
+            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color,
+                         label=element["name"], dashes=line, marker=marker, markersize=marker_size,
+                         markevery=mark_every)
 
     if mapped_offline_req_list is not None:
         for element in mapped_offline_req_list:
@@ -413,6 +414,7 @@ def main(argv):
 
             plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color, label=element["name"],
                      dashes=line, marker=marker, markersize=marker_size, markevery=mark_every)
+
     plt.grid('on')
     plt.title('Accepted incoming service requests')
     plt.ylabel('Accepted requests count')
@@ -422,12 +424,12 @@ def main(argv):
     if start_count != 0 or finish_count != float('inf'):
         plt.xlim(xmin=start_count, xmax=finish_count)
 
-    lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1))
-
+    lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1), numpoints=1)
     if nolegend:
         plt.legend().set_visible(False)
 
-    plt.savefig(path + "mapped_requests" + str(time.ctime()).replace(' ', '_').replace(':', '-') + "." + format, bbox_extra_artists=(lgd,), bbox_inches='tight')
+    plt.savefig(path + "mapped_requests" + str(time.ctime()).replace(' ', '_').replace(':', '-') + "." + format,
+                bbox_extra_artists=(lgd,), bbox_inches='tight')
     plt.clf()
 
     # Create mapped picture with time axis
@@ -511,7 +513,7 @@ def main(argv):
     plt.title('Currently running (mapped) requests in the NFFG')
     plt.ylabel('Requests count')
     plt.xlabel('Incoming requests')
-    lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1))
+    lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1), numpoints=1)
     if start_count != 0 or finish_count != float('inf'):
         plt.xlim(xmin=start_count, xmax=finish_count)
     if nolegend:
@@ -555,7 +557,7 @@ def main(argv):
     plt.title('Currently running (mapped) requests in the NFFG')
     plt.ylabel('Requests count')
     plt.xlabel('Sec')
-    lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1))
+    lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1), numpoints=1)
     if nolegend:
         plt.legend().set_visible(False)
     # TODO: fix zoom with time axis too
@@ -597,7 +599,7 @@ def main(argv):
     plt.title('Refused requests during the simulation')
     plt.ylabel('Refused requests count')
     plt.xlabel('Incoming requests')
-    lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1))
+    lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1), numpoints=1)
     if start_count != 0 or finish_count != float('inf'):
         plt.xlim(xmin=start_count, xmax=finish_count)
     if nolegend:
@@ -643,7 +645,7 @@ def main(argv):
     plt.title('Refused requests during the simulation')
     plt.ylabel('Refused requests count')
     plt.xlabel('Sec')
-    lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1))
+    lgd = plt.legend(loc='upper left', bbox_to_anchor=(0, -0.1), numpoints=1)
     if nolegend:
         plt.legend().set_visible(False)
     # TODO: fix zoom with time axis too
