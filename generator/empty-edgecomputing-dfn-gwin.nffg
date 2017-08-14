@@ -1,0 +1,2562 @@
+{
+  "parameters": {
+    "id": "dfn-gwin", 
+    "version": "1.0"
+  }, 
+  "node_saps": [
+    {
+      "id": "BerlinSAP2", 
+      "name": "BerlinSAP2", 
+      "ports": [
+        {
+          "id": 1
+        }
+      ]
+    }, 
+    {
+      "id": "BerlinSAP0", 
+      "name": "BerlinSAP0", 
+      "ports": [
+        {
+          "id": 1
+        }
+      ]
+    }, 
+    {
+      "id": "BerlinSAP1", 
+      "name": "BerlinSAP1", 
+      "ports": [
+        {
+          "id": 1
+        }
+      ]
+    }, 
+    {
+      "id": "LeipzigSAP3", 
+      "name": "LeipzigSAP3", 
+      "ports": [
+        {
+          "id": 1
+        }
+      ]
+    }, 
+    {
+      "id": "FrankSAP3", 
+      "name": "FrankSAP3", 
+      "ports": [
+        {
+          "id": 1
+        }
+      ]
+    }, 
+    {
+      "id": "HamburgSAP3", 
+      "name": "HamburgSAP3", 
+      "ports": [
+        {
+          "id": 1
+        }
+      ]
+    }, 
+    {
+      "id": "HamburgSAP2", 
+      "name": "HamburgSAP2", 
+      "ports": [
+        {
+          "id": 1
+        }
+      ]
+    }, 
+    {
+      "id": "HamburgSAP1", 
+      "name": "HamburgSAP1", 
+      "ports": [
+        {
+          "id": 1
+        }
+      ]
+    }, 
+    {
+      "id": "HamburgSAP0", 
+      "name": "HamburgSAP0", 
+      "ports": [
+        {
+          "id": 1
+        }
+      ]
+    }, 
+    {
+      "id": "FrankSAP1", 
+      "name": "FrankSAP1", 
+      "ports": [
+        {
+          "id": 1
+        }
+      ]
+    }, 
+    {
+      "id": "FrankSAP0", 
+      "name": "FrankSAP0", 
+      "ports": [
+        {
+          "id": 1
+        }
+      ]
+    }, 
+    {
+      "id": "FrankSAP2", 
+      "name": "FrankSAP2", 
+      "ports": [
+        {
+          "id": 1
+        }
+      ]
+    }, 
+    {
+      "id": "MuenchenSAP4", 
+      "name": "MuenchenSAP4", 
+      "ports": [
+        {
+          "id": 1
+        }
+      ]
+    }, 
+    {
+      "id": "LeipzigSAP2", 
+      "name": "LeipzigSAP2", 
+      "ports": [
+        {
+          "id": 1
+        }
+      ]
+    }, 
+    {
+      "id": "LeipzigSAP1", 
+      "name": "LeipzigSAP1", 
+      "ports": [
+        {
+          "id": 1
+        }
+      ]
+    }, 
+    {
+      "id": "LeipzigSAP0", 
+      "name": "LeipzigSAP0", 
+      "ports": [
+        {
+          "id": 1
+        }
+      ]
+    }, 
+    {
+      "id": "MuenchenSAP6", 
+      "name": "MuenchenSAP6", 
+      "ports": [
+        {
+          "id": 1
+        }
+      ]
+    }, 
+    {
+      "id": "MuenchenSAP5", 
+      "name": "MuenchenSAP5", 
+      "ports": [
+        {
+          "id": 1
+        }
+      ]
+    }, 
+    {
+      "id": "MuenchenSAP3", 
+      "name": "MuenchenSAP3", 
+      "ports": [
+        {
+          "id": 1
+        }
+      ]
+    }, 
+    {
+      "id": "MuenchenSAP2", 
+      "name": "MuenchenSAP2", 
+      "ports": [
+        {
+          "id": 1
+        }
+      ]
+    }, 
+    {
+      "id": "MuenchenSAP1", 
+      "name": "MuenchenSAP1", 
+      "ports": [
+        {
+          "id": 1
+        }
+      ]
+    }, 
+    {
+      "id": "MuenchenSAP0", 
+      "name": "MuenchenSAP0", 
+      "ports": [
+        {
+          "id": 1
+        }
+      ]
+    }
+  ], 
+  "node_infras": [
+    {
+      "id": "BerlinSw0Host0", 
+      "name": "BerlinSw0Host0", 
+      "ports": [
+        {
+          "id": "ddd47b27-80ff-11e7-bc35-3065ec956147"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "EE", 
+      "supported": [
+        "H", 
+        "D", 
+        "G", 
+        "E", 
+        "A", 
+        "C"
+      ], 
+      "resources": {
+        "cpu": 400, 
+        "mem": 320000, 
+        "storage": 1500, 
+        "delay": 1.0, 
+        "bandwidth": 40000
+      }
+    }, 
+    {
+      "id": "LeipzigSw0Host0", 
+      "name": "LeipzigSw0Host0", 
+      "ports": [
+        {
+          "id": "ddd47b2b-80ff-11e7-bc35-3065ec956147"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "EE", 
+      "supported": [
+        "I", 
+        "C", 
+        "J", 
+        "G", 
+        "B", 
+        "H"
+      ], 
+      "resources": {
+        "cpu": 400, 
+        "mem": 320000, 
+        "storage": 1500, 
+        "delay": 1.0, 
+        "bandwidth": 40000
+      }
+    }, 
+    {
+      "id": "Koeln", 
+      "name": "Koeln", 
+      "ports": [
+        {
+          "id": "ddd47a05-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a1d-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a30-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a34-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a38-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a3c-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a51-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a85-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47aa1-80ff-11e7-bc35-3065ec956147"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "SDN-SWITCH", 
+      "resources": {
+        "cpu": 0, 
+        "mem": 0, 
+        "storage": 0, 
+        "delay": 0.5, 
+        "bandwidth": 40000
+      }
+    }, 
+    {
+      "id": "Frank", 
+      "name": "Frank", 
+      "ports": [
+        {
+          "id": "ddd47a15-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a2d-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a3d-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a45-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a61-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a75-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a7d-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a91-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47ab1-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47ab9-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47ae6-80ff-11e7-bc35-3065ec956147"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "SDN-SWITCH", 
+      "resources": {
+        "cpu": 0, 
+        "mem": 0, 
+        "storage": 0, 
+        "delay": 0.5, 
+        "bandwidth": 40000
+      }
+    }, 
+    {
+      "id": "HamburgSw0Host0", 
+      "name": "HamburgSw0Host0", 
+      "ports": [
+        {
+          "id": "ddd47b23-80ff-11e7-bc35-3065ec956147"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "EE", 
+      "supported": [
+        "E", 
+        "H", 
+        "C", 
+        "F", 
+        "D", 
+        "A"
+      ], 
+      "resources": {
+        "cpu": 400, 
+        "mem": 320000, 
+        "storage": 1500, 
+        "delay": 1.0, 
+        "bandwidth": 40000
+      }
+    }, 
+    {
+      "id": "FrankSw0", 
+      "name": "FrankSw0", 
+      "ports": [
+        {
+          "id": "ddd47ae7-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47aea-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47aed-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47af0-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47af3-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47b16-80ff-11e7-bc35-3065ec956147"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "SDN-SWITCH", 
+      "resources": {
+        "cpu": 0, 
+        "mem": 0, 
+        "storage": 0, 
+        "delay": 0.5, 
+        "bandwidth": 40000
+      }
+    }, 
+    {
+      "id": "Erlangen", 
+      "name": "Erlangen", 
+      "ports": [
+        {
+          "id": "ddd47a09-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a21-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a31-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a55-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a6c-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a70-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a74-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a89-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47aa5-80ff-11e7-bc35-3065ec956147"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "SDN-SWITCH", 
+      "resources": {
+        "cpu": 0, 
+        "mem": 0, 
+        "storage": 0, 
+        "delay": 0.5, 
+        "bandwidth": 40000
+      }
+    }, 
+    {
+      "id": "Berlin", 
+      "name": "Berlin", 
+      "ports": [
+        {
+          "id": "ddd47a0d-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a25-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a35-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a59-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a6d-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a78-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a7c-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a8d-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47aa9-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47acc-80ff-11e7-bc35-3065ec956147"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "SDN-SWITCH", 
+      "resources": {
+        "cpu": 0, 
+        "mem": 0, 
+        "storage": 0, 
+        "delay": 0.5, 
+        "bandwidth": 40000
+      }
+    }, 
+    {
+      "id": "Hamburg", 
+      "name": "Hamburg", 
+      "ports": [
+        {
+          "id": "ddd47a65-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a98-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a9c-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47aa0-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47aa4-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47aa8-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47aac-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47ab0-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47ab4-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47abc-80ff-11e7-bc35-3065ec956147"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "SDN-SWITCH", 
+      "resources": {
+        "cpu": 0, 
+        "mem": 0, 
+        "storage": 0, 
+        "delay": 0.5, 
+        "bandwidth": 40000
+      }
+    }, 
+    {
+      "id": "MuenchenSw0", 
+      "name": "MuenchenSw0", 
+      "ports": [
+        {
+          "id": "ddd47ada-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47add-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47ae0-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47ae3-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47b1a-80ff-11e7-bc35-3065ec956147"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "SDN-SWITCH", 
+      "resources": {
+        "cpu": 0, 
+        "mem": 0, 
+        "storage": 0, 
+        "delay": 0.5, 
+        "bandwidth": 40000
+      }
+    }, 
+    {
+      "id": "MuenchenSw1", 
+      "name": "MuenchenSw1", 
+      "ports": [
+        {
+          "id": "ddd47b07-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47b0a-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47b0d-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47b10-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47b13-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47b1e-80ff-11e7-bc35-3065ec956147"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "SDN-SWITCH", 
+      "resources": {
+        "cpu": 0, 
+        "mem": 0, 
+        "storage": 0, 
+        "delay": 0.5, 
+        "bandwidth": 40000
+      }
+    }, 
+    {
+      "id": "HamburgSw0", 
+      "name": "HamburgSw0", 
+      "ports": [
+        {
+          "id": "ddd47abd-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47ac0-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47ac3-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47ac6-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47ac9-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47b22-80ff-11e7-bc35-3065ec956147"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "SDN-SWITCH", 
+      "resources": {
+        "cpu": 0, 
+        "mem": 0, 
+        "storage": 0, 
+        "delay": 0.5, 
+        "bandwidth": 40000
+      }
+    }, 
+    {
+      "id": "Hannover", 
+      "name": "Hannover", 
+      "ports": [
+        {
+          "id": "ddd47a00-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a04-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a08-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a0c-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a10-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a14-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a18-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a41-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a49-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a99-80ff-11e7-bc35-3065ec956147"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "SDN-SWITCH", 
+      "resources": {
+        "cpu": 0, 
+        "mem": 0, 
+        "storage": 0, 
+        "delay": 0.5, 
+        "bandwidth": 40000
+      }
+    }, 
+    {
+      "id": "IP", 
+      "name": "IP", 
+      "ports": [
+        {
+          "id": "ddd47a40-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a44-80ff-11e7-bc35-3065ec956147"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "SDN-SWITCH", 
+      "resources": {
+        "cpu": 0, 
+        "mem": 0, 
+        "storage": 0, 
+        "delay": 0.5, 
+        "bandwidth": 40000
+      }
+    }, 
+    {
+      "id": "BerlinSw0", 
+      "name": "BerlinSw0", 
+      "ports": [
+        {
+          "id": "ddd47acd-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47ad0-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47ad3-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47ad6-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47b26-80ff-11e7-bc35-3065ec956147"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "SDN-SWITCH", 
+      "resources": {
+        "cpu": 0, 
+        "mem": 0, 
+        "storage": 0, 
+        "delay": 0.5, 
+        "bandwidth": 40000
+      }
+    }, 
+    {
+      "id": "FrankSw0Host0", 
+      "name": "FrankSw0Host0", 
+      "ports": [
+        {
+          "id": "ddd47b17-80ff-11e7-bc35-3065ec956147"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "EE", 
+      "supported": [
+        "C", 
+        "G", 
+        "E", 
+        "B", 
+        "F", 
+        "H"
+      ], 
+      "resources": {
+        "cpu": 400, 
+        "mem": 320000, 
+        "storage": 1500, 
+        "delay": 1.0, 
+        "bandwidth": 40000
+      }
+    }, 
+    {
+      "id": "MuenchenSw0Host0", 
+      "name": "MuenchenSw0Host0", 
+      "ports": [
+        {
+          "id": "ddd47b1b-80ff-11e7-bc35-3065ec956147"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "EE", 
+      "supported": [
+        "I", 
+        "J", 
+        "C", 
+        "F", 
+        "G", 
+        "D"
+      ], 
+      "resources": {
+        "cpu": 400, 
+        "mem": 320000, 
+        "storage": 1500, 
+        "delay": 1.0, 
+        "bandwidth": 40000
+      }
+    }, 
+    {
+      "id": "Muenchen", 
+      "name": "Muenchen", 
+      "ports": [
+        {
+          "id": "ddd47a01-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a1c-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a20-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a24-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a28-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a2c-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a4d-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a81-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a9d-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47ad9-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47b06-80ff-11e7-bc35-3065ec956147"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "SDN-SWITCH", 
+      "resources": {
+        "cpu": 0, 
+        "mem": 0, 
+        "storage": 0, 
+        "delay": 0.5, 
+        "bandwidth": 40000
+      }
+    }, 
+    {
+      "id": "MuenchenSw1Host0", 
+      "name": "MuenchenSw1Host0", 
+      "ports": [
+        {
+          "id": "ddd47b1f-80ff-11e7-bc35-3065ec956147"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "EE", 
+      "supported": [
+        "E", 
+        "A", 
+        "D", 
+        "J", 
+        "F", 
+        "G"
+      ], 
+      "resources": {
+        "cpu": 400, 
+        "mem": 320000, 
+        "storage": 1500, 
+        "delay": 1.0, 
+        "bandwidth": 40000
+      }
+    }, 
+    {
+      "id": "Leipzig", 
+      "name": "Leipzig", 
+      "ports": [
+        {
+          "id": "ddd47a48-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a4c-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a50-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a54-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a58-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a5c-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a60-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a64-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a68-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47af6-80ff-11e7-bc35-3065ec956147"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "SDN-SWITCH", 
+      "resources": {
+        "cpu": 0, 
+        "mem": 0, 
+        "storage": 0, 
+        "delay": 0.5, 
+        "bandwidth": 40000
+      }
+    }, 
+    {
+      "id": "LeipzigSw0", 
+      "name": "LeipzigSw0", 
+      "ports": [
+        {
+          "id": "ddd47af7-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47afa-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47afd-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47b00-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47b03-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47b2a-80ff-11e7-bc35-3065ec956147"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "SDN-SWITCH", 
+      "resources": {
+        "cpu": 0, 
+        "mem": 0, 
+        "storage": 0, 
+        "delay": 0.5, 
+        "bandwidth": 40000
+      }
+    }, 
+    {
+      "id": "Stutt", 
+      "name": "Stutt", 
+      "ports": [
+        {
+          "id": "ddd47a11-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a5d-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a80-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a84-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a88-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a8c-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a90-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a94-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47aad-80ff-11e7-bc35-3065ec956147"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "SDN-SWITCH", 
+      "resources": {
+        "cpu": 0, 
+        "mem": 0, 
+        "storage": 0, 
+        "delay": 0.5, 
+        "bandwidth": 40000
+      }
+    }, 
+    {
+      "id": "Essen", 
+      "name": "Essen", 
+      "ports": [
+        {
+          "id": "ddd47a19-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a29-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a39-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a69-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a71-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a79-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47a95-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47ab5-80ff-11e7-bc35-3065ec956147"
+        }, 
+        {
+          "id": "ddd47ab8-80ff-11e7-bc35-3065ec956147"
+        }
+      ], 
+      "domain": "VIRTUAL", 
+      "type": "SDN-SWITCH", 
+      "resources": {
+        "cpu": 0, 
+        "mem": 0, 
+        "storage": 0, 
+        "delay": 0.5, 
+        "bandwidth": 40000
+      }
+    }
+  ], 
+  "edge_links": [
+    {
+      "id": "ddd47ad7-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "BerlinSAP2", 
+      "src_port": 1, 
+      "dst_node": "BerlinSw0", 
+      "dst_port": "ddd47ad6-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 100
+    }, 
+    {
+      "id": "ddd47ad1-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "BerlinSAP0", 
+      "src_port": 1, 
+      "dst_node": "BerlinSw0", 
+      "dst_port": "ddd47ad0-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 100
+    }, 
+    {
+      "id": "ddd47ad4-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "BerlinSAP1", 
+      "src_port": 1, 
+      "dst_node": "BerlinSw0", 
+      "dst_port": "ddd47ad3-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 100
+    }, 
+    {
+      "id": "ddd47b04-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "LeipzigSAP3", 
+      "src_port": 1, 
+      "dst_node": "LeipzigSw0", 
+      "dst_port": "ddd47b03-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 100
+    }, 
+    {
+      "id": "ddd47b29-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "BerlinSw0Host0", 
+      "src_port": "ddd47b27-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "BerlinSw0", 
+      "dst_port": "ddd47b26-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47b2d-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "LeipzigSw0Host0", 
+      "src_port": "ddd47b2b-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "LeipzigSw0", 
+      "dst_port": "ddd47b2a-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47af4-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "FrankSAP3", 
+      "src_port": 1, 
+      "dst_node": "FrankSw0", 
+      "dst_port": "ddd47af3-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 100
+    }, 
+    {
+      "id": "ddd47aca-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "HamburgSAP3", 
+      "src_port": 1, 
+      "dst_node": "HamburgSw0", 
+      "dst_port": "ddd47ac9-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 100
+    }, 
+    {
+      "id": "ddd47ac7-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "HamburgSAP2", 
+      "src_port": 1, 
+      "dst_node": "HamburgSw0", 
+      "dst_port": "ddd47ac6-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 100
+    }, 
+    {
+      "id": "ddd47ac4-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "HamburgSAP1", 
+      "src_port": 1, 
+      "dst_node": "HamburgSw0", 
+      "dst_port": "ddd47ac3-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 100
+    }, 
+    {
+      "id": "ddd47ac1-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "HamburgSAP0", 
+      "src_port": 1, 
+      "dst_node": "HamburgSw0", 
+      "dst_port": "ddd47ac0-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 100
+    }, 
+    {
+      "id": "ddd47a07-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Koeln", 
+      "src_port": "ddd47a05-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Hannover", 
+      "dst_port": "ddd47a04-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a1f-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Koeln", 
+      "src_port": "ddd47a1d-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Muenchen", 
+      "dst_port": "ddd47a1c-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a3e-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Koeln", 
+      "src_port": "ddd47a3c-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Frank", 
+      "dst_port": "ddd47a3d-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47aa3-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Koeln", 
+      "src_port": "ddd47aa1-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Hamburg", 
+      "dst_port": "ddd47aa0-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a53-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Koeln", 
+      "src_port": "ddd47a51-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Leipzig", 
+      "dst_port": "ddd47a50-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a32-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Koeln", 
+      "src_port": "ddd47a30-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Erlangen", 
+      "dst_port": "ddd47a31-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a36-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Koeln", 
+      "src_port": "ddd47a34-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Berlin", 
+      "dst_port": "ddd47a35-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a87-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Koeln", 
+      "src_port": "ddd47a85-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Stutt", 
+      "dst_port": "ddd47a84-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a3a-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Koeln", 
+      "src_port": "ddd47a38-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Essen", 
+      "dst_port": "ddd47a39-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a17-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Frank", 
+      "src_port": "ddd47a15-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Hannover", 
+      "dst_port": "ddd47a14-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a2f-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Frank", 
+      "src_port": "ddd47a2d-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Muenchen", 
+      "dst_port": "ddd47a2c-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a3f-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Frank", 
+      "src_port": "ddd47a3d-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Koeln", 
+      "dst_port": "ddd47a3c-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a47-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Frank", 
+      "src_port": "ddd47a45-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "IP", 
+      "dst_port": "ddd47a44-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47ab3-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Frank", 
+      "src_port": "ddd47ab1-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Hamburg", 
+      "dst_port": "ddd47ab0-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a63-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Frank", 
+      "src_port": "ddd47a61-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Leipzig", 
+      "dst_port": "ddd47a60-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47ae8-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Frank", 
+      "src_port": "ddd47ae6-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "FrankSw0", 
+      "dst_port": "ddd47ae7-80ff-11e7-bc35-3065ec956147", 
+      "delay": 5.0, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "ddd47a77-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Frank", 
+      "src_port": "ddd47a75-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Erlangen", 
+      "dst_port": "ddd47a74-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a7f-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Frank", 
+      "src_port": "ddd47a7d-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Berlin", 
+      "dst_port": "ddd47a7c-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a93-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Frank", 
+      "src_port": "ddd47a91-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Stutt", 
+      "dst_port": "ddd47a90-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47abb-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Frank", 
+      "src_port": "ddd47ab9-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Essen", 
+      "dst_port": "ddd47ab8-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47b25-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "HamburgSw0Host0", 
+      "src_port": "ddd47b23-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "HamburgSw0", 
+      "dst_port": "ddd47b22-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47aee-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "FrankSAP1", 
+      "src_port": 1, 
+      "dst_node": "FrankSw0", 
+      "dst_port": "ddd47aed-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 100
+    }, 
+    {
+      "id": "ddd47aeb-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "FrankSAP0", 
+      "src_port": 1, 
+      "dst_node": "FrankSw0", 
+      "dst_port": "ddd47aea-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 100
+    }, 
+    {
+      "id": "ddd47ae9-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "FrankSw0", 
+      "src_port": "ddd47ae7-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Frank", 
+      "dst_port": "ddd47ae6-80ff-11e7-bc35-3065ec956147", 
+      "delay": 5.0, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47aef-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "FrankSw0", 
+      "src_port": "ddd47aed-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "FrankSAP1", 
+      "dst_port": 1, 
+      "delay": 1.0, 
+      "bandwidth": 100, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47aec-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "FrankSw0", 
+      "src_port": "ddd47aea-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "FrankSAP0", 
+      "dst_port": 1, 
+      "delay": 1.0, 
+      "bandwidth": 100, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47af5-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "FrankSw0", 
+      "src_port": "ddd47af3-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "FrankSAP3", 
+      "dst_port": 1, 
+      "delay": 1.0, 
+      "bandwidth": 100, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47af2-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "FrankSw0", 
+      "src_port": "ddd47af0-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "FrankSAP2", 
+      "dst_port": 1, 
+      "delay": 1.0, 
+      "bandwidth": 100, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47b18-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "FrankSw0", 
+      "src_port": "ddd47b16-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "FrankSw0Host0", 
+      "dst_port": "ddd47b17-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47af1-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "FrankSAP2", 
+      "src_port": 1, 
+      "dst_node": "FrankSw0", 
+      "dst_port": "ddd47af0-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 100
+    }, 
+    {
+      "id": "ddd47a0b-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Erlangen", 
+      "src_port": "ddd47a09-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Hannover", 
+      "dst_port": "ddd47a08-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a23-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Erlangen", 
+      "src_port": "ddd47a21-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Muenchen", 
+      "dst_port": "ddd47a20-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a33-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Erlangen", 
+      "src_port": "ddd47a31-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Koeln", 
+      "dst_port": "ddd47a30-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a76-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Erlangen", 
+      "src_port": "ddd47a74-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Frank", 
+      "dst_port": "ddd47a75-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47aa7-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Erlangen", 
+      "src_port": "ddd47aa5-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Hamburg", 
+      "dst_port": "ddd47aa4-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a57-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Erlangen", 
+      "src_port": "ddd47a55-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Leipzig", 
+      "dst_port": "ddd47a54-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a6e-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Erlangen", 
+      "src_port": "ddd47a6c-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Berlin", 
+      "dst_port": "ddd47a6d-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a8b-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Erlangen", 
+      "src_port": "ddd47a89-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Stutt", 
+      "dst_port": "ddd47a88-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a72-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Erlangen", 
+      "src_port": "ddd47a70-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Essen", 
+      "dst_port": "ddd47a71-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47ace-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Berlin", 
+      "src_port": "ddd47acc-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "BerlinSw0", 
+      "dst_port": "ddd47acd-80ff-11e7-bc35-3065ec956147", 
+      "delay": 5.0, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "ddd47a0f-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Berlin", 
+      "src_port": "ddd47a0d-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Hannover", 
+      "dst_port": "ddd47a0c-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a27-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Berlin", 
+      "src_port": "ddd47a25-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Muenchen", 
+      "dst_port": "ddd47a24-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a37-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Berlin", 
+      "src_port": "ddd47a35-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Koeln", 
+      "dst_port": "ddd47a34-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a7e-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Berlin", 
+      "src_port": "ddd47a7c-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Frank", 
+      "dst_port": "ddd47a7d-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47aab-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Berlin", 
+      "src_port": "ddd47aa9-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Hamburg", 
+      "dst_port": "ddd47aa8-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a5b-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Berlin", 
+      "src_port": "ddd47a59-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Leipzig", 
+      "dst_port": "ddd47a58-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a6f-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Berlin", 
+      "src_port": "ddd47a6d-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Erlangen", 
+      "dst_port": "ddd47a6c-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a8f-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Berlin", 
+      "src_port": "ddd47a8d-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Stutt", 
+      "dst_port": "ddd47a8c-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a7a-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Berlin", 
+      "src_port": "ddd47a78-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Essen", 
+      "dst_port": "ddd47a79-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47abe-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Hamburg", 
+      "src_port": "ddd47abc-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "HamburgSw0", 
+      "dst_port": "ddd47abd-80ff-11e7-bc35-3065ec956147", 
+      "delay": 5.0, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "ddd47a9a-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Hamburg", 
+      "src_port": "ddd47a98-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Hannover", 
+      "dst_port": "ddd47a99-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a9e-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Hamburg", 
+      "src_port": "ddd47a9c-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Muenchen", 
+      "dst_port": "ddd47a9d-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47aa2-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Hamburg", 
+      "src_port": "ddd47aa0-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Koeln", 
+      "dst_port": "ddd47aa1-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47ab2-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Hamburg", 
+      "src_port": "ddd47ab0-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Frank", 
+      "dst_port": "ddd47ab1-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a67-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Hamburg", 
+      "src_port": "ddd47a65-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Leipzig", 
+      "dst_port": "ddd47a64-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47aa6-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Hamburg", 
+      "src_port": "ddd47aa4-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Erlangen", 
+      "dst_port": "ddd47aa5-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47aaa-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Hamburg", 
+      "src_port": "ddd47aa8-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Berlin", 
+      "dst_port": "ddd47aa9-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47aae-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Hamburg", 
+      "src_port": "ddd47aac-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Stutt", 
+      "dst_port": "ddd47aad-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47ab6-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Hamburg", 
+      "src_port": "ddd47ab4-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Essen", 
+      "dst_port": "ddd47ab5-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47b1c-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "MuenchenSw0", 
+      "src_port": "ddd47b1a-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "MuenchenSw0Host0", 
+      "dst_port": "ddd47b1b-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47adf-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "MuenchenSw0", 
+      "src_port": "ddd47add-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "MuenchenSAP0", 
+      "dst_port": 1, 
+      "delay": 1.0, 
+      "bandwidth": 100, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47ae5-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "MuenchenSw0", 
+      "src_port": "ddd47ae3-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "MuenchenSAP2", 
+      "dst_port": 1, 
+      "delay": 1.0, 
+      "bandwidth": 100, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47ae2-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "MuenchenSw0", 
+      "src_port": "ddd47ae0-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "MuenchenSAP1", 
+      "dst_port": 1, 
+      "delay": 1.0, 
+      "bandwidth": 100, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47adc-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "MuenchenSw0", 
+      "src_port": "ddd47ada-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Muenchen", 
+      "dst_port": "ddd47ad9-80ff-11e7-bc35-3065ec956147", 
+      "delay": 5.0, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47b09-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "MuenchenSw1", 
+      "src_port": "ddd47b07-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Muenchen", 
+      "dst_port": "ddd47b06-80ff-11e7-bc35-3065ec956147", 
+      "delay": 5.0, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47b0c-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "MuenchenSw1", 
+      "src_port": "ddd47b0a-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "MuenchenSAP3", 
+      "dst_port": 1, 
+      "delay": 1.0, 
+      "bandwidth": 100, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47b15-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "MuenchenSw1", 
+      "src_port": "ddd47b13-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "MuenchenSAP6", 
+      "dst_port": 1, 
+      "delay": 1.0, 
+      "bandwidth": 100, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47b12-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "MuenchenSw1", 
+      "src_port": "ddd47b10-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "MuenchenSAP5", 
+      "dst_port": 1, 
+      "delay": 1.0, 
+      "bandwidth": 100, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47b0f-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "MuenchenSw1", 
+      "src_port": "ddd47b0d-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "MuenchenSAP4", 
+      "dst_port": 1, 
+      "delay": 1.0, 
+      "bandwidth": 100, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47b20-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "MuenchenSw1", 
+      "src_port": "ddd47b1e-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "MuenchenSw1Host0", 
+      "dst_port": "ddd47b1f-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47acb-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "HamburgSw0", 
+      "src_port": "ddd47ac9-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "HamburgSAP3", 
+      "dst_port": 1, 
+      "delay": 1.0, 
+      "bandwidth": 100, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47ac8-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "HamburgSw0", 
+      "src_port": "ddd47ac6-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "HamburgSAP2", 
+      "dst_port": 1, 
+      "delay": 1.0, 
+      "bandwidth": 100, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47ac5-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "HamburgSw0", 
+      "src_port": "ddd47ac3-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "HamburgSAP1", 
+      "dst_port": 1, 
+      "delay": 1.0, 
+      "bandwidth": 100, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47ac2-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "HamburgSw0", 
+      "src_port": "ddd47ac0-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "HamburgSAP0", 
+      "dst_port": 1, 
+      "delay": 1.0, 
+      "bandwidth": 100, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47b24-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "HamburgSw0", 
+      "src_port": "ddd47b22-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "HamburgSw0Host0", 
+      "dst_port": "ddd47b23-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47abf-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "HamburgSw0", 
+      "src_port": "ddd47abd-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Hamburg", 
+      "dst_port": "ddd47abc-80ff-11e7-bc35-3065ec956147", 
+      "delay": 5.0, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a43-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Hannover", 
+      "src_port": "ddd47a41-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "IP", 
+      "dst_port": "ddd47a40-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a02-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Hannover", 
+      "src_port": "ddd47a00-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Muenchen", 
+      "dst_port": "ddd47a01-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a06-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Hannover", 
+      "src_port": "ddd47a04-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Koeln", 
+      "dst_port": "ddd47a05-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a16-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Hannover", 
+      "src_port": "ddd47a14-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Frank", 
+      "dst_port": "ddd47a15-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a9b-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Hannover", 
+      "src_port": "ddd47a99-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Hamburg", 
+      "dst_port": "ddd47a98-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a4b-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Hannover", 
+      "src_port": "ddd47a49-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Leipzig", 
+      "dst_port": "ddd47a48-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a0a-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Hannover", 
+      "src_port": "ddd47a08-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Erlangen", 
+      "dst_port": "ddd47a09-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a0e-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Hannover", 
+      "src_port": "ddd47a0c-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Berlin", 
+      "dst_port": "ddd47a0d-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a12-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Hannover", 
+      "src_port": "ddd47a10-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Stutt", 
+      "dst_port": "ddd47a11-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a1a-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Hannover", 
+      "src_port": "ddd47a18-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Essen", 
+      "dst_port": "ddd47a19-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a46-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "IP", 
+      "src_port": "ddd47a44-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Frank", 
+      "dst_port": "ddd47a45-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a42-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "IP", 
+      "src_port": "ddd47a40-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Hannover", 
+      "dst_port": "ddd47a41-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47acf-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "BerlinSw0", 
+      "src_port": "ddd47acd-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Berlin", 
+      "dst_port": "ddd47acc-80ff-11e7-bc35-3065ec956147", 
+      "delay": 5.0, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47ad8-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "BerlinSw0", 
+      "src_port": "ddd47ad6-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "BerlinSAP2", 
+      "dst_port": 1, 
+      "delay": 1.0, 
+      "bandwidth": 100, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47b28-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "BerlinSw0", 
+      "src_port": "ddd47b26-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "BerlinSw0Host0", 
+      "dst_port": "ddd47b27-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47ad2-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "BerlinSw0", 
+      "src_port": "ddd47ad0-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "BerlinSAP0", 
+      "dst_port": 1, 
+      "delay": 1.0, 
+      "bandwidth": 100, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47ad5-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "BerlinSw0", 
+      "src_port": "ddd47ad3-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "BerlinSAP1", 
+      "dst_port": 1, 
+      "delay": 1.0, 
+      "bandwidth": 100, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47b19-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "FrankSw0Host0", 
+      "src_port": "ddd47b17-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "FrankSw0", 
+      "dst_port": "ddd47b16-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47b1d-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "MuenchenSw0Host0", 
+      "src_port": "ddd47b1b-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "MuenchenSw0", 
+      "dst_port": "ddd47b1a-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47b0e-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "MuenchenSAP4", 
+      "src_port": 1, 
+      "dst_node": "MuenchenSw1", 
+      "dst_port": "ddd47b0d-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 100
+    }, 
+    {
+      "id": "ddd47a03-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Muenchen", 
+      "src_port": "ddd47a01-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Hannover", 
+      "dst_port": "ddd47a00-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a1e-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Muenchen", 
+      "src_port": "ddd47a1c-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Koeln", 
+      "dst_port": "ddd47a1d-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a2e-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Muenchen", 
+      "src_port": "ddd47a2c-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Frank", 
+      "dst_port": "ddd47a2d-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a9f-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Muenchen", 
+      "src_port": "ddd47a9d-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Hamburg", 
+      "dst_port": "ddd47a9c-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a4f-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Muenchen", 
+      "src_port": "ddd47a4d-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Leipzig", 
+      "dst_port": "ddd47a4c-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a22-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Muenchen", 
+      "src_port": "ddd47a20-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Erlangen", 
+      "dst_port": "ddd47a21-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a26-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Muenchen", 
+      "src_port": "ddd47a24-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Berlin", 
+      "dst_port": "ddd47a25-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a83-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Muenchen", 
+      "src_port": "ddd47a81-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Stutt", 
+      "dst_port": "ddd47a80-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a2a-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Muenchen", 
+      "src_port": "ddd47a28-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Essen", 
+      "dst_port": "ddd47a29-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47adb-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Muenchen", 
+      "src_port": "ddd47ad9-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "MuenchenSw0", 
+      "dst_port": "ddd47ada-80ff-11e7-bc35-3065ec956147", 
+      "delay": 5.0, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "ddd47b08-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Muenchen", 
+      "src_port": "ddd47b06-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "MuenchenSw1", 
+      "dst_port": "ddd47b07-80ff-11e7-bc35-3065ec956147", 
+      "delay": 5.0, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "ddd47b21-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "MuenchenSw1Host0", 
+      "src_port": "ddd47b1f-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "MuenchenSw1", 
+      "dst_port": "ddd47b1e-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a4a-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Leipzig", 
+      "src_port": "ddd47a48-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Hannover", 
+      "dst_port": "ddd47a49-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a4e-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Leipzig", 
+      "src_port": "ddd47a4c-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Muenchen", 
+      "dst_port": "ddd47a4d-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a52-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Leipzig", 
+      "src_port": "ddd47a50-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Koeln", 
+      "dst_port": "ddd47a51-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a62-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Leipzig", 
+      "src_port": "ddd47a60-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Frank", 
+      "dst_port": "ddd47a61-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a66-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Leipzig", 
+      "src_port": "ddd47a64-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Hamburg", 
+      "dst_port": "ddd47a65-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47af8-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Leipzig", 
+      "src_port": "ddd47af6-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "LeipzigSw0", 
+      "dst_port": "ddd47af7-80ff-11e7-bc35-3065ec956147", 
+      "delay": 5.0, 
+      "bandwidth": 1000
+    }, 
+    {
+      "id": "ddd47a56-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Leipzig", 
+      "src_port": "ddd47a54-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Erlangen", 
+      "dst_port": "ddd47a55-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a5a-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Leipzig", 
+      "src_port": "ddd47a58-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Berlin", 
+      "dst_port": "ddd47a59-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a5e-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Leipzig", 
+      "src_port": "ddd47a5c-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Stutt", 
+      "dst_port": "ddd47a5d-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a6a-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Leipzig", 
+      "src_port": "ddd47a68-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Essen", 
+      "dst_port": "ddd47a69-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47af9-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "LeipzigSw0", 
+      "src_port": "ddd47af7-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Leipzig", 
+      "dst_port": "ddd47af6-80ff-11e7-bc35-3065ec956147", 
+      "delay": 5.0, 
+      "bandwidth": 1000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47b05-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "LeipzigSw0", 
+      "src_port": "ddd47b03-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "LeipzigSAP3", 
+      "dst_port": 1, 
+      "delay": 1.0, 
+      "bandwidth": 100, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47b02-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "LeipzigSw0", 
+      "src_port": "ddd47b00-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "LeipzigSAP2", 
+      "dst_port": 1, 
+      "delay": 1.0, 
+      "bandwidth": 100, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47aff-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "LeipzigSw0", 
+      "src_port": "ddd47afd-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "LeipzigSAP1", 
+      "dst_port": 1, 
+      "delay": 1.0, 
+      "bandwidth": 100, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47afc-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "LeipzigSw0", 
+      "src_port": "ddd47afa-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "LeipzigSAP0", 
+      "dst_port": 1, 
+      "delay": 1.0, 
+      "bandwidth": 100, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47b2c-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "LeipzigSw0", 
+      "src_port": "ddd47b2a-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "LeipzigSw0Host0", 
+      "dst_port": "ddd47b2b-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47b01-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "LeipzigSAP2", 
+      "src_port": 1, 
+      "dst_node": "LeipzigSw0", 
+      "dst_port": "ddd47b00-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 100
+    }, 
+    {
+      "id": "ddd47afe-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "LeipzigSAP1", 
+      "src_port": 1, 
+      "dst_node": "LeipzigSw0", 
+      "dst_port": "ddd47afd-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 100
+    }, 
+    {
+      "id": "ddd47afb-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "LeipzigSAP0", 
+      "src_port": 1, 
+      "dst_node": "LeipzigSw0", 
+      "dst_port": "ddd47afa-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 100
+    }, 
+    {
+      "id": "ddd47a13-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Stutt", 
+      "src_port": "ddd47a11-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Hannover", 
+      "dst_port": "ddd47a10-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a82-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Stutt", 
+      "src_port": "ddd47a80-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Muenchen", 
+      "dst_port": "ddd47a81-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a86-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Stutt", 
+      "src_port": "ddd47a84-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Koeln", 
+      "dst_port": "ddd47a85-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a92-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Stutt", 
+      "src_port": "ddd47a90-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Frank", 
+      "dst_port": "ddd47a91-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a5f-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Stutt", 
+      "src_port": "ddd47a5d-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Leipzig", 
+      "dst_port": "ddd47a5c-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a8a-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Stutt", 
+      "src_port": "ddd47a88-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Erlangen", 
+      "dst_port": "ddd47a89-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a8e-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Stutt", 
+      "src_port": "ddd47a8c-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Berlin", 
+      "dst_port": "ddd47a8d-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47aaf-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Stutt", 
+      "src_port": "ddd47aad-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Hamburg", 
+      "dst_port": "ddd47aac-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a96-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Stutt", 
+      "src_port": "ddd47a94-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Essen", 
+      "dst_port": "ddd47a95-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47b14-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "MuenchenSAP6", 
+      "src_port": 1, 
+      "dst_node": "MuenchenSw1", 
+      "dst_port": "ddd47b13-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 100
+    }, 
+    {
+      "id": "ddd47b11-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "MuenchenSAP5", 
+      "src_port": 1, 
+      "dst_node": "MuenchenSw1", 
+      "dst_port": "ddd47b10-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 100
+    }, 
+    {
+      "id": "ddd47a1b-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Essen", 
+      "src_port": "ddd47a19-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Hannover", 
+      "dst_port": "ddd47a18-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a2b-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Essen", 
+      "src_port": "ddd47a29-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Muenchen", 
+      "dst_port": "ddd47a28-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a3b-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Essen", 
+      "src_port": "ddd47a39-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Koeln", 
+      "dst_port": "ddd47a38-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47ab7-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Essen", 
+      "src_port": "ddd47ab5-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Hamburg", 
+      "dst_port": "ddd47ab4-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a6b-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Essen", 
+      "src_port": "ddd47a69-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Leipzig", 
+      "dst_port": "ddd47a68-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a73-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Essen", 
+      "src_port": "ddd47a71-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Erlangen", 
+      "dst_port": "ddd47a70-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47a7b-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Essen", 
+      "src_port": "ddd47a79-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Berlin", 
+      "dst_port": "ddd47a78-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47aba-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Essen", 
+      "src_port": "ddd47ab8-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Frank", 
+      "dst_port": "ddd47ab9-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000
+    }, 
+    {
+      "id": "ddd47a97-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "Essen", 
+      "src_port": "ddd47a95-80ff-11e7-bc35-3065ec956147", 
+      "dst_node": "Stutt", 
+      "dst_port": "ddd47a94-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 10000, 
+      "backward": true
+    }, 
+    {
+      "id": "ddd47b0b-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "MuenchenSAP3", 
+      "src_port": 1, 
+      "dst_node": "MuenchenSw1", 
+      "dst_port": "ddd47b0a-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 100
+    }, 
+    {
+      "id": "ddd47ae4-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "MuenchenSAP2", 
+      "src_port": 1, 
+      "dst_node": "MuenchenSw0", 
+      "dst_port": "ddd47ae3-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 100
+    }, 
+    {
+      "id": "ddd47ae1-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "MuenchenSAP1", 
+      "src_port": 1, 
+      "dst_node": "MuenchenSw0", 
+      "dst_port": "ddd47ae0-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 100
+    }, 
+    {
+      "id": "ddd47ade-80ff-11e7-bc35-3065ec956147", 
+      "src_node": "MuenchenSAP0", 
+      "src_port": 1, 
+      "dst_node": "MuenchenSw0", 
+      "dst_port": "ddd47add-80ff-11e7-bc35-3065ec956147", 
+      "delay": 1.0, 
+      "bandwidth": 100
+    }
+  ]
+}

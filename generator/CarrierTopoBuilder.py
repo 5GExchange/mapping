@@ -430,7 +430,7 @@ def getPicoTopo():
 
 def getSNDlib_dfn_gwin(gwin_path = "dfn-gwin.gml", save_to_file=False,
                        gen_sap_names=False,
-                       abc_nf_type_num=10):
+                       abc_nf_type_num=10, edge_computing=False):
   """
   Topology taken from SNDlib, dfn-gwin.
   """
@@ -456,15 +456,15 @@ def getSNDlib_dfn_gwin(gwin_path = "dfn-gwin.gml", save_to_file=False,
                              nffg.network.node[j.rstrip('.')].add_port(), 
                              **corelinkres)
 
-  
-  nodeset1 = random.sample(gwinnodes, 3)
-  nodeset1.extend(random.sample(gwinnodes, 3))
-  # add cloud nodes to 6 random nodes.
-  for n in nodeset1:
-    infra = nffg.add_infra(id=getName(n+"Host"), **infrares)
-    infra.add_supported_type(random.sample(nf_types, 6))
-    nffg.add_undirected_link(nffg.network.node[n].add_port(), infra.add_port(), 
-                             **corelinkres)
+  if not edge_computing:
+    # add cloud nodes to 6 random nodes.
+    nodeset1 = random.sample(gwinnodes, 3)
+    nodeset1.extend(random.sample(gwinnodes, 3))
+    for n in nodeset1:
+      infra = nffg.add_infra(id=getName(n+"Host"), **infrares)
+      infra.add_supported_type(random.sample(nf_types, 6))
+      nffg.add_undirected_link(nffg.network.node[n].add_port(), infra.add_port(),
+                               **corelinkres)
     
   nodeset2 = random.sample(gwinnodes, 3)
   nodeset2.extend(random.sample(gwinnodes, 3))
@@ -480,7 +480,16 @@ def getSNDlib_dfn_gwin(gwin_path = "dfn-gwin.gml", save_to_file=False,
         nameid = getName(n+"SAP")
       sap = nffg.add_sap(id=nameid, name=nameid)
       nffg.add_undirected_link(sap.add_port(id=1), sw.add_port(), **acclinkres)
-  
+
+  if edge_computing:
+    # add hosts to the 6 access switches available
+    for n in filter(lambda i: "Sw" in i.id, [i for i in nffg.infras]):
+      infra = nffg.add_infra(id=getName(n.id + "Host"), **infrares)
+      infra.add_supported_type(random.sample(nf_types, 6))
+      nffg.add_undirected_link(nffg.network.node[n.id].add_port(),
+                               infra.add_port(),
+                               **corelinkres)
+
   # save it to file
   if save_to_file:
     augmented_gwin = nx.MultiDiGraph()
@@ -511,4 +520,5 @@ if __name__ == '__main__':
   # topo = getCarrierTopo(topoparams)
   # print topo.dump()
   with open("augmented-dfn-gwin.nffg", "w") as f:
-    f.write(getSNDlib_dfn_gwin(abc_nf_type_num=10, gen_sap_names=True).dump())
+    f.write(getSNDlib_dfn_gwin(abc_nf_type_num=10, gen_sap_names=False,
+                               save_to_file=True, edge_computing=True).dump())
