@@ -368,7 +368,7 @@ def main(argv):
                 on_act_lines.append(line)
 
             plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color,
-                         label=element["name"], dashes=line, marker=marker, markersize=marker_size,
+                         label=element["name"].replace('/', '_'), dashes=line, marker=marker, markersize=marker_size,
                          markevery=mark_every)
 
     if mapped_offline_req_list is not None:
@@ -390,8 +390,9 @@ def main(argv):
                 off_act_colors.append(color)
                 off_act_lines.append(line)
 
-            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color, label=element["name"],
-                     dashes=line, marker=marker, markersize=marker_size, markevery=mark_every)
+            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color,
+                     label=element["name"].replace('/', '_'), dashes=line, marker=marker, markersize=marker_size,
+                     markevery=mark_every)
 
     if mapped_hybrid_req_list is not None:
         for element in mapped_hybrid_req_list:
@@ -412,8 +413,9 @@ def main(argv):
                 hy_act_colors.append(color)
                 hy_act_lines.append(line)
 
-            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color, label=element["name"],
-                     dashes=line, marker=marker, markersize=marker_size, markevery=mark_every)
+            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color,
+                     label=element["name"].replace('/', '_'), dashes=line, marker=marker, markersize=marker_size,
+                     markevery=mark_every)
 
     plt.grid('on')
     plt.title('Accepted incoming service requests')
@@ -439,8 +441,9 @@ def main(argv):
             color = on_act_colors[i]
             line = on_act_lines[i]
             marker = on_act_marker[i]
-            plt.plot(element["incoming_time"], element["request_list"], color=color, label=element["name"],
-                     dashes=line, marker=marker, markersize=marker_size, markevery=mark_every)
+            plt.plot(element["incoming_time"], element["request_list"], color=color,
+                     label=element["name"].replace('/', '_'), dashes=line, marker=marker, markersize=marker_size,
+                     markevery=mark_every)
             i += 1
 
     if mapped_offline_req_list is not None:
@@ -449,8 +452,9 @@ def main(argv):
             color = off_act_colors[i]
             line = off_act_lines[i]
             marker = off_act_marker[i]
-            plt.plot(element["incoming_time"], element["request_list"], color=color, label=element["name"],
-                     dashes=line, marker=marker, markersize=marker_size, markevery=mark_every)
+            plt.plot(element["incoming_time"], element["request_list"], color=color,
+                     label=element["name"].replace('/', '_'), dashes=line, marker=marker, markersize=marker_size,
+                     markevery=mark_every)
             i += 1
 
     if mapped_hybrid_req_list is not None:
@@ -459,8 +463,9 @@ def main(argv):
             color = hy_act_colors[i]
             line = hy_act_lines[i]
             marker = hy_act_marker[i]
-            plt.plot(element["incoming_time"], element["request_list"], color=color, label=element["name"],
-                     dashes=line, marker=marker, markersize=marker_size, markevery=mark_every)
+            plt.plot(element["incoming_time"], element["request_list"], color=color,
+                     label=element["name"].replace('/', '_'), dashes=line, marker=marker, markersize=marker_size,
+                     markevery=mark_every)
             i += 1
 
     plt.grid('on')
@@ -485,8 +490,9 @@ def main(argv):
             color = on_act_colors[i]
             line = on_act_lines[i]
             marker = on_act_marker[i]
-            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color, label=element["name"],
-                     dashes=line, marker=marker, markersize=marker_size, markevery=mark_every)
+            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color,
+                     label=element["name"].replace('/', '_'), dashes=line, marker=marker, markersize=marker_size,
+                     markevery=mark_every)
             i += 1
 
     if running_offline_req_list is not None:
@@ -495,8 +501,9 @@ def main(argv):
             color = off_act_colors[i]
             line = off_act_lines[i]
             marker = off_act_marker[i]
-            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color, label=element["name"],
-                     dashes=line, marker=marker, markersize=marker_size, markevery=mark_every)
+            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color,
+                     label=element["name"].replace('/', '_'), dashes=line, marker=marker, markersize=marker_size,
+                     markevery=mark_every)
             i += 1
 
     if running_hybrid_req_list is not None:
@@ -505,8 +512,9 @@ def main(argv):
             color = hy_act_colors[i]
             line = hy_act_lines[i]
             marker = hy_act_marker[i]
-            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color, label=element["name"],
-                     dashes=line, marker=marker, markersize=marker_size, markevery=mark_every)
+            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color,
+                     label=element["name"].replace('/', '_'), dashes=line, marker=marker, markersize=marker_size,
+                     markevery=mark_every)
             i += 1
 
     plt.grid('on')
@@ -529,7 +537,8 @@ def main(argv):
             color = on_act_colors[i]
             line = on_act_lines[i]
             marker = on_act_marker[i]
-            plt.plot(element["incoming_time"], element["request_list"], color=color, label=element["name"],
+            plt.plot(element["incoming_time"], element["request_list"], color=color,
+                     label=element["name"].replace('/', '_'),
                      dashes=line, marker=marker, markersize=marker_size, markevery=mark_every)
             i += 1
 
@@ -539,8 +548,9 @@ def main(argv):
             color = off_act_colors[i]
             line = off_act_lines[i]
             marker = off_act_marker[i]
-            plt.plot(element["incoming_time"], element["request_list"], color=color, label=element["name"],
-                     dashes=line, marker=marker, markersize=marker_size, markevery=mark_every)
+            plt.plot(element["incoming_time"], element["request_list"], color=color,
+                     label=element["name"].replace('/', '_'), dashes=line, marker=marker, markersize=marker_size,
+                     markevery=mark_every)
             i += 1
 
     if running_hybrid_req_list is not None:
@@ -549,8 +559,9 @@ def main(argv):
             color = hy_act_colors[i]
             line = hy_act_lines[i]
             marker = hy_act_marker[i]
-            plt.plot(element["incoming_time"], element["request_list"], color=color, label=element["name"],
-                     dashes=line, marker=marker, markersize=marker_size, markevery=mark_every)
+            plt.plot(element["incoming_time"], element["request_list"], color=color,
+                     label=element["name"].replace('/', '_'), dashes=line, marker=marker, markersize=marker_size,
+                     markevery=mark_every)
             i += 1
 
     plt.grid('on')
@@ -572,8 +583,9 @@ def main(argv):
             color = on_act_colors[i]
             line = on_act_lines[i]
             marker = on_act_marker[i]
-            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color, label=element["name"],
-                     dashes=line, marker=marker, markersize=marker_size, markevery=mark_every)
+            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color,
+                     label=element["name"].replace('/', '_'), dashes=line, marker=marker, markersize=marker_size,
+                     markevery=mark_every)
             i += 1
 
     if refused_offline_req_list is not None:
@@ -582,8 +594,9 @@ def main(argv):
             color = off_act_colors[i]
             line = off_act_lines[i]
             marker = off_act_marker[i]
-            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color, label=element["name"],
-                     dashes=line, marker=marker, markersize=marker_size, markevery=mark_every)
+            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color,
+                     label=element["name"].replace('/', '_'), dashes=line, marker=marker, markersize=marker_size,
+                     markevery=mark_every)
             i += 1
 
     if refused_hybrid_req_list is not None:
@@ -592,8 +605,9 @@ def main(argv):
             color = hy_act_colors[i]
             line = hy_act_lines[i]
             marker = hy_act_marker[i]
-            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color, label=element["name"],
-                     dashes=line, marker=marker, markersize=marker_size, markevery=mark_every)
+            plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color,
+                     label=element["name"].replace('/', '_'), dashes=line, marker=marker, markersize=marker_size,
+                     markevery=mark_every)
             i += 1
 
     plt.title('Refused requests during the simulation')
@@ -617,8 +631,9 @@ def main(argv):
             color = on_act_colors[i]
             line = on_act_lines[i]
             marker = on_act_marker[i]
-            plt.plot(element["incoming_time"], element["request_list"], color=color, label=element["name"],
-                     dashes=line, marker=marker, markersize=marker_size, markevery=mark_every)
+            plt.plot(element["incoming_time"], element["request_list"], color=color,
+                     label=element["name"].replace('/', '_'), dashes=line, marker=marker, markersize=marker_size,
+                     markevery=mark_every)
             i += 1
 
     if refused_offline_req_list is not None:
@@ -627,8 +642,9 @@ def main(argv):
             color = off_act_colors[i]
             line = off_act_lines[i]
             marker = off_act_marker[i]
-            plt.plot(element["incoming_time"], element["request_list"], color=color, label=element["name"],
-                     dashes=line, marker=marker, markersize=marker_size, markevery=mark_every)
+            plt.plot(element["incoming_time"], element["request_list"], color=color,
+                     label=element["name"].replace('/', '_'), dashes=line, marker=marker, markersize=marker_size,
+                     markevery=mark_every)
             i += 1
 
     if refused_hybrid_req_list is not None:
@@ -637,8 +653,9 @@ def main(argv):
             color = hy_act_colors[i]
             line = hy_act_lines[i]
             marker = hy_act_marker[i]
-            plt.plot(element["incoming_time"], element["request_list"], color=color, label=element["name"],
-                     dashes=line, marker=marker, markersize=marker_size, markevery=mark_every)
+            plt.plot(element["incoming_time"], element["request_list"], color=color,
+                     label=element["name"].replace('/', '_'), dashes=line, marker=marker, markersize=marker_size,
+                     markevery=mark_every)
             i += 1
 
     plt.grid('on')
@@ -653,7 +670,6 @@ def main(argv):
                 replace(' ', '_').replace(':', '-') + "." + format, bbox_extra_artists=(lgd,), bbox_inches='tight')
 
     print("Creating plots are DONE :)")
-
 
 if __name__ == "__main__":
    main(sys.argv[1:])
