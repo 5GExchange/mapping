@@ -342,7 +342,6 @@ def main(argv):
     colors_iter = iter(['red', 'blue', 'green', 'yellow', 'skyblue', 'yellowgreen', 'black', 'orange', 'magenta', 'slategray'])
     lines_iter = iter([[8, 4, 2, 4, 2, 4], [4, 2], [], [8, 4, 4, 2], [8, 4, 2, 4], [5, 2, 10, 5], []])
     markers_iter = iter(['o', 'v', '+', 's', '*', '', '|', 'x'])
-    ticks = []
 
     on_act_colors, on_act_lines, on_act_marker, off_act_colors, off_act_lines, off_act_marker, hy_act_colors, \
                                                     hy_act_lines, hy_act_marker = [], [], [], [], [], [], [], [], []
@@ -366,9 +365,9 @@ def main(argv):
                 on_act_marker.append(marker)
                 on_act_colors.append(color)
                 on_act_lines.append(line)
-
+            label = element["name"].replace('/', '_').replace('-', '').replace('.', '_')
             plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color,
-                         label=element["name"].replace('/', '_')[:80], dashes=line, marker=marker, markersize=marker_size,
+                         label=label[:80], dashes=line, marker=marker, markersize=marker_size,
                          markevery=mark_every)
 
     if mapped_offline_req_list is not None:
@@ -389,9 +388,9 @@ def main(argv):
                 off_act_marker.append(marker)
                 off_act_colors.append(color)
                 off_act_lines.append(line)
-
+            label = element["name"].replace('/', '_').replace('-', '_').replace('.', '_')
             plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color,
-                     label=element["name"].replace('/', '_')[:80], dashes=line, marker=marker, markersize=marker_size,
+                     label=label[:80], dashes=line, marker=marker, markersize=marker_size,
                      markevery=mark_every)
 
     if mapped_hybrid_req_list is not None:
@@ -412,9 +411,9 @@ def main(argv):
                 hy_act_marker.append(marker)
                 hy_act_colors.append(color)
                 hy_act_lines.append(line)
-
+            label = element["name"].replace('/', '_').replace('-', '_').replace('.', '_')
             plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color,
-                     label=element["name"].replace('/', '_')[:80], dashes=line, marker=marker, markersize=marker_size,
+                     label=label[:80], dashes=line, marker=marker, markersize=marker_size,
                      markevery=mark_every)
 
     plt.grid('on')
@@ -441,8 +440,9 @@ def main(argv):
             color = on_act_colors[i]
             line = on_act_lines[i]
             marker = on_act_marker[i]
+            label = element["name"].replace('/', '_').replace('-', '').replace('.', '_')
             plt.plot(element["incoming_time"], element["request_list"], color=color,
-                     label=element["name"].replace('/', '_')[:80], dashes=line, marker=marker, markersize=marker_size,
+                     label=label[:80], dashes=line, marker=marker, markersize=marker_size,
                      markevery=mark_every)
             i += 1
 
@@ -452,8 +452,9 @@ def main(argv):
             color = off_act_colors[i]
             line = off_act_lines[i]
             marker = off_act_marker[i]
+            label = element["name"].replace('/', '_').replace('-', '').replace('.', '_')
             plt.plot(element["incoming_time"], element["request_list"], color=color,
-                     label=element["name"].replace('/', '_')[:80], dashes=line, marker=marker, markersize=marker_size,
+                     label=label[:80], dashes=line, marker=marker, markersize=marker_size,
                      markevery=mark_every)
             i += 1
 
@@ -463,8 +464,9 @@ def main(argv):
             color = hy_act_colors[i]
             line = hy_act_lines[i]
             marker = hy_act_marker[i]
+            label = element["name"].replace('/', '_').replace('-', '').replace('.', '_')
             plt.plot(element["incoming_time"], element["request_list"], color=color,
-                     label=element["name"].replace('/', '_')[:80], dashes=line, marker=marker, markersize=marker_size,
+                     label=label[:80], dashes=line, marker=marker, markersize=marker_size,
                      markevery=mark_every)
             i += 1
 
@@ -490,8 +492,9 @@ def main(argv):
             color = on_act_colors[i]
             line = on_act_lines[i]
             marker = on_act_marker[i]
+            label = element["name"].replace('/', '_').replace('-', '').replace('.', '_')
             plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color,
-                     label=element["name"].replace('/', '_')[:80], dashes=line, marker=marker, markersize=marker_size,
+                     label=label[:80], dashes=line, marker=marker, markersize=marker_size,
                      markevery=mark_every)
             i += 1
 
@@ -501,8 +504,9 @@ def main(argv):
             color = off_act_colors[i]
             line = off_act_lines[i]
             marker = off_act_marker[i]
+            label = element["name"].replace('/', '_').replace('-', '').replace('.', '_')
             plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color,
-                     label=element["name"].replace('/', '_')[:80], dashes=line, marker=marker, markersize=marker_size,
+                     label=label[:80], dashes=line, marker=marker, markersize=marker_size,
                      markevery=mark_every)
             i += 1
 
@@ -512,8 +516,9 @@ def main(argv):
             color = hy_act_colors[i]
             line = hy_act_lines[i]
             marker = hy_act_marker[i]
+            label = element["name"].replace('/', '_').replace('-', '').replace('.', '_')
             plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color,
-                     label=element["name"].replace('/', '_')[:80], dashes=line, marker=marker, markersize=marker_size,
+                     label=label[:80], dashes=line, marker=marker, markersize=marker_size,
                      markevery=mark_every)
             i += 1
 
@@ -537,8 +542,9 @@ def main(argv):
             color = on_act_colors[i]
             line = on_act_lines[i]
             marker = on_act_marker[i]
+            label = element["name"].replace('/', '_').replace('-', '').replace('.', '_')
             plt.plot(element["incoming_time"], element["request_list"], color=color,
-                     label=element["name"].replace('/', '_')[:80],
+                     label=label[:80],
                      dashes=line, marker=marker, markersize=marker_size, markevery=mark_every)
             i += 1
 
@@ -548,8 +554,9 @@ def main(argv):
             color = off_act_colors[i]
             line = off_act_lines[i]
             marker = off_act_marker[i]
+            label = element["name"].replace('/', '_').replace('-', '').replace('.', '_')
             plt.plot(element["incoming_time"], element["request_list"], color=color,
-                     label=element["name"].replace('/', '_')[:80], dashes=line, marker=marker, markersize=marker_size,
+                     label=label[:80], dashes=line, marker=marker, markersize=marker_size,
                      markevery=mark_every)
             i += 1
 
@@ -559,8 +566,9 @@ def main(argv):
             color = hy_act_colors[i]
             line = hy_act_lines[i]
             marker = hy_act_marker[i]
+            label = element["name"].replace('/', '_').replace('-', '').replace('.', '_')
             plt.plot(element["incoming_time"], element["request_list"], color=color,
-                     label=element["name"].replace('/', '_')[:80], dashes=line, marker=marker, markersize=marker_size,
+                     label=label[:80], dashes=line, marker=marker, markersize=marker_size,
                      markevery=mark_every)
             i += 1
 
@@ -583,8 +591,9 @@ def main(argv):
             color = on_act_colors[i]
             line = on_act_lines[i]
             marker = on_act_marker[i]
+            label = element["name"].replace('/', '_').replace('-', '').replace('.', '_')
             plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color,
-                     label=element["name"].replace('/', '_')[:80], dashes=line, marker=marker, markersize=marker_size,
+                     label=label[:80], dashes=line, marker=marker, markersize=marker_size,
                      markevery=mark_every)
             i += 1
 
@@ -594,8 +603,9 @@ def main(argv):
             color = off_act_colors[i]
             line = off_act_lines[i]
             marker = off_act_marker[i]
+            label = element["name"].replace('/', '_').replace('-', '').replace('.', '_')
             plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color,
-                     label=element["name"].replace('/', '_')[:80], dashes=line, marker=marker, markersize=marker_size,
+                     label=label[:80], dashes=line, marker=marker, markersize=marker_size,
                      markevery=mark_every)
             i += 1
 
@@ -605,8 +615,9 @@ def main(argv):
             color = hy_act_colors[i]
             line = hy_act_lines[i]
             marker = hy_act_marker[i]
+            label = element["name"].replace('/', '_').replace('-', '').replace('.', '_')
             plt.plot(range(0, len(element["request_list"])), element["request_list"], color=color,
-                     label=element["name"].replace('/', '_')[:80], dashes=line, marker=marker, markersize=marker_size,
+                     label=label[:80], dashes=line, marker=marker, markersize=marker_size,
                      markevery=mark_every)
             i += 1
 
@@ -631,8 +642,9 @@ def main(argv):
             color = on_act_colors[i]
             line = on_act_lines[i]
             marker = on_act_marker[i]
+            label = element["name"].replace('/', '_').replace('-', '').replace('.', '_')
             plt.plot(element["incoming_time"], element["request_list"], color=color,
-                     label=element["name"].replace('/', '_')[:80], dashes=line, marker=marker, markersize=marker_size,
+                     label=label[:80], dashes=line, marker=marker, markersize=marker_size,
                      markevery=mark_every)
             i += 1
 
@@ -642,8 +654,9 @@ def main(argv):
             color = off_act_colors[i]
             line = off_act_lines[i]
             marker = off_act_marker[i]
+            label = element["name"].replace('/', '_').replace('-', '').replace('.', '_')
             plt.plot(element["incoming_time"], element["request_list"], color=color,
-                     label=element["name"].replace('/', '_')[:80], dashes=line, marker=marker, markersize=marker_size,
+                     label=label[:80], dashes=line, marker=marker, markersize=marker_size,
                      markevery=mark_every)
             i += 1
 
@@ -653,8 +666,9 @@ def main(argv):
             color = hy_act_colors[i]
             line = hy_act_lines[i]
             marker = hy_act_marker[i]
+            label = element["name"].replace('/', '_').replace('-', '').replace('.', '_')
             plt.plot(element["incoming_time"], element["request_list"], color=color,
-                     label=element["name"].replace('/', '_')[:80], dashes=line, marker=marker, markersize=marker_size,
+                     label=label[:80], dashes=line, marker=marker, markersize=marker_size,
                      markevery=mark_every)
             i += 1
 
