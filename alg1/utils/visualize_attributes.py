@@ -29,6 +29,7 @@ import networkx as nx
 site.addsitedir('../..')
 from nffg_lib.nffg import NFFG
 
+
 def main():
   parser = argparse.ArgumentParser(
     description="Reads and NFFG file calculates utilization parameters and "
@@ -53,6 +54,8 @@ def main():
 
   outputfile = args.o + ".graphml" if args.o else "output.graphml"
 
+  # TODO: use color or line pattern (for intervals) as load visualization?
+
   # NFFG processing mode.
   if args.nffg:
     with open(args.nffg, "r") as f:
@@ -61,19 +64,23 @@ def main():
       nffg.calculate_available_node_res({})
       nffg.calculate_available_link_res([])
 
+      # clear all VNF-s, we only want the topology
       nffg.clear_nodes(NFFG.TYPE_NF)
+      nffg.clear_links(NFFG.TYPE_LINK_REQUIREMENT)
 
-      graphml_to_wrtie = nx.DiGraph()
-      graphml_to_wrtie.add_nodes_from(nffg.network.nodes_iter())
+      graphml_to_write = nx.DiGraph()
+
+      # TODO: add node attributes too
+      graphml_to_write.add_nodes_from(nffg.network.nodes_iter())
       for i, j, d in nffg.network.edges_iter(data=True):
-        graphml_to_wrtie.add_edge(i, j, attr_dict=dict(
+        graphml_to_write.add_edge(i, j, attr_dict=dict(
           [(l, str(v)) for l, v in d.__dict__.iteritems() if v is not None]))
 
-      for i, j, d in graphml_to_wrtie.edges_iter(data=True):
-        graphml_to_wrtie[i][j]['utilization'] = 1.0 - float(
+      for i, j, d in graphml_to_write.edges_iter(data=True):
+        graphml_to_write[i][j]['utilization'] = 1.0 - float(
           d['availbandwidth']) / float(d['bandwidth'])
 
-      nx.write_graphml(graphml_to_wrtie, outputfile)
+      nx.write_graphml(graphml_to_write, outputfile)
 
   # GRAPHML processing mode
   elif args.graphml:
