@@ -140,6 +140,16 @@ def get_data(file_list, type, start, finish, nice):
                 refused_requests_dict["name"] = (name + "_AVG_" + str(file_list[file_list_iter])).replace("\n", "")
                 refused_reqs_to_avg.append(copy.copy(refused_requests_dict))
 
+            mapped_requests_dict["name"] = ""
+            mapped_requests_dict["request_list"] = []
+            mapped_requests_dict["incoming_time"] = []
+            running_requests_dict["name"] = ""
+            running_requests_dict["request_list"] = []
+            running_requests_dict["incoming_time"] = []
+            refused_requests_dict["name"] = ""
+            refused_requests_dict["request_list"] = []
+            refused_requests_dict["incoming_time"] = []
+
             # Average dicts
             avg_mapped_requests_dict = dict()
             avg_mapped_requests_dict["request_list"] = []
@@ -162,7 +172,7 @@ def get_data(file_list, type, start, finish, nice):
                     req_summa += m["request_list"][i]
                     log_file_counter += 1
                 avg_mapped_requests_dict["incoming_time"].append(round(inc_summa / log_file_counter, 2))
-                avg_mapped_requests_dict["request_list"].append(round(req_summa / log_file_counter, 2))
+                avg_mapped_requests_dict["request_list"].append(int(req_summa / log_file_counter))
                 avg_mapped_requests_dict["name"] = mapped_reqs_to_avg[0]["name"]
                 inc_summa, req_summa, log_file_counter = 0, 0, 0
 
@@ -172,17 +182,17 @@ def get_data(file_list, type, start, finish, nice):
                     req_summa += m["request_list"][i]
                     log_file_counter += 1
                 avg_running_requests_dict["incoming_time"].append(round(inc_summa / log_file_counter, 2))
-                avg_running_requests_dict["request_list"].append(round(req_summa / log_file_counter, 2))
+                avg_running_requests_dict["request_list"].append(int(req_summa / log_file_counter))
                 avg_running_requests_dict["name"] = running_reqs_to_avg[0]["name"]
                 inc_summa, req_summa, log_file_counter = 0, 0, 0
 
             for i in range(0, len(refused_reqs_to_avg[0]["request_list"])):
-                for m in running_reqs_to_avg:
+                for m in refused_reqs_to_avg:
                     inc_summa += m["incoming_time"][i]
                     req_summa += m["request_list"][i]
                     log_file_counter += 1
                 avg_refused_requests_dict["incoming_time"].append(round(inc_summa / log_file_counter, 2))
-                avg_refused_requests_dict["request_list"].append(round(req_summa / log_file_counter, 2))
+                avg_refused_requests_dict["request_list"].append(int(req_summa / log_file_counter))
                 avg_refused_requests_dict["name"] = refused_reqs_to_avg[0]["name"]
                 inc_summa, req_summa, log_file_counter = 0, 0, 0
 
@@ -197,41 +207,45 @@ def get_data(file_list, type, start, finish, nice):
 
 def separate_and_avg(log_files):
     # Separate
-    result = []
-    if "[" in log_files:
-        avg_log_files = log_files.split(",")
+    try:
+        result = []
+        if "[" in log_files:
+            avg_log_files = log_files.split(",")
 
-        # where are [ and ] characters:
-        start = [i for i, s in enumerate(avg_log_files) if '[' in s]
-        end = [i for i, s in enumerate(avg_log_files) if ']' in s]
+            # where are [ and ] characters:
+            start = [i for i, s in enumerate(avg_log_files) if '[' in s]
+            end = [i for i, s in enumerate(avg_log_files) if ']' in s]
 
-        if len(start) != len(end):
-            print("The number of [ and ] is not equal!!")
-            raise
+            if len(start) != len(end):
+                print("The number of [ and ] is not equal!!")
+                raise
 
-        # delete special characters:
-        avg_log_files = ([s.replace('[', '') for s in avg_log_files])
-        avg_log_files = ([s.replace(']', '') for s in avg_log_files])
+            # delete special characters:
+            avg_log_files = ([s.replace('[', '') for s in avg_log_files])
+            avg_log_files = ([s.replace(']', '') for s in avg_log_files])
 
-        # merge those items in the list that were in the same parentheses
-        correction = 0
-        for k in range(0, len(start)):
-            avg_log_files[(start[k]-correction):(end[k]+1-correction)] = \
-                [','.join(avg_log_files[(start[k]-correction):(end[k]+1-correction)])]
-            correction += end[k] - start[k]
+            # merge those items in the list that were in the same parentheses
+            correction = 0
+            for k in range(0, len(start)):
+                avg_log_files[(start[k]-correction):(end[k]+1-correction)] = \
+                    [','.join(avg_log_files[(start[k]-correction):(end[k]+1-correction)])]
+                correction += end[k] - start[k]
 
-        for element in avg_log_files:
-            while "." in element:
-                tmp_element = []
-                element = element.split(",")
-                for i in element:
-                    if i!='':
-                        tmp_element.append(i)
-                        element = tmp_element
-                result.append(element)
-        return result
-    else:
-        return log_files.split(",")
+            for element in avg_log_files:
+                while "." in element:
+                    tmp_element = []
+                    element = element.split(",")
+                    for i in element:
+                        if i!='':
+                            tmp_element.append(i)
+                            element = tmp_element
+                    result.append(element)
+            return result
+        else:
+            return log_files.split(",")
+    except Exception as e:
+        print e
+        print "Separate file error!"
 
 
 def main(argv):
@@ -244,7 +258,6 @@ def main(argv):
     refused_online_req_list = None
     refused_offline_req_list = None
     refused_hybrid_req_list = None
-
     start_count = 0
     finish_count = float('inf')
     path = ""
@@ -307,7 +320,6 @@ def main(argv):
         online_files = separate_and_avg(online_log_files)
         mapped_online_req_list, running_online_req_list, refused_online_req_list = \
             get_data(online_files, "Online", start_count, finish_count, nice)
-
     except Exception as e:
         print e
         print "The program runs without online log file."
