@@ -27,6 +27,7 @@ def get_data(file_list, type, start, finish, nice):
     refused_requests_dict["incoming_time"] = []
     refused_requests_dict["name"] = ""
     file_list_iter = 0
+    unfinished_test_count = False
 
     for element in file_list:
         start_time, data_point_count = 0, 0
@@ -150,6 +151,12 @@ def get_data(file_list, type, start, finish, nice):
             refused_requests_dict["request_list"] = []
             refused_requests_dict["incoming_time"] = []
 
+            # Get the longest list len
+            longest_list = len(mapped_reqs_to_avg[0]["request_list"])
+            for x in range(0, len(mapped_reqs_to_avg)):
+                if len(mapped_reqs_to_avg[x]["request_list"]) > longest_list:
+                    longest_list = len(mapped_reqs_to_avg[x]["request_list"])
+
             # Average dicts
             avg_mapped_requests_dict = dict()
             avg_mapped_requests_dict["request_list"] = []
@@ -166,31 +173,44 @@ def get_data(file_list, type, start, finish, nice):
 
             inc_summa, req_summa, log_file_counter = 0, 0, 0
 
-            for i in range(0, len(mapped_reqs_to_avg[0]["request_list"])):
+            for i in range(0, longest_list):
                 for m in mapped_reqs_to_avg:
-                    inc_summa += m["incoming_time"][i]
-                    req_summa += m["request_list"][i]
-                    log_file_counter += 1
+                    try:
+                        inc_summa += m["incoming_time"][i]
+                        req_summa += m["request_list"][i]
+                        log_file_counter += 1
+                    except:
+                        unfinished_test_count = True
+                        # in this case, the current test is shorter than the others
+                        pass
                 avg_mapped_requests_dict["incoming_time"].append(round(inc_summa / log_file_counter, 2))
                 avg_mapped_requests_dict["request_list"].append(int(req_summa / log_file_counter))
                 avg_mapped_requests_dict["name"] = mapped_reqs_to_avg[0]["name"]
                 inc_summa, req_summa, log_file_counter = 0, 0, 0
 
-            for i in range(0, len(running_reqs_to_avg[0]["request_list"])):
+            for i in range(0, longest_list):
                 for m in running_reqs_to_avg:
-                    inc_summa += m["incoming_time"][i]
-                    req_summa += m["request_list"][i]
-                    log_file_counter += 1
+                    try:
+                        inc_summa += m["incoming_time"][i]
+                        req_summa += m["request_list"][i]
+                        log_file_counter += 1
+                    except:
+                        # in this case, the current test is shorter than the others
+                        pass
                 avg_running_requests_dict["incoming_time"].append(round(inc_summa / log_file_counter, 2))
                 avg_running_requests_dict["request_list"].append(int(req_summa / log_file_counter))
                 avg_running_requests_dict["name"] = running_reqs_to_avg[0]["name"]
                 inc_summa, req_summa, log_file_counter = 0, 0, 0
 
-            for i in range(0, len(refused_reqs_to_avg[0]["request_list"])):
+            for i in range(0, longest_list):
                 for m in refused_reqs_to_avg:
-                    inc_summa += m["incoming_time"][i]
-                    req_summa += m["request_list"][i]
-                    log_file_counter += 1
+                    try:
+                        inc_summa += m["incoming_time"][i]
+                        req_summa += m["request_list"][i]
+                        log_file_counter += 1
+                    except:
+                        # in this case, the current test is shorter than the others
+                        pass
                 avg_refused_requests_dict["incoming_time"].append(round(inc_summa / log_file_counter, 2))
                 avg_refused_requests_dict["request_list"].append(int(req_summa / log_file_counter))
                 avg_refused_requests_dict["name"] = refused_reqs_to_avg[0]["name"]
@@ -201,6 +221,9 @@ def get_data(file_list, type, start, finish, nice):
             refused_reqs.append(copy.copy(avg_refused_requests_dict))
 
         file_list_iter += 1
+
+    if unfinished_test_count:
+        print ('\x1b[1;33;0m' + 'There are one or more unfinished tests!!!' + '\x1b[0m')
 
     return mapped_reqs, running_reqs, refused_reqs
 
@@ -243,6 +266,7 @@ def separate_and_avg(log_files):
             return result
         else:
             return log_files.split(",")
+
     except Exception as e:
         print e
         print "Separate file error!"
@@ -315,7 +339,8 @@ def main(argv):
         else:
             print 'Bad parameters! Use python create_plots.py --help'
             sys.exit()
-
+    print "Argument:"
+    print (sys.argv)
     try:
         online_files = separate_and_avg(online_log_files)
         mapped_online_req_list, running_online_req_list, refused_online_req_list = \
@@ -695,7 +720,7 @@ def main(argv):
     plt.savefig(path + "refused_requests_with_time_axis" + str(time.ctime()). \
                 replace(' ', '_').replace(':', '-') + "." + format, bbox_extra_artists=(lgd,), bbox_inches='tight')
 
-    print("Creating plots are DONE :)")
+    print('\x1b[1;32;0m' + 'Creating plots are DONE :)' + '\x1b[0m')
 
 if __name__ == "__main__":
-   main(sys.argv[1:])
+    main(sys.argv[1:])
