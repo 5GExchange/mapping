@@ -498,7 +498,67 @@ def getSNDlib_dfn_gwin(gwin_path = "dfn-gwin.gml", save_to_file=False,
     nx.write_gml(augmented_gwin, "augmented-dfn-gwin.gml")
 
   return nffg
-  
+
+
+def getFatTreeTopo(abc_nf_type_num=10, save_to_file=False):
+  """
+  Constructs a data center fat tree topology, with similar values as
+  SNDLib gwin.
+  :param gen_sap_names:
+  :param abc_nf_type_num:
+  :param save_to_file:
+  :return:
+  """
+  random.seed(1)
+  nf_types = list(string.ascii_uppercase)[:abc_nf_type_num]
+  nffg = NFFG(id="FatTree")
+  switch = {'cpu': 0, 'mem': 0, 'storage': 0, 'delay': 0.5,
+            'bandwidth': 40000, 'infra_type': NFFG.TYPE_INFRA_SDN_SW}
+  infrares = {'cpu': 400, 'mem': 320000, 'storage': 1500, 'delay': 1.0,
+              'bandwidth': 40000, 'infra_type': NFFG.TYPE_INFRA_EE}
+  corelinkres = {'bandwidth': 10000, 'delay': 1.0}
+  aggrlinkres = {'bandwidth': 1000, 'delay': 5.0}
+  acclinkres = {'bandwidth': 100, 'delay': 1.0}
+
+  # add core switches
+  core_sw = []
+  for i in nx.complete_graph(4):
+    core_sw.append(nffg.add_infra(id='CoreSw'+str(i), **switch))
+  for i,j in nx.complete_graph(4).edges():
+    nffg.add_undirected_link(core_sw[i].add_port(), core_sw[j].add_port(),
+                             **corelinkres)
+
+  # add aggregation switches
+  aggr_sw = []
+  for i in xrange(0,8):
+    aggr_sw.append(nffg.add_infra(id='AggrSw'+str(i), **switch))
+  for sw_c in core_sw:
+    for sw_a in random.sample(aggr_sw, 4):
+      nffg.add_undirected_link(sw_c.add_port(), sw_a.add_port(), **aggrlinkres)
+
+  # add sap nodes
+  saps = []
+  for i in xrange(0,19):
+    nameid = getName('SAP')
+    saps.append(nffg.add_sap(id=nameid, name=nameid))
+  for sap in saps:
+    for sw_a in random.sample(aggr_sw, 6):
+      nffg.add_undirected_link(sap.add_port(), sw_a.add_port(), **acclinkres)
+
+  # add hosts: 2 connected to core and 4 connected to aggregation switches
+  for number, sw_list in zip((2, 4), (core_sw, aggr_sw)):
+    for i, sw in zip(xrange(0,number), random.sample(sw_list, number)):
+      infra = nffg.add_infra(id=getName('Host'), **infrares)
+      infra.add_supported_type(random.sample(nf_types, 6))
+      nffg.add_undirected_link(sw.add_port(), infra.add_port(), **corelinkres)
+
+  if save_to_file:
+    fat_tree = nx.MultiDiGraph()
+    fat_tree.add_nodes_from(nffg.network.nodes_iter())
+    fat_tree.add_edges_from(nffg.network.edges_iter())
+    nx.write_gml(fat_tree, "fat-tree-data-center.gml")
+
+  return nffg
 
 if __name__ == '__main__':
   topoparams = []
@@ -519,6 +579,10 @@ if __name__ == '__main__':
   #                                 [4,8,12,16], [32000,64000], [200], 40000, 4)})
   # topo = getCarrierTopo(topoparams)
   # print topo.dump()
-  with open("augmented-dfn-gwin.nffg", "w") as f:
-    f.write(getSNDlib_dfn_gwin(abc_nf_type_num=10, gen_sap_names=False,
-                               save_to_file=True, edge_computing=True).dump())
+
+  # with open("augmented-dfn-gwin.nffg", "w") as f:
+  #   f.write(getSNDlib_dfn_gwin(abc_nf_type_num=10, gen_sap_names=False,
+  #                              save_to_file=True, edge_computing=True).dump())
+
+  with open("fat-tree-data-center.nffg", "w") as f:
+    f.write(getFatTreeTopo(save_to_file=True).dump())
