@@ -110,7 +110,7 @@ class AbstractRequestGenerator:
                             tmpid = all_saps_ending.pop() if use_saps_once \
                                 else self.rnd.choice(
                                 all_saps_ending)
-
+                # WARNING: SAP port must have ID 1, and one single port!
                 sg_path = []
                 if 1 in sap1.ports:
                     sap1port = sap1.ports[1]
@@ -170,6 +170,7 @@ class TestReqGen(AbstractRequestGenerator):
 
     def __init__(self, request_lifetime_lambda, nf_type_count, seed):
         super(TestReqGen, self).__init__(request_lifetime_lambda, nf_type_count, seed)
+        raise Exception("The test request generator is depracted!!")
 
     def get_request(self, resource_graph, test_lvl):
         all_saps_ending = [s.id for s in resource_graph.saps]

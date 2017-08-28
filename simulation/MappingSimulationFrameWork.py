@@ -257,6 +257,8 @@ class MappingSolutionFramework():
                                         "SG": service_graph, "req_num": req_num}
                 self.__remaining_request_lifetimes.append(service_life_element)
 
+        elif resource_type == "fat_tree":
+            self.__resource_getter = FatFreeTopoGetter()
         else:
             log.error("Invalid 'topology' in the simulation.cfg file!")
             raise RuntimeError(

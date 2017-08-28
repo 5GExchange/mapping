@@ -33,6 +33,7 @@ except ImportError:
     site.addsitedir('../generator')
     import CarrierTopoBuilder
 
+
 class AbstractResourceGetter:
     __metaclass__ = ABCMeta
 
@@ -127,6 +128,11 @@ class CarrierTopoGetter(AbstractResourceGetter):
     return CarrierTopoBuilder.getCarrierTopo(topoparams, increment_port_ids=True)
 
 
+class FatFreeTopoGetter(AbstractResourceGetter):
+
+  def GetNFFG(self):
+    network = CarrierTopoBuilder.getFatTreeTopo()
+    return network
 
 if __name__ == "__main__":
   carrier = CarrierTopoGetter().GetNFFG()
