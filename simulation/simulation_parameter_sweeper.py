@@ -15,10 +15,10 @@ import copy
 import os
 import sys
 import threading
-import time
 
 from configobj import ConfigObj
 
+semaphore_logging = threading.Semaphore(1)
 
 class Simulation(threading.Thread):
 
@@ -35,12 +35,14 @@ class Simulation(threading.Thread):
                                   base_filename + ".err")
 
   def run (self):
+    semaphore_logging.acquire()
     # cleaning up if there were a folder with this name earlier.
     os.system("rm -rf test"+config['simulation_number']+config['orchestrator'])
     self.semaphore.acquire()
     print "Simulation started at: "
     os.system("date")
     print "Running simulation: ", self.command
+    semaphore_logging.release()
     os.system(self.command)
     self.semaphore.release()
 
@@ -92,4 +94,3 @@ if __name__ == '__main__':
         config[k] = v[0]
       sweep[k] = v[1:]
     Simulation(config, folder, semaphore).start()
-    time.sleep(2)
