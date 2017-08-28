@@ -263,7 +263,10 @@ def separate_and_avg(log_files):
                             tmp_element.append(i)
                             element = tmp_element
                     result.append(element)
-            return result
+            print "result::"
+            for x in result:
+                print x
+	    return result
         else:
             return log_files.split(",")
 
@@ -339,8 +342,11 @@ def main(argv):
         else:
             print 'Bad parameters! Use python create_plots.py --help'
             sys.exit()
-    print "Argument:"
+    print "argument:::::"
     print (sys.argv)
+    print "arg0" + sys.argv[0]
+    print "arg1" + sys.argv[1]
+    print "arg2" + sys.argv[2]
     try:
         online_files = separate_and_avg(online_log_files)
         mapped_online_req_list, running_online_req_list, refused_online_req_list = \
