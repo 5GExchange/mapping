@@ -525,7 +525,8 @@ def getFatTreeTopo(abc_nf_type_num=10, save_to_file=False):
   for i in nx.complete_graph(4):
     core_sw.append(nffg.add_infra(id='CoreSw'+str(i), **switch))
   for i,j in nx.complete_graph(4).edges():
-    nffg.add_undirected_link(core_sw[i].add_port(), core_sw[j].add_port(),
+    nffg.add_undirected_link(core_sw[i].add_port(id=getName('p'+core_sw[i].id)),
+                             core_sw[j].add_port(id=getName('p'+core_sw[j].id)),
                              **corelinkres)
 
   # add aggregation switches
@@ -534,23 +535,34 @@ def getFatTreeTopo(abc_nf_type_num=10, save_to_file=False):
     aggr_sw.append(nffg.add_infra(id='AggrSw'+str(i), **switch))
   for sw_c in core_sw:
     for sw_a in random.sample(aggr_sw, 4):
-      nffg.add_undirected_link(sw_c.add_port(), sw_a.add_port(), **aggrlinkres)
+      nffg.add_undirected_link(sw_c.add_port(id=getName('p'+sw_c.id)),
+                               sw_a.add_port(id=getName('p'+sw_a.id)),
+                               **aggrlinkres)
 
-  # add sap nodes
-  saps = []
+  # add sap nodes with one connecting switch each
   for i in xrange(0,19):
     nameid = getName('SAP')
-    saps.append(nffg.add_sap(id=nameid, name=nameid))
-  for sap in saps:
+    sap = nffg.add_sap(id=nameid, name=nameid)
+    access_sw = nffg.add_infra(id='AccessSw'+str(i), **switch)
+    # connect the SAP to its Switch to eliminate SAP link bottleneck.
+    # WARNING: in some NFFG environments SAPs should only have one port, in
+    # others this port must have ID 1.
+    nffg.add_undirected_link(sap.add_port(id=1),
+                             access_sw.add_port(id=getName('p'+access_sw.id)),
+                             **corelinkres)
     for sw_a in random.sample(aggr_sw, 6):
-      nffg.add_undirected_link(sap.add_port(), sw_a.add_port(), **acclinkres)
+      nffg.add_undirected_link(access_sw.add_port(id=getName('p'+access_sw.id)),
+                               sw_a.add_port(id=getName('p'+sw_a.id)),
+                                             **acclinkres)
 
   # add hosts: 2 connected to core and 4 connected to aggregation switches
   for number, sw_list in zip((2, 4), (core_sw, aggr_sw)):
     for i, sw in zip(xrange(0,number), random.sample(sw_list, number)):
       infra = nffg.add_infra(id=getName('Host'), **infrares)
       infra.add_supported_type(random.sample(nf_types, 6))
-      nffg.add_undirected_link(sw.add_port(), infra.add_port(), **corelinkres)
+      nffg.add_undirected_link(sw.add_port(id=getName('p'+sw.id)),
+                               infra.add_port(id=getName('p'+infra.id)),
+                               **corelinkres)
 
   if save_to_file:
     fat_tree = nx.MultiDiGraph()
