@@ -15,10 +15,16 @@ import copy
 import os
 import sys
 import threading
+import time
+import subprocess
+import logging
 
 from configobj import ConfigObj
 
 semaphore_logging = threading.Semaphore(1)
+log = logging.getLogger()
+logging.basicConfig(format='%(levelname)s:%(name)s:%(message)s',
+                    level=logging.DEBUG)
 
 class Simulation(threading.Thread):
 
@@ -39,9 +45,9 @@ class Simulation(threading.Thread):
     # cleaning up if there were a folder with this name earlier.
     os.system("rm -rf test"+config['simulation_number']+config['orchestrator'])
     self.semaphore.acquire()
-    print "Simulation started at: "
-    os.system("date")
-    print "Running simulation: ", self.command
+    log.info("\nSimulation started at: %s" % subprocess.check_output("date").\
+             rstrip('\n'))
+    log.info("Running simulation: %s" % self.command)
     semaphore_logging.release()
     os.system(self.command)
     self.semaphore.release()
@@ -85,7 +91,7 @@ if __name__ == '__main__':
                         "parameter!")
     prev_value_cnt = value_cnt
 
-  print "Received parameter value sweep is %s \n"%sweep
+  log.info("Received parameter value sweep is %s \n"%sweep)
 
   for _ in xrange(0,prev_value_cnt):
     config = copy.deepcopy(default_config)
@@ -94,3 +100,4 @@ if __name__ == '__main__':
         config[k] = v[0]
       sweep[k] = v[1:]
     Simulation(config, folder, semaphore).start()
+    time.sleep(2)
